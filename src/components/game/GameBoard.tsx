@@ -9,6 +9,8 @@ import { PlayerCard } from './PlayerCard';
 import { MessageFlow } from './MessageFlow';
 import { ControlPanel } from './ControlPanel';
 import { VoteTracker } from './VoteTracker';
+import { FactionStats } from './FactionStats';
+import { VotingProgress } from './VotingProgress';
 import { Dog, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -70,7 +72,7 @@ export function GameBoard() {
 
   return (
     <div className={cn(
-      "h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br",
+      "h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br transition-all duration-1000 ease-in-out",
       theme.gradient
     )}>
       {/* Fixed Header */}
@@ -112,13 +114,22 @@ export function GameBoard() {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {gameState ? (
-                gameState.players.map((player) => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    showRole={true}
-                  />
-                ))
+                gameState.players.map((player, index) => {
+                  // Determine if this player is currently speaking
+                  const isCurrent =
+                    !gameState.waitingForNextStep &&
+                    index === gameState.currentPlayerIndex &&
+                    player.isAlive;
+
+                  return (
+                    <PlayerCard
+                      key={player.id}
+                      player={player}
+                      showRole={true}
+                      isCurrent={isCurrent}
+                    />
+                  );
+                })
               ) : (
                 <div className="text-center text-muted-foreground py-8">
                   <p>暂无进行中的游戏</p>
@@ -127,6 +138,20 @@ export function GameBoard() {
               )}
             </div>
           </div>
+
+          {/* Faction Stats */}
+          {gameState && gameState.phase !== 'setup' && (
+            <div className="flex-shrink-0">
+              <FactionStats gameState={gameState} />
+            </div>
+          )}
+
+          {/* Voting Progress */}
+          {gameState && (
+            <div className="flex-shrink-0">
+              <VotingProgress gameState={gameState} />
+            </div>
+          )}
 
           {/* Control Panel - Fixed */}
           <div className="flex-shrink-0">

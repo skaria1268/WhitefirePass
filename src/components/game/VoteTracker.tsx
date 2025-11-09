@@ -117,22 +117,39 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
                       第 {voteRound} 回合 - 狼人击杀投票
                     </div>
                     <div className="space-y-2">
-                      {/* Vote counts */}
+                      {/* Vote counts with bar chart */}
                       {voteCounts.length > 0 && (
                         <div className="rounded-lg bg-red-950/30 border border-red-500/30 p-3">
-                          <div className="text-xs text-muted-foreground mb-2">票数统计</div>
-                          <div className="space-y-1">
-                            {voteCounts.map(({ target, count }) => (
-                              <div
-                                key={target}
-                                className="flex items-center justify-between text-sm"
-                              >
-                                <span className="text-foreground">{target}</span>
-                                <Badge variant="destructive" className="text-xs">
-                                  {count} 票
-                                </Badge>
-                              </div>
-                            ))}
+                          <div className="text-xs text-muted-foreground mb-3">票数统计</div>
+                          <div className="space-y-2">
+                            {voteCounts.map(({ target, count }) => {
+                              const maxVotes = voteCounts[0].count;
+                              const percentage = (count / maxVotes) * 100;
+                              const isLeader = count === maxVotes;
+
+                              return (
+                                <div key={target} className="space-y-1">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-foreground font-medium">{target}</span>
+                                    <Badge variant="destructive" className="text-xs">
+                                      {count} 票
+                                    </Badge>
+                                  </div>
+                                  {/* Progress bar */}
+                                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full transition-all duration-500 rounded-full",
+                                        isLeader
+                                          ? "bg-gradient-to-r from-red-600 to-red-400"
+                                          : "bg-gradient-to-r from-stone-600 to-stone-500"
+                                      )}
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -166,29 +183,46 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
                       第 {voteRound} 回合 - 白天投票
                     </div>
                     <div className="space-y-2">
-                      {/* Vote counts */}
+                      {/* Vote counts with bar chart */}
                       {voteCounts.length > 0 && (
                         <div className="rounded-lg bg-amber-950/30 border border-amber-500/30 p-3">
-                          <div className="text-xs text-muted-foreground mb-2">票数统计</div>
-                          <div className="space-y-1">
-                            {voteCounts.map(({ target, count }) => (
-                              <div
-                                key={target}
-                                className="flex items-center justify-between text-sm"
-                              >
-                                <span className="text-foreground">{target}</span>
-                                <Badge
-                                  className={cn(
-                                    'text-xs',
-                                    count === voteCounts[0].count
-                                      ? 'bg-orange-600 hover:bg-orange-700'
-                                      : 'bg-stone-600 hover:bg-stone-700',
-                                  )}
-                                >
-                                  {count} 票
-                                </Badge>
-                              </div>
-                            ))}
+                          <div className="text-xs text-muted-foreground mb-3">票数统计</div>
+                          <div className="space-y-2">
+                            {voteCounts.map(({ target, count }) => {
+                              const maxVotes = voteCounts[0].count;
+                              const percentage = (count / maxVotes) * 100;
+                              const isLeader = count === maxVotes;
+
+                              return (
+                                <div key={target} className="space-y-1">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-foreground font-medium">{target}</span>
+                                    <Badge
+                                      className={cn(
+                                        'text-xs',
+                                        isLeader
+                                          ? 'bg-orange-600 hover:bg-orange-700'
+                                          : 'bg-stone-600 hover:bg-stone-700',
+                                      )}
+                                    >
+                                      {count} 票
+                                    </Badge>
+                                  </div>
+                                  {/* Progress bar */}
+                                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full transition-all duration-500 rounded-full",
+                                        isLeader
+                                          ? "bg-gradient-to-r from-orange-600 to-orange-400"
+                                          : "bg-gradient-to-r from-stone-600 to-stone-500"
+                                      )}
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}

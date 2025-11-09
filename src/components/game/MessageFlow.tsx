@@ -15,7 +15,9 @@ import {
   Skull,
   Activity,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Star,
+  Zap
 } from 'lucide-react';
 
 interface MessageFlowProps {
@@ -95,6 +97,25 @@ function getMessageIcon(type: string) {
   }
 }
 
+/**
+ * Check if message is a critical event
+ */
+function isCriticalEvent(message: Message): boolean {
+  const content = message.content.toLowerCase();
+  return (
+    message.type === 'death' ||
+    message.type === 'action' ||
+    content.includes('被') ||
+    content.includes('杀') ||
+    content.includes('死亡') ||
+    content.includes('淘汰') ||
+    content.includes('查验') ||
+    content.includes('平票') ||
+    content.includes('获胜') ||
+    content.includes('结束')
+  );
+}
+
 export function MessageFlow({ messages, filterTypes }: MessageFlowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -116,33 +137,55 @@ export function MessageFlow({ messages, filterTypes }: MessageFlowProps) {
           <p>暂无消息。开始游戏后将显示游戏进程！</p>
         </div>
       ) : (
-        filteredMessages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              'rounded-lg p-3 shadow-md',
-              messageStyles[message.type] || 'bg-card',
-            )}
-          >
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                {getMessageIcon(message.type)}
-                <span className="font-bold text-sm text-foreground">
-                  {message.from}
+        filteredMessages.map((message, idx) => {
+          const isCritical = isCriticalEvent(message);
+
+          return (
+            <div
+              key={message.id}
+              className={cn(
+                'rounded-lg p-3 shadow-md animate-in fade-in slide-in-from-bottom-4 duration-500 relative',
+                messageStyles[message.type] || 'bg-card',
+                isCritical && 'ring-2 ring-yellow-500/40 shadow-yellow-500/10',
+              )}
+              style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
+            >
+              {/* Critical event marker */}
+              {isCritical && (
+                <div className="absolute -top-2 -right-2">
+                  <div className="relative">
+                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 animate-pulse" />
+                    <Zap className="w-3 h-3 text-yellow-300 absolute top-1 left-1" />
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {getMessageIcon(message.type)}
+                  <span className="font-bold text-sm text-foreground">
+                    {message.from}
+                  </span>
+                  {message.type !== 'system' && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs flex items-center gap-1"
+                    >
+                      {messageTypeNames[message.type] || message.type}
+                    </Badge>
+                  )}
+                  {isCritical && (
+                    <Badge
+                      className="text-xs bg-yellow-600 hover:bg-yellow-700"
+                    >
+                      关键事件
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(message.timestamp)}
                 </span>
-                {message.type !== 'system' && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs flex items-center gap-1"
-                  >
-                    {messageTypeNames[message.type] || message.type}
-                  </Badge>
-                )}
               </div>
-              <span className="text-xs text-muted-foreground">
-                {formatTime(message.timestamp)}
-              </span>
-            </div>
             <div className={cn(
               "text-sm leading-relaxed",
               message.type === 'thinking' ? 'text-emerald-400' : 'text-foreground'
@@ -166,7 +209,8 @@ export function MessageFlow({ messages, filterTypes }: MessageFlowProps) {
               </div>
             )}
           </div>
-        ))
+          );
+        })
       )}
     </div>
   );
