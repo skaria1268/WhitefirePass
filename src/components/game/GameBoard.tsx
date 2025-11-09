@@ -36,7 +36,7 @@ export function GameBoard() {
                     <PlayerCard
                       key={player.id}
                       player={player}
-                      showRole={gameState.phase === 'end'}
+                      showRole={true}
                     />
                   ))}
                 </div>
