@@ -70,6 +70,7 @@ export interface Message {
 export interface Vote {
   from: string;
   target: string;
+  round?: number;  // Which round this vote belongs to
 }
 
 /**
@@ -99,8 +100,8 @@ export interface GameState {
   round: number;
   players: Player[];
   messages: Message[];
-  votes: Vote[];  // Day voting
-  nightVotes: Vote[];  // Night werewolf voting for kill
+  votes: Vote[];  // Day voting (current round)
+  nightVotes: Vote[];  // Night werewolf voting for kill (current round)
   nightActions: NightAction[];
   seerChecks: SeerCheck[];  // Seer's check history
   winner?: 'werewolf' | 'villager';
@@ -108,6 +109,15 @@ export interface GameState {
   lastUpdated: number;
   currentPlayerIndex: number; // Current player index for manual stepping
   waitingForNextStep: boolean; // Whether game is waiting for user to click next
+
+  // Tie handling
+  tiedPlayers: string[];  // Players involved in a tie
+  isRevote: boolean;  // Whether currently in revote phase
+  revoteRound: number;  // Number of revote rounds (for werewolves)
+
+  // Vote history for all rounds
+  voteHistory: Vote[];  // All day votes with round numbers
+  nightVoteHistory: Vote[];  // All night votes with round numbers
 }
 
 /**

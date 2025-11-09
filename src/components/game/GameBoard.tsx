@@ -11,6 +11,7 @@ import { ControlPanel } from './ControlPanel';
 import { VoteTracker } from './VoteTracker';
 import { Dog, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /**
  * Get phase-specific background gradient and theme
@@ -45,11 +46,18 @@ function getPhaseTheme(phase: string) {
         icon: <Dog className="w-8 h-8 text-emerald-400" />,
         label: '游戏结束',
       };
+    case 'setup':
+      return {
+        gradient: 'from-stone-900 via-purple-950 to-stone-900',
+        border: 'border-purple-500/30',
+        icon: <Gamepad2 className="w-8 h-8 text-purple-400" />,
+        label: '准备中',
+      };
     default:
       return {
-        gradient: 'from-stone-950 to-stone-900',
-        border: 'border-stone-500/30',
-        icon: <Dog className="w-8 h-8 text-stone-400" />,
+        gradient: 'from-stone-900 via-purple-950 to-stone-900',
+        border: 'border-purple-500/30',
+        icon: <Gamepad2 className="w-8 h-8 text-purple-400" />,
         label: '准备中',
       };
   }
@@ -128,14 +136,38 @@ export function GameBoard() {
 
         {/* Right Main Area - Game Log & Vote Tracker */}
         <div className="flex-1 flex gap-4 overflow-hidden">
-          {/* Game Log */}
+          {/* Game Log with Tabs */}
           <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden flex flex-col">
             <div className="flex-shrink-0 px-4 py-3 border-b border-border">
               <h2 className="text-lg font-bold text-card-foreground">游戏日志</h2>
             </div>
             <div className="flex-1 overflow-hidden">
               {gameState ? (
-                <MessageFlow messages={gameState.messages} />
+                <Tabs defaultValue="game" className="h-full flex flex-col">
+                  <TabsList className="flex-shrink-0 w-full justify-start rounded-none border-b bg-background/50">
+                    <TabsTrigger value="game">游戏记录</TabsTrigger>
+                    <TabsTrigger value="thinking">AI思考</TabsTrigger>
+                    <TabsTrigger value="prompt">AI提示词</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="game" className="flex-1 overflow-hidden m-0">
+                    <MessageFlow
+                      messages={gameState.messages}
+                      filterTypes={['system', 'speech', 'vote', 'death', 'action']}
+                    />
+                  </TabsContent>
+                  <TabsContent value="thinking" className="flex-1 overflow-hidden m-0">
+                    <MessageFlow
+                      messages={gameState.messages}
+                      filterTypes={['thinking']}
+                    />
+                  </TabsContent>
+                  <TabsContent value="prompt" className="flex-1 overflow-hidden m-0">
+                    <MessageFlow
+                      messages={gameState.messages}
+                      filterTypes={['prompt']}
+                    />
+                  </TabsContent>
+                </Tabs>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   <div className="text-center">

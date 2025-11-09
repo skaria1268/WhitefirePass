@@ -16,24 +16,22 @@ interface VoteTrackerProps {
 }
 
 export function VoteTracker({ gameState }: VoteTrackerProps) {
-  const { votes, nightVotes, seerChecks = [], round } = gameState;
+  const { voteHistory = [], nightVoteHistory = [], seerChecks = [] } = gameState;
 
-  // Group votes by round
-  const votesByRound = new Map<number, typeof votes>();
-  votes.forEach((vote) => {
-    const msg = gameState.messages.find((m) => m.type === 'vote' && m.from === vote.from);
-    const voteRound = msg?.round || round;
+  // Group votes by round from history
+  const votesByRound = new Map<number, typeof voteHistory>();
+  voteHistory.forEach((vote) => {
+    const voteRound = vote.round ?? 0;
     if (!votesByRound.has(voteRound)) {
       votesByRound.set(voteRound, []);
     }
     votesByRound.get(voteRound)?.push(vote);
   });
 
-  // Group night votes by round
-  const nightVotesByRound = new Map<number, typeof nightVotes>();
-  nightVotes.forEach((vote) => {
-    const msg = gameState.messages.find((m) => m.from === vote.from && m.visibility === 'werewolf');
-    const voteRound = msg?.round || round;
+  // Group night votes by round from history
+  const nightVotesByRound = new Map<number, typeof nightVoteHistory>();
+  nightVoteHistory.forEach((vote) => {
+    const voteRound = vote.round ?? 0;
     if (!nightVotesByRound.has(voteRound)) {
       nightVotesByRound.set(voteRound, []);
     }
@@ -41,10 +39,10 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
   });
 
   // Calculate vote counts
-  const calculateVoteCounts = (voteList: typeof votes) => {
+  const calculateVoteCounts = (voteList: typeof voteHistory) => {
     const counts = new Map<string, number>();
     voteList.forEach((vote) => {
-      counts.set(vote.target, (counts.get(vote.target) || 0) + 1);
+      counts.set(vote.target, (counts.get(vote.target) ?? 0) + 1);
     });
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
@@ -213,7 +211,7 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
               })}
 
             {/* Empty state */}
-            {votes.length === 0 && nightVotes.length === 0 && seerChecks.length === 0 && (
+            {voteHistory.length === 0 && nightVoteHistory.length === 0 && seerChecks.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 <p className="text-sm">暂无投票或查验记录</p>
                 <p className="text-xs mt-1">游戏进行后会显示在这里</p>

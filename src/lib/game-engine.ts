@@ -100,6 +100,11 @@ export function createGame(config: GameConfig): GameState {
     lastUpdated: Date.now(),
     currentPlayerIndex: 0,
     waitingForNextStep: true,
+    tiedPlayers: [],
+    isRevote: false,
+    revoteRound: 0,
+    voteHistory: [],
+    nightVoteHistory: [],
   };
 }
 
@@ -186,11 +191,15 @@ export function checkWinCondition(
 export function processNightPhase(state: GameState): {
   killedPlayer: Player | null;
   message: Message;
+  isTied: boolean;
+  tiedPlayers: string[];
 } {
   if (state.nightVotes.length === 0) {
     return {
       killedPlayer: null,
       message: createMessage('旁白', '昨夜平安无事'),
+      isTied: false,
+      tiedPlayers: [],
     };
   }
 
@@ -200,23 +209,43 @@ export function processNightPhase(state: GameState): {
     voteCounts.set(vote.target, (voteCounts.get(vote.target) ?? 0) + 1);
   });
 
-  // Find player with most votes
+  // Find max votes
   let maxVotes = 0;
-  let killedName: string | null = null;
-
-  voteCounts.forEach((count, target) => {
+  voteCounts.forEach((count) => {
     if (count > maxVotes) {
       maxVotes = count;
-      killedName = target;
     }
   });
 
-  const player = state.players.find((p) => p.name === killedName);
+  // Find all players with max votes
+  const playersWithMaxVotes: string[] = [];
+  voteCounts.forEach((count, target) => {
+    if (count === maxVotes) {
+      playersWithMaxVotes.push(target);
+    }
+  });
+
+  // Check for tie
+  if (playersWithMaxVotes.length > 1) {
+    return {
+      killedPlayer: null,
+      message: createMessage(
+        '旁白',
+        `狼人投票平票！${playersWithMaxVotes.join('、')} 各得 ${maxVotes} 票。需要重新讨论投票。`,
+      ),
+      isTied: true,
+      tiedPlayers: playersWithMaxVotes,
+    };
+  }
+
+  const player = state.players.find((p) => p.name === playersWithMaxVotes[0]);
 
   if (!player || !player.isAlive) {
     return {
       killedPlayer: null,
       message: createMessage('旁白', '昨夜平安无事'),
+      isTied: false,
+      tiedPlayers: [],
     };
   }
 
@@ -226,6 +255,8 @@ export function processNightPhase(state: GameState): {
       '旁白',
       `昨夜 ${player.name} 被狼人杀害了`,
     ),
+    isTied: false,
+    tiedPlayers: [],
   };
 }
 
@@ -235,11 +266,15 @@ export function processNightPhase(state: GameState): {
 export function processVoting(state: GameState): {
   eliminated: Player | null;
   message: Message;
+  isTied: boolean;
+  tiedPlayers: string[];
 } {
   if (state.votes.length === 0) {
     return {
       eliminated: null,
       message: createMessage('旁白', '没有人投票'),
+      isTied: false,
+      tiedPlayers: [],
     };
   }
 
@@ -248,22 +283,43 @@ export function processVoting(state: GameState): {
     voteCounts.set(vote.target, (voteCounts.get(vote.target) ?? 0) + 1);
   });
 
+  // Find max votes
   let maxVotes = 0;
-  let eliminated: string | null = null;
-
-  voteCounts.forEach((count, target) => {
+  voteCounts.forEach((count) => {
     if (count > maxVotes) {
       maxVotes = count;
-      eliminated = target;
     }
   });
 
-  const player = state.players.find((p) => p.name === eliminated);
+  // Find all players with max votes
+  const playersWithMaxVotes: string[] = [];
+  voteCounts.forEach((count, target) => {
+    if (count === maxVotes) {
+      playersWithMaxVotes.push(target);
+    }
+  });
+
+  // Check for tie
+  if (playersWithMaxVotes.length > 1) {
+    return {
+      eliminated: null,
+      message: createMessage(
+        '旁白',
+        `投票结果平票！${playersWithMaxVotes.join('、')} 各得 ${maxVotes} 票。`,
+      ),
+      isTied: true,
+      tiedPlayers: playersWithMaxVotes,
+    };
+  }
+
+  const player = state.players.find((p) => p.name === playersWithMaxVotes[0]);
 
   if (!player) {
     return {
       eliminated: null,
       message: createMessage('旁白', '没有人被淘汰'),
+      isTied: false,
+      tiedPlayers: [],
     };
   }
 
@@ -273,6 +329,8 @@ export function processVoting(state: GameState): {
       '旁白',
       `${player.name} 被投票淘汰了。`,
     ),
+    isTied: false,
+    tiedPlayers: [],
   };
 }
 

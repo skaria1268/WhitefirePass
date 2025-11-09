@@ -171,9 +171,48 @@ export const useGameStore = create<GameStore>()(
         addMessage(gameState, '旁白', '狼人请投票选择击杀目标', 'system', 'werewolf'),
       );
     } else if (gameState.nightPhase === 'werewolf-vote') {
-      // All night phases completed, advance to day
-      get().advanceToNextPhase();
-      return;
+      // Check werewolf votes for ties
+      const { isTied, tiedPlayers } = processNightPhase(gameState);
+
+      if (isTied) {
+        // Save night votes to history before clearing for revote
+        if (gameState.nightVotes.length > 0) {
+          const nightVotesWithRound = gameState.nightVotes.map((vote) => ({
+            ...vote,
+            round: gameState.round
+          }));
+          gameState.nightVoteHistory.push(...nightVotesWithRound);
+        }
+
+        // Tie - go back to discussion
+        gameState.revoteRound += 1;
+        gameState.nightPhase = 'werewolf-discuss';
+        gameState.currentPlayerIndex = 0;
+        gameState.nightVotes = [];  // Clear votes for new round
+        gameState.messages.push(
+          addMessage(
+            gameState,
+            '旁白',
+            `第 ${gameState.revoteRound} 次平票（${tiedPlayers.join('、')}）！狼人必须重新讨论并达成一致。`,
+            'system',
+            'werewolf',
+          ),
+        );
+      } else {
+        // Save successful night votes to history
+        if (gameState.nightVotes.length > 0) {
+          const nightVotesWithRound = gameState.nightVotes.map((vote) => ({
+            ...vote,
+            round: gameState.round
+          }));
+          gameState.nightVoteHistory.push(...nightVotesWithRound);
+        }
+
+        // No tie - proceed to day
+        gameState.revoteRound = 0;
+        get().advanceToNextPhase();
+        return;
+      }
     }
 
     set({ gameState: { ...gameState } });
@@ -182,6 +221,7 @@ export const useGameStore = create<GameStore>()(
   /**
    * Advance to next phase
    */
+  // eslint-disable-next-line complexity
   advanceToNextPhase: () => {
     const { gameState } = get();
     if (!gameState) return;
@@ -195,49 +235,28 @@ export const useGameStore = create<GameStore>()(
         addMessage(gameState, '旁白', '讨论结束。现在开始投票！', 'system', 'all'),
       );
     } else if (gameState.phase === 'voting') {
-      // Voting phase ended, process votes and go to night
-      const { eliminated, message } = processVoting(gameState);
-      if (eliminated) {
-        const player = gameState.players.find((p) => p.id === eliminated.id);
-        if (player) {
-          player.isAlive = false;
-        }
-      }
+      // Voting phase ended, process votes and check for ties
+      const { eliminated, message, isTied, tiedPlayers } = processVoting(gameState);
       gameState.messages.push(message);
-      gameState.phase = 'night';
-      gameState.nightPhase = 'seer';  // Start with seer phase
-      gameState.currentPlayerIndex = 0;
-      gameState.nightVotes = [];  // Clear night votes for new night
 
-      // Check if seer is alive
-      const seer = gameState.players.find((p) => p.role === 'seer' && p.isAlive);
-      if (seer) {
-        gameState.messages.push(
-          addMessage(gameState, '旁白', '夜幕降临... 预言家请睁眼', 'system', 'all'),
-        );
-      } else {
-        // Skip to werewolf discuss if seer is dead
-        gameState.nightPhase = 'werewolf-discuss';
-        gameState.messages.push(
-          addMessage(gameState, '旁白', '夜幕降临... 狼人请睁眼', 'system', 'all'),
-        );
+      // Save votes to history before processing
+      if (gameState.votes.length > 0) {
+        const votesWithRound = gameState.votes.map((vote) => ({
+          ...vote,
+          round: gameState.round
+        }));
+        gameState.voteHistory.push(...votesWithRound);
       }
+
+      handleDayVotingResult(gameState, eliminated, isTied, tiedPlayers);
     } else if (gameState.phase === 'night') {
       // Night phase ended, process night actions and go to day
-      const { killedPlayer, message } = processNightPhase(gameState);
-      if (killedPlayer) {
-        const player = gameState.players.find((p) => p.id === killedPlayer.id);
-        if (player) {
-          player.isAlive = false;
-        }
+      const { killedPlayer, message, isTied } = processNightPhase(gameState);
+
+      // Only process kill if not tied (tie is handled in advanceNightPhase)
+      if (!isTied) {
+        handleNightKillResult(gameState, killedPlayer, message);
       }
-      gameState.messages.push(message);
-      gameState.round += 1;
-      gameState.phase = 'day';
-      gameState.currentPlayerIndex = 0;
-      gameState.messages.push(
-        addMessage(gameState, '旁白', `第 ${gameState.round} 回合。天亮了！`, 'system', 'all'),
-      );
     }
 
     set({ gameState: { ...gameState } });
@@ -263,6 +282,11 @@ export const useGameStore = create<GameStore>()(
         // Only werewolves act
         alivePlayers = alivePlayers.filter((p) => p.role === 'werewolf');
       }
+    }
+
+    // Filter out tied players during revote discussion
+    if (gameState.phase === 'day' && gameState.isRevote && gameState.tiedPlayers.length > 0) {
+      alivePlayers = alivePlayers.filter((p) => !gameState.tiedPlayers.includes(p.name));
     }
 
     // If all players in current phase have acted, advance to next phase
@@ -600,6 +624,100 @@ function getRoleInstructionsForDisplay(role: string, phase: string, nightPhase?:
     return '你是村民。通过讨论和投票找出狼人。仔细观察每个人的发言和行为。';
   }
   return '';
+}
+
+/**
+ * Helper function to handle day voting result
+ */
+function handleDayVotingResult(
+  gameState: GameState,
+  eliminated: Player | null,
+  isTied: boolean,
+  tiedPlayers: string[],
+): void {
+  if (isTied) {
+    if (gameState.isRevote) {
+      // Second tie - nobody gets eliminated
+      gameState.messages.push(
+        addMessage(gameState, '旁白', '再次平票！本回合不淘汰任何人。', 'system', 'all'),
+      );
+      enterNightPhase(gameState);
+    } else {
+      // First tie - enter revote discussion phase
+      gameState.isRevote = true;
+      gameState.tiedPlayers = tiedPlayers;
+      gameState.phase = 'day';
+      gameState.currentPlayerIndex = 0;
+      gameState.votes = [];
+      gameState.messages.push(
+        addMessage(
+          gameState,
+          '旁白',
+          `平票玩家 ${tiedPlayers.join('、')} 不能发言。其他玩家请进行讨论并投票。`,
+          'system',
+          'all',
+        ),
+      );
+    }
+  } else {
+    // No tie - normal elimination
+    if (eliminated) {
+      const player = gameState.players.find((p) => p.id === eliminated.id);
+      if (player) {
+        player.isAlive = false;
+      }
+    }
+    enterNightPhase(gameState);
+  }
+}
+
+/**
+ * Helper function to handle night kill result
+ */
+function handleNightKillResult(
+  gameState: GameState,
+  killedPlayer: Player | null,
+  message: Message,
+): void {
+  if (killedPlayer) {
+    const player = gameState.players.find((p) => p.id === killedPlayer.id);
+    if (player) {
+      player.isAlive = false;
+    }
+  }
+  gameState.messages.push(message);
+  gameState.round += 1;
+  gameState.phase = 'day';
+  gameState.currentPlayerIndex = 0;
+  gameState.isRevote = false;
+  gameState.tiedPlayers = [];
+  gameState.messages.push(
+    addMessage(gameState, '旁白', `第 ${gameState.round} 回合。天亮了！`, 'system', 'all'),
+  );
+}
+
+/**
+ * Helper function to enter night phase
+ */
+function enterNightPhase(gameState: GameState): void {
+  gameState.phase = 'night';
+  gameState.nightPhase = 'seer';
+  gameState.currentPlayerIndex = 0;
+  gameState.nightVotes = [];
+  gameState.isRevote = false;
+  gameState.tiedPlayers = [];
+
+  const seer = gameState.players.find((p) => p.role === 'seer' && p.isAlive);
+  if (seer) {
+    gameState.messages.push(
+      addMessage(gameState, '旁白', '夜幕降临... 预言家请睁眼', 'system', 'all'),
+    );
+  } else {
+    gameState.nightPhase = 'werewolf-discuss';
+    gameState.messages.push(
+      addMessage(gameState, '旁白', '夜幕降临... 狼人请睁眼', 'system', 'all'),
+    );
+  }
 }
 
 /**

@@ -20,6 +20,7 @@ import {
 
 interface MessageFlowProps {
   messages: Message[];
+  filterTypes?: string[];  // Optional filter for message types
 }
 
 /**
@@ -94,23 +95,28 @@ function getMessageIcon(type: string) {
   }
 }
 
-export function MessageFlow({ messages }: MessageFlowProps) {
+export function MessageFlow({ messages, filterTypes }: MessageFlowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Filter messages if filterTypes is provided
+  const filteredMessages = filterTypes
+    ? messages.filter((msg) => filterTypes.includes(msg.type))
+    : messages;
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [filteredMessages]);
 
   return (
     <div ref={scrollRef} className="h-full w-full overflow-y-auto p-4 space-y-3">
-      {messages.length === 0 ? (
+      {filteredMessages.length === 0 ? (
         <div className="flex h-full items-center justify-center text-muted-foreground">
           <p>暂无消息。开始游戏后将显示游戏进程！</p>
         </div>
       ) : (
-        messages.map((message) => (
+        filteredMessages.map((message) => (
           <div
             key={message.id}
             className={cn(
