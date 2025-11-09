@@ -36,6 +36,7 @@ interface GameStore {
 
   // Internal actions
   advanceToNextPhase: () => void;
+  advanceNightPhase: () => void;
   executeCurrentPlayerAction: () => Promise<void>;
 }
 
@@ -149,6 +150,36 @@ export const useGameStore = create<GameStore>()(
   },
 
   /**
+   * Advance to next night sub-phase
+   */
+  advanceNightPhase: () => {
+    const { gameState } = get();
+    if (!gameState || gameState.phase !== 'night') return;
+
+    if (gameState.nightPhase === 'seer') {
+      // Seer phase ended, go to werewolf discuss
+      gameState.nightPhase = 'werewolf-discuss';
+      gameState.currentPlayerIndex = 0;
+      gameState.messages.push(
+        addMessage(gameState, 'system', '狼人请开始讨论今晚的目标', 'system', 'werewolf'),
+      );
+    } else if (gameState.nightPhase === 'werewolf-discuss') {
+      // Werewolf discuss ended, go to werewolf vote
+      gameState.nightPhase = 'werewolf-vote';
+      gameState.currentPlayerIndex = 0;
+      gameState.messages.push(
+        addMessage(gameState, 'system', '狼人请投票选择击杀目标', 'system', 'werewolf'),
+      );
+    } else if (gameState.nightPhase === 'werewolf-vote') {
+      // All night phases completed, advance to day
+      get().advanceToNextPhase();
+      return;
+    }
+
+    set({ gameState: { ...gameState } });
+  },
+
+  /**
    * Advance to next phase
    */
   advanceToNextPhase: () => {
@@ -174,11 +205,23 @@ export const useGameStore = create<GameStore>()(
       }
       gameState.messages.push(message);
       gameState.phase = 'night';
+      gameState.nightPhase = 'seer';  // Start with seer phase
       gameState.currentPlayerIndex = 0;
       gameState.nightVotes = [];  // Clear night votes for new night
-      gameState.messages.push(
-        addMessage(gameState, 'system', '夜幕降临... 狼人请睁眼', 'system', 'all'),
-      );
+
+      // Check if seer is alive
+      const seer = gameState.players.find((p) => p.role === 'seer' && p.isAlive);
+      if (seer) {
+        gameState.messages.push(
+          addMessage(gameState, 'system', '夜幕降临... 预言家请睁眼', 'system', 'all'),
+        );
+      } else {
+        // Skip to werewolf discuss if seer is dead
+        gameState.nightPhase = 'werewolf-discuss';
+        gameState.messages.push(
+          addMessage(gameState, 'system', '夜幕降临... 狼人请睁眼', 'system', 'all'),
+        );
+      }
     } else if (gameState.phase === 'night') {
       // Night phase ended, process night actions and go to day
       const { killedPlayer, message } = processNightPhase(gameState);
@@ -203,17 +246,32 @@ export const useGameStore = create<GameStore>()(
   /**
    * Execute current player's action
    */
+  // eslint-disable-next-line complexity
   executeCurrentPlayerAction: async () => {
     const { gameState, apiKey } = get();
     if (!gameState) return;
 
-    const alivePlayers = getAlivePlayers(gameState).filter(
-      (p) => gameState.phase !== 'night' || p.role === 'werewolf',
-    );
+    // Get active players based on current phase
+    let alivePlayers = getAlivePlayers(gameState);
+
+    // Filter players based on night sub-phase
+    if (gameState.phase === 'night' && gameState.nightPhase) {
+      if (gameState.nightPhase === 'seer') {
+        // Only seer acts
+        alivePlayers = alivePlayers.filter((p) => p.role === 'seer');
+      } else if (gameState.nightPhase === 'werewolf-discuss' || gameState.nightPhase === 'werewolf-vote') {
+        // Only werewolves act
+        alivePlayers = alivePlayers.filter((p) => p.role === 'werewolf');
+      }
+    }
 
     // If all players in current phase have acted, advance to next phase
     if (gameState.currentPlayerIndex >= alivePlayers.length) {
-      get().advanceToNextPhase();
+      if (gameState.phase === 'night') {
+        get().advanceNightPhase();
+      } else {
+        get().advanceToNextPhase();
+      }
       set({ isProcessing: false });
       return;
     }
@@ -223,8 +281,12 @@ export const useGameStore = create<GameStore>()(
     try {
       // Determine message visibility based on phase and role
       let visibility: Message['visibility'] = 'all';
-      if (gameState.phase === 'night' && currentPlayer.role === 'werewolf') {
-        visibility = 'werewolf'; // Only werewolves can see night discussion
+      if (gameState.phase === 'night') {
+        if (gameState.nightPhase === 'seer' && currentPlayer.role === 'seer') {
+          visibility = 'seer';  // Only seer can see their check
+        } else if (currentPlayer.role === 'werewolf') {
+          visibility = 'werewolf'; // Only werewolves can see night discussion
+        }
       }
 
       // Get prompt for display
@@ -344,12 +406,23 @@ function getPromptForDisplay(
     ? players.filter((p) => p.role === 'werewolf' && p.name !== player.name)
     : [];
 
-  const roleInstructions = getRoleInstructionsForDisplay(player.role, phase);
+  const roleInstructions = getRoleInstructionsForDisplay(player.role, phase, gameState.nightPhase);
+
+  // Get phase display name
+  let phaseDisplay = phaseNames[phase];
+  if (phase === 'night' && gameState.nightPhase) {
+    const nightPhaseNames: Record<string, string> = {
+      'seer': '夜晚-预言家查验',
+      'werewolf-discuss': '夜晚-狼人讨论',
+      'werewolf-vote': '夜晚-狼人投票',
+    };
+    phaseDisplay = nightPhaseNames[gameState.nightPhase] || phaseDisplay;
+  }
 
   return `【AI Prompt】
 玩家：${player.name}
 身份：${roleNames[player.role]}
-阶段：${phaseNames[phase]}
+阶段：${phaseDisplay}
 回合：${round}
 存活玩家：${alivePlayers.map((p) => p.name).join('、')}
 ${werewolfTeammates.length > 0 ? `狼人队友：${werewolfTeammates.map((p) => p.name).join('、')}` : ''}
@@ -359,7 +432,7 @@ ${roleInstructions}
 最近的对话：
 ${recentMessages.map((m) => `${m.from}: ${m.content}`).join('\n')}
 
-${phase === 'day' ? '请发表你的看法（1-2句话）' : phase === 'voting' ? '请投票选择一个玩家（只回复名字）' : phase === 'night' && player.role === 'werewolf' ? '请选择今晚要杀的玩家（只回复名字）' : ''}`;
+${getActionPrompt(phase, gameState.nightPhase, player.role)}`;
 }
 
 /**
@@ -379,45 +452,124 @@ function parseAIResponse(response: string): {
 }
 
 /**
- * Record vote based on player response
+ * Record vote or action based on player response
  */
 function recordVote(
   gameState: GameState,
   currentPlayer: Player,
   response: string,
 ): void {
-  const votedName = response.trim();
-  const targetPlayer = getPlayerByName(gameState, votedName);
+  const targetName = response.trim();
+  const targetPlayer = getPlayerByName(gameState, targetName);
 
-  // Record day vote
   if (gameState.phase === 'voting') {
-    if (targetPlayer?.isAlive) {
-      gameState.votes.push({ from: currentPlayer.name, target: votedName });
-    }
-    return;
+    recordDayVote(gameState, currentPlayer, targetName, targetPlayer);
+  } else if (gameState.phase === 'night') {
+    recordNightAction(gameState, currentPlayer, targetName, targetPlayer);
   }
+}
 
-  // Record night vote (werewolf only)
-  if (gameState.phase === 'night' && currentPlayer.role === 'werewolf') {
-    if (targetPlayer?.isAlive && targetPlayer.role !== 'werewolf') {
-      gameState.nightVotes.push({ from: currentPlayer.name, target: votedName });
-    }
+/**
+ * Record day vote
+ */
+function recordDayVote(
+  gameState: GameState,
+  currentPlayer: Player,
+  targetName: string,
+  targetPlayer: Player | undefined,
+): void {
+  if (targetPlayer?.isAlive) {
+    gameState.votes.push({ from: currentPlayer.name, target: targetName });
+  }
+}
+
+/**
+ * Record night action
+ */
+function recordNightAction(
+  gameState: GameState,
+  currentPlayer: Player,
+  targetName: string,
+  targetPlayer: Player | undefined,
+): void {
+  if (gameState.nightPhase === 'seer' && currentPlayer.role === 'seer') {
+    recordSeerCheck(gameState, targetName, targetPlayer);
+  } else if (gameState.nightPhase === 'werewolf-vote' && currentPlayer.role === 'werewolf') {
+    recordWerewolfVote(gameState, currentPlayer, targetName, targetPlayer);
+  }
+}
+
+/**
+ * Record seer check
+ */
+function recordSeerCheck(
+  gameState: GameState,
+  targetName: string,
+  targetPlayer: Player | undefined,
+): void {
+  if (!targetPlayer?.isAlive) return;
+
+  gameState.seerChecks.push({
+    round: gameState.round,
+    target: targetName,
+    role: targetPlayer.role,
+  });
+
+  const roleNames: Record<string, string> = {
+    werewolf: '狼人',
+    villager: '村民',
+    seer: '预言家',
+    witch: '女巫',
+    hunter: '猎人',
+  };
+
+  gameState.messages.push(
+    addMessage(
+      gameState,
+      'system',
+      `查验结果：${targetName} 是 ${roleNames[targetPlayer.role]}`,
+      'system',
+      'seer',
+    ),
+  );
+}
+
+/**
+ * Record werewolf vote
+ */
+function recordWerewolfVote(
+  gameState: GameState,
+  currentPlayer: Player,
+  targetName: string,
+  targetPlayer: Player | undefined,
+): void {
+  if (targetPlayer?.isAlive && targetPlayer.role !== 'werewolf') {
+    gameState.nightVotes.push({ from: currentPlayer.name, target: targetName });
   }
 }
 
 /**
  * Get role instructions for display in prompt
  */
-function getRoleInstructionsForDisplay(role: string, phase: string): string {
+function getRoleInstructionsForDisplay(role: string, phase: string, nightPhase?: string): string {
   if (role === 'werewolf') {
     if (phase === 'night') {
-      return `【狼人身份 - 夜晚阶段】
+      if (nightPhase === 'werewolf-discuss') {
+        return `【狼人身份 - 讨论阶段】
 你是狼人。现在是夜晚，只有狼人能看到这些对话。
-⚠️ 重要：你需要投票选择今晚要杀的人
-- 分析白天的讨论，选择威胁最大的玩家
-- 优先杀掉发言好、逻辑清晰的玩家
+⚠️ 当前阶段：讨论今晚的击杀目标
+- 和其他狼人交流你的想法
+- 分析哪个玩家威胁最大
+- 可以提出建议但不要做最终决定
+- 保持 1-2 句话即可`;
+      } else if (nightPhase === 'werewolf-vote') {
+        return `【狼人身份 - 投票阶段】
+你是狼人。现在需要投票决定击杀目标。
+⚠️ 重要：投票选择今晚要杀的人
+- 根据刚才的讨论做出决定
 - 只回复要杀的玩家名字（如：Alice）
 - 不要解释原因，不要说其他内容`;
+      }
     }
     return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
 你是狼人，但必须伪装成村民。
@@ -428,10 +580,43 @@ function getRoleInstructionsForDisplay(role: string, phase: string): string {
 - 可以指控真正的村民，转移注意力`;
   }
   if (role === 'seer') {
-    return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识。';
+    if (phase === 'night' && nightPhase === 'seer') {
+      return `【预言家身份 - 查验阶段】
+你是预言家。现在是夜晚查验时间。
+⚠️ 重要：选择一个玩家查验身份
+- 根据白天的讨论选择最可疑的人
+- 只回复要查验的玩家名字（如：Alice）
+- 不要解释原因，不要说其他内容
+- 查验结果只有你能看到`;
+    }
+    return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识，避免过早暴露。';
   }
   if (role === 'villager') {
-    return '你是村民。通过讨论和投票找出狼人。';
+    return '你是村民。通过讨论和投票找出狼人。仔细观察每个人的发言和行为。';
+  }
+  return '';
+}
+
+/**
+ * Get action prompt based on phase and role
+ */
+function getActionPrompt(phase: string, nightPhase: string | undefined, role: string): string {
+  if (phase === 'day') {
+    return '请发表你的看法（1-2句话）';
+  }
+  if (phase === 'voting') {
+    return '请投票选择一个玩家（只回复名字）';
+  }
+  if (phase === 'night') {
+    if (nightPhase === 'seer' && role === 'seer') {
+      return '请选择要查验的玩家（只回复名字）';
+    }
+    if (nightPhase === 'werewolf-discuss' && role === 'werewolf') {
+      return '请和队友讨论今晚的目标（1-2句话）';
+    }
+    if (nightPhase === 'werewolf-vote' && role === 'werewolf') {
+      return '请投票选择今晚要杀的玩家（只回复名字）';
+    }
   }
   return '';
 }

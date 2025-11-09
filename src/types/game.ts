@@ -13,6 +13,11 @@ export type Role = 'werewolf' | 'villager' | 'seer' | 'witch' | 'hunter';
 export type GamePhase = 'setup' | 'night' | 'day' | 'voting' | 'end';
 
 /**
+ * Night sub-phases
+ */
+export type NightPhase = 'seer' | 'werewolf-discuss' | 'werewolf-vote';
+
+/**
  * Message types for different game events
  */
 export type MessageType =
@@ -77,16 +82,27 @@ export interface NightAction {
 }
 
 /**
+ * Seer check result
+ */
+export interface SeerCheck {
+  round: number;
+  target: string;
+  role: Role;
+}
+
+/**
  * Game state - single source of truth
  */
 export interface GameState {
   phase: GamePhase;
+  nightPhase?: NightPhase;  // Sub-phase during night
   round: number;
   players: Player[];
   messages: Message[];
   votes: Vote[];  // Day voting
   nightVotes: Vote[];  // Night werewolf voting for kill
   nightActions: NightAction[];
+  seerChecks: SeerCheck[];  // Seer's check history
   winner?: 'werewolf' | 'villager';
   createdAt: number;
   lastUpdated: number;

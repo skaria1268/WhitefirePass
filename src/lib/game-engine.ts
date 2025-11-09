@@ -36,6 +36,7 @@ export function createGame(config: GameConfig): GameState {
     votes: [],
     nightVotes: [],
     nightActions: [],
+    seerChecks: [],
     createdAt: Date.now(),
     lastUpdated: Date.now(),
     currentPlayerIndex: 0,

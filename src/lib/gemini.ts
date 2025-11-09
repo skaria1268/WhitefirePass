@@ -81,8 +81,9 @@ export async function getAIResponse(
 /**
  * Build prompt for AI player based on game context
  */
+// eslint-disable-next-line complexity
 function buildPrompt(player: Player, gameState: GameState): string {
-  const { phase, round, players, messages } = gameState;
+  const { phase, nightPhase, round, players, messages } = gameState;
 
   const alivePlayers = players.filter((p) => p.isAlive);
 
@@ -120,6 +121,17 @@ function buildPrompt(player: Player, gameState: GameState): string {
     end: '结束',
   };
 
+  // Get phase display name
+  let phaseDisplay = phaseNames[phase];
+  if (phase === 'night' && nightPhase) {
+    const nightPhaseNames: Record<string, string> = {
+      'seer': '夜晚-预言家查验',
+      'werewolf-discuss': '夜晚-狼人讨论',
+      'werewolf-vote': '夜晚-狼人投票',
+    };
+    phaseDisplay = nightPhaseNames[nightPhase] || phaseDisplay;
+  }
+
   // Get teammate information for werewolves
   const werewolfTeammates = player.role === 'werewolf'
     ? players.filter((p) => p.role === 'werewolf' && p.name !== player.name)
@@ -132,12 +144,12 @@ ${player.personality || '你是一个普通玩家，按照自己的判断行事�
 
 【游戏信息】
 你的身份：${roleNames[player.role]}
-当前阶段：${phaseNames[phase]}
+当前阶段：${phaseDisplay}
 回合数：${round}
 存活玩家：${alivePlayers.map((p) => p.name).join('、')}
 ${werewolfTeammates.length > 0 ? `你的狼人队友：${werewolfTeammates.map((p) => p.name).join('、')}` : ''}
 
-${getRoleInstructions(player.role, phase)}
+${getRoleInstructions(player.role, phase, nightPhase)}
 
 最近的对话：
 ${messageHistory}
@@ -170,9 +182,39 @@ ${messageHistory}
 注意：思考部分只有你自己能看到，发言部分（投票结果）所有人都能看到。`;
   }
 
-  if (phase === 'night' && player.role === 'werewolf') {
-    return `${basePrompt}
-现在是夜晚，选择今晚要杀的玩家。请按照以下格式回复：
+  if (phase === 'night') {
+    // Seer check phase
+    if (nightPhase === 'seer' && player.role === 'seer') {
+      return `${basePrompt}
+现在是预言家查验时间。请按照以下格式回复：
+
+【思考】
+（在这里写出你的分析：为什么要查验这个人，2-3句话）
+
+【发言】
+（只写要查验的玩家名字，不要有其他内容）
+
+注意：思考和发言都只有你自己能看到。查验结果会在你选择后显示。`;
+    }
+
+    // Werewolf discuss phase
+    if (nightPhase === 'werewolf-discuss' && player.role === 'werewolf') {
+      return `${basePrompt}
+现在是狼人讨论时间。请按照以下格式回复：
+
+【思考】
+（在这里写出你的分析和策略，2-3句话）
+
+【发言】
+（和队友讨论今晚的目标，1-2句话）
+
+注意：思考和发言都只有狼人能看到。`;
+    }
+
+    // Werewolf vote phase
+    if (nightPhase === 'werewolf-vote' && player.role === 'werewolf') {
+      return `${basePrompt}
+现在是狼人投票时间。请按照以下格式回复：
 
 【思考】
 （在这里写出你的击杀策略和分析，2-3句话）
@@ -181,6 +223,7 @@ ${messageHistory}
 （只写要击杀的玩家名字，不要有其他内容）
 
 注意：思考和发言都只有狼人能看到。`;
+    }
   }
 
   return basePrompt;
@@ -189,17 +232,27 @@ ${messageHistory}
 /**
  * Role-specific instructions
  */
-function getRoleInstructions(role: string, phase: string): string {
+// eslint-disable-next-line complexity
+function getRoleInstructions(role: string, phase: string, nightPhase?: string): string {
   switch (role) {
     case 'werewolf':
       if (phase === 'night') {
-        return `【狼人身份 - 夜晚阶段】
+        if (nightPhase === 'werewolf-discuss') {
+          return `【狼人身份 - 讨论阶段】
 你是狼人。现在是夜晚，只有狼人能看到这些对话。
-⚠️ 重要：你需要投票选择今晚要杀的人
-- 分析白天的讨论，选择威胁最大的玩家
-- 优先杀掉发言好、逻辑清晰的玩家
+⚠️ 当前阶段：讨论今晚的击杀目标
+- 和其他狼人交流你的想法
+- 分析哪个玩家威胁最大
+- 可以提出建议但不要做最终决定
+- 保持 1-2 句话即可`;
+        } else if (nightPhase === 'werewolf-vote') {
+          return `【狼人身份 - 投票阶段】
+你是狼人。现在需要投票决定击杀目标。
+⚠️ 重要：投票选择今晚要杀的人
+- 根据刚才的讨论做出决定
 - 只回复要杀的玩家名字（如：Alice）
 - 不要解释原因，不要说其他内容`;
+        }
       }
       return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
 你是狼人，但必须伪装成村民。
@@ -209,6 +262,15 @@ function getRoleInstructions(role: string, phase: string): string {
 - 像村民一样说话和投票
 - 可以指控真正的村民，转移注意力`;
     case 'seer':
+      if (phase === 'night' && nightPhase === 'seer') {
+        return `【预言家身份 - 查验阶段】
+你是预言家。现在是夜晚查验时间。
+⚠️ 重要：选择一个玩家查验身份
+- 根据白天的讨论选择最可疑的人
+- 只回复要查验的玩家名字（如：Alice）
+- 不要解释原因，不要说其他内容
+- 查验结果只有你能看到`;
+      }
       return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识，避免过早暴露身份。';
     case 'villager':
       return '你是村民。通过讨论和投票找出狼人。仔细观察每个人的发言和行为。';
