@@ -86,16 +86,20 @@ function ControlButtons({
   isValidating,
   isProcessing,
   canExecuteNext,
+  hasError,
   onStart,
   onNextStep,
+  onRetry,
   onReset,
 }: {
   gameState: GameState | null;
   isValidating: boolean;
   isProcessing: boolean;
   canExecuteNext: boolean;
+  hasError: boolean;
   onStart: () => void;
   onNextStep: () => void;
+  onRetry: () => void;
   onReset: () => void;
 }) {
   if (!gameState) {
@@ -112,13 +116,23 @@ function ControlButtons({
 
   return (
     <>
-      <Button
-        onClick={onNextStep}
-        className="w-full"
-        disabled={!canExecuteNext}
-      >
-        {isProcessing ? '⏳ 处理中...' : '➡️ 下一步'}
-      </Button>
+      {hasError ? (
+        <Button
+          onClick={onRetry}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+          disabled={isProcessing}
+        >
+          {isProcessing ? '⏳ 重试中...' : '🔄 重试当前步骤'}
+        </Button>
+      ) : (
+        <Button
+          onClick={onNextStep}
+          className="w-full"
+          disabled={!canExecuteNext}
+        >
+          {isProcessing ? '⏳ 处理中...' : '➡️ 下一步'}
+        </Button>
+      )}
       <Button
         onClick={onReset}
         className="w-full bg-red-600 hover:bg-red-700 text-white"
@@ -169,7 +183,17 @@ function GameStatus({
 export function ControlPanel() {
   const [apiKey, setApiKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const { gameState, isProcessing, setApiKey: saveApiKey, startGame, resetGame, executeNextStep } = useGameStore();
+  const {
+    gameState,
+    isProcessing,
+    lastError,
+    setApiKey: saveApiKey,
+    startGame,
+    resetGame,
+    executeNextStep,
+    retryCurrentStep,
+    clearError,
+  } = useGameStore();
 
   const handleStart = async () => {
     const trimmedKey = apiKey.trim();
@@ -192,7 +216,7 @@ export function ControlPanel() {
     }
   };
 
-  const canExecuteNext = Boolean(gameState && !isProcessing && gameState.phase !== 'end');
+  const canExecuteNext = Boolean(gameState && !isProcessing && gameState.phase !== 'end' && !lastError);
 
   return (
     <Card>
@@ -216,6 +240,24 @@ export function ControlPanel() {
             {gameState.phase !== 'end' && gameState.phase !== 'setup' && (
               <CurrentPlayerDisplay gameState={gameState} />
             )}
+            {lastError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-600 font-semibold">⚠️</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-900">请求失败</p>
+                    <p className="text-xs text-red-700 mt-1">{lastError}</p>
+                  </div>
+                  <button
+                    onClick={clearError}
+                    className="text-red-400 hover:text-red-600"
+                    aria-label="关闭错误提示"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -225,8 +267,10 @@ export function ControlPanel() {
             isValidating={isValidating}
             isProcessing={isProcessing}
             canExecuteNext={canExecuteNext}
+            hasError={Boolean(lastError)}
             onStart={() => void handleStart()}
             onNextStep={() => void executeNextStep()}
+            onRetry={() => void retryCurrentStep()}
             onReset={resetGame}
           />
         </div>

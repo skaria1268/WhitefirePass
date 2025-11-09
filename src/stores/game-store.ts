@@ -22,12 +22,15 @@ interface GameStore {
   gameState: GameState | null;
   isProcessing: boolean;
   apiKey: string;
+  lastError: string | null;
 
   // Actions
   setApiKey: (key: string) => void;
   startGame: (config: GameConfig) => void;
   resetGame: () => void;
   executeNextStep: () => Promise<void>;
+  retryCurrentStep: () => Promise<void>;
+  clearError: () => void;
 
   // Internal actions
   advanceToNextPhase: () => void;
@@ -41,6 +44,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameState: null,
   isProcessing: false,
   apiKey: '',
+  lastError: null,
 
   /**
    * Set Gemini API key
@@ -61,7 +65,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
    * Reset game
    */
   resetGame: () => {
-    set({ gameState: null, isProcessing: false });
+    set({ gameState: null, isProcessing: false, lastError: null });
+  },
+
+  /**
+   * Clear error message
+   */
+  clearError: () => {
+    set({ lastError: null });
+  },
+
+  /**
+   * Retry current step after error
+   */
+  retryCurrentStep: async () => {
+    set({ lastError: null });
+    await get().executeCurrentPlayerAction();
   },
 
   /**
@@ -216,13 +235,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      // Move to next player
+      // Move to next player only on success
       gameState.currentPlayerIndex += 1;
 
-      set({ gameState: { ...gameState }, isProcessing: false });
+      set({ gameState: { ...gameState }, isProcessing: false, lastError: null });
     } catch (error) {
       console.error(`Error executing action for ${currentPlayer.name}:`, error);
-      set({ isProcessing: false });
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      set({
+        isProcessing: false,
+        lastError: `${currentPlayer.name} 的 AI 请求失败: ${errorMessage}`,
+      });
     }
   },
 }));

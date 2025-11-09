@@ -45,42 +45,37 @@ export async function getAIResponse(
 ): Promise<string> {
   const prompt = buildPrompt(player, gameState);
 
-  try {
-    const response = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        apiKey: config.apiKey,
-        model: config.model ?? 'gemini-2.5-pro',
-        prompt,
-      }),
-    });
+  const response = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      apiKey: config.apiKey,
+      model: config.model ?? 'gemini-2.5-pro',
+      prompt,
+    }),
+  });
 
-    if (!response.ok) {
-      const errorData = (await response.json()) as { error?: string; details?: string };
-      console.error('Gemini API 错误响应:', errorData);
-      return `${player.name} 无法发言（${errorData.error || 'API 错误'}）`;
-    }
-
-    const data = (await response.json()) as {
-      text?: string;
-      usage?: unknown;
-    };
-
-    const text = data.text?.trim();
-
-    if (!text) {
-      console.error('Gemini API 响应为空:', data);
-      return `${player.name} 沉默了...`;
-    }
-
-    return text;
-  } catch (error) {
-    console.error(`${player.name} 的 AI 调用失败:`, error);
-    return `${player.name}: 我需要想一想...`;
+  if (!response.ok) {
+    const errorData = (await response.json()) as { error?: string; details?: string };
+    console.error('Gemini API 错误响应:', errorData);
+    throw new Error(errorData.error ?? errorData.details ?? 'API 请求失败');
   }
+
+  const data = (await response.json()) as {
+    text?: string;
+    usage?: unknown;
+  };
+
+  const text = data.text?.trim();
+
+  if (!text) {
+    console.error('Gemini API 响应为空:', data);
+    throw new Error('AI 响应为空');
+  }
+
+  return text;
 }
 
 /**
