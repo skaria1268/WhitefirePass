@@ -117,7 +117,7 @@ function buildPrompt(player: Player, gameState: GameState): string {
 回合数：${round}
 存活玩家：${alivePlayers.map((p) => p.name).join('、')}
 
-${getRoleInstructions(player.role)}
+${getRoleInstructions(player.role, phase)}
 
 最近的对话：
 ${messageHistory}
@@ -146,18 +146,31 @@ ${messageHistory}
 /**
  * Role-specific instructions
  */
-function getRoleInstructions(role: string): string {
+function getRoleInstructions(role: string, phase: string): string {
   switch (role) {
     case 'werewolf':
-      return '你是狼人。伪装成村民。保护其他狼人。指控村民阵营。';
+      if (phase === 'night') {
+        return `【狼人身份 - 夜晚阶段】
+你是狼人。现在是夜晚，只有狼人在讨论。
+- 你可以和其他狼人商量要杀谁
+- 讨论策略和白天如何伪装
+- 这些讨论其他玩家听不到`;
+      }
+      return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
+你是狼人，但必须伪装成村民。
+⚠️ 重要规则：
+- 绝不暴露自己是狼人
+- 绝不暴露其他狼人的身份
+- 像村民一样说话和投票
+- 可以指控真正的村民，转移注意力`;
     case 'seer':
-      return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识。';
+      return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识，避免过早暴露身份。';
     case 'villager':
-      return '你是村民。通过讨论和投票找出狼人。';
+      return '你是村民。通过讨论和投票找出狼人。仔细观察每个人的发言和行为。';
     case 'witch':
-      return '你是女巫。你有一瓶毒药和一瓶解药。';
+      return '你是女巫。你有一瓶毒药和一瓶解药。使用时机很关键。';
     case 'hunter':
-      return '你是猎人。如果你死了，可以带走一个人。';
+      return '你是猎人。如果你死了，可以带走一个人。保持低调，不要过早暴露身份。';
     default:
       return '';
   }

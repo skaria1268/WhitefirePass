@@ -257,6 +257,8 @@ function getPromptForDisplay(
     end: '结束',
   };
 
+  const roleInstructions = getRoleInstructionsForDisplay(player.role, phase);
+
   return `【AI Prompt】
 玩家：${player.name}
 身份：${roleNames[player.role]}
@@ -264,8 +266,39 @@ function getPromptForDisplay(
 回合：${round}
 存活玩家：${alivePlayers.map((p) => p.name).join('、')}
 
+${roleInstructions}
+
 最近的对话：
 ${recentMessages.map((m) => `${m.from}: ${m.content}`).join('\n')}
 
 ${phase === 'day' ? '请发表你的看法（1-2句话）' : phase === 'voting' ? '请投票选择一个玩家（只回复名字）' : ''}`;
+}
+
+/**
+ * Get role instructions for display in prompt
+ */
+function getRoleInstructionsForDisplay(role: string, phase: string): string {
+  if (role === 'werewolf') {
+    if (phase === 'night') {
+      return `【狼人身份 - 夜晚阶段】
+你是狼人。现在是夜晚，只有狼人在讨论。
+- 你可以和其他狼人商量要杀谁
+- 讨论策略和白天如何伪装
+- 这些讨论其他玩家听不到`;
+    }
+    return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
+你是狼人，但必须伪装成村民。
+⚠️ 重要规则：
+- 绝不暴露自己是狼人
+- 绝不暴露其他狼人的身份
+- 像村民一样说话和投票
+- 可以指控真正的村民，转移注意力`;
+  }
+  if (role === 'seer') {
+    return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识。';
+  }
+  if (role === 'villager') {
+    return '你是村民。通过讨论和投票找出狼人。';
+  }
+  return '';
 }
