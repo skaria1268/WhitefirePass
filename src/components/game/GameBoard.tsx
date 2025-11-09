@@ -8,6 +8,7 @@ import { useGameStore } from '@/stores/game-store';
 import { PlayerCard } from './PlayerCard';
 import { MessageFlow } from './MessageFlow';
 import { ControlPanel } from './ControlPanel';
+import { VoteTracker } from './VoteTracker';
 import { Dog, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -125,26 +126,36 @@ export function GameBoard() {
           </div>
         </div>
 
-        {/* Right Main Area - Game Log */}
-        <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden flex flex-col">
-          <div className="flex-shrink-0 px-4 py-3 border-b border-border">
-            <h2 className="text-lg font-bold text-card-foreground">游戏日志</h2>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {gameState ? (
-              <MessageFlow messages={gameState.messages} />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <Gamepad2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-semibold mb-2">准备好开始了吗？</p>
-                  <p className="text-sm">
-                    输入你的 Gemini API 密钥并开始新游戏
-                  </p>
+        {/* Right Main Area - Game Log & Vote Tracker */}
+        <div className="flex-1 flex gap-4 overflow-hidden">
+          {/* Game Log */}
+          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden flex flex-col">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-border">
+              <h2 className="text-lg font-bold text-card-foreground">游戏日志</h2>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {gameState ? (
+                <MessageFlow messages={gameState.messages} />
+              ) : (
+                <div className="flex h-full items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <Gamepad2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-semibold mb-2">准备好开始了吗？</p>
+                    <p className="text-sm">
+                      输入你的 Gemini API 密钥并开始新游戏
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Vote Tracker */}
+          {gameState && (
+            <div className="w-80 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden">
+              <VoteTracker gameState={gameState} />
+            </div>
+          )}
         </div>
       </div>
     </div>
