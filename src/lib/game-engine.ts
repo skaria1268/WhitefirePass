@@ -30,6 +30,7 @@ export function createGame(config: GameConfig): GameState {
         timestamp: Date.now(),
         round: 0,
         phase: 'setup',
+        visibility: 'all',
       },
     ],
     votes: [],
@@ -198,6 +199,7 @@ export function addMessage(
   from: string,
   content: string,
   type: Message['type'] = 'speech',
+  visibility: Message['visibility'] = 'all',
 ): Message {
   return {
     id: generateId(),
@@ -207,6 +209,7 @@ export function addMessage(
     timestamp: Date.now(),
     round: state.round,
     phase: state.phase,
+    visibility,
   };
 }
 
@@ -220,6 +223,7 @@ function createMessage(from: string, content: string): Message {
     from,
     content,
     timestamp: Date.now(),
+    visibility: 'all',
   };
 }
 

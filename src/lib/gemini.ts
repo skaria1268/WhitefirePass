@@ -84,8 +84,18 @@ export async function getAIResponse(
 function buildPrompt(player: Player, gameState: GameState): string {
   const { phase, round, players, messages } = gameState;
 
-  const recentMessages = messages.slice(-10);
   const alivePlayers = players.filter((p) => p.isAlive);
+
+  // Filter messages based on visibility
+  const visibleMessages = messages.filter((m) => {
+    if (m.visibility === 'all') return true;
+    if (m.visibility === 'werewolf' && player.role === 'werewolf') return true;
+    if (m.visibility === 'seer' && player.role === 'seer') return true;
+    if (typeof m.visibility === 'object' && m.visibility.player === player.name) return true;
+    return false;
+  });
+
+  const recentMessages = visibleMessages.slice(-10);
   const messageHistory = recentMessages
     .map((m) => `${m.from}: ${m.content}`)
     .join('\n');

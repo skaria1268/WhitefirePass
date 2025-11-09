@@ -36,6 +36,15 @@ export interface Player {
 }
 
 /**
+ * Message visibility - who can see this message
+ */
+export type MessageVisibility =
+  | 'all'           // Everyone can see (day speech, voting, system)
+  | 'werewolf'      // Only werewolves can see (night discussion)
+  | 'seer'          // Only seer can see (vision results)
+  | { player: string };  // Only specific player can see
+
+/**
  * Game message
  */
 export interface Message {
@@ -46,6 +55,7 @@ export interface Message {
   timestamp: number;
   round?: number;
   phase?: GamePhase;
+  visibility: MessageVisibility;  // Who can see this message
 }
 
 /**

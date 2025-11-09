@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import type { GameState, GameConfig } from '@/types/game';
+import type { GameState, GameConfig, Message } from '@/types/game';
 import {
   createGame,
   checkWinCondition,
@@ -94,13 +94,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ isProcessing: true });
 
     try {
-      // Handle setup phase
+      // Handle setup phase - game starts with day phase
       if (gameState.phase === 'setup') {
-        gameState.phase = 'night';
+        gameState.phase = 'day';
         gameState.round = 1;
         gameState.currentPlayerIndex = 0;
         gameState.messages.push(
-          addMessage(gameState, 'system', '第 1 回合开始。夜幕降临...', 'system'),
+          addMessage(gameState, 'system', '第 1 回合开始。天亮了，请大家发言！', 'system', 'all'),
         );
         set({ gameState: { ...gameState }, isProcessing: false });
         return;
@@ -137,30 +137,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameState } = get();
     if (!gameState) return;
 
-    if (gameState.phase === 'night') {
-      // Night phase ended, process night actions
-      const { killedPlayer, message } = processNightPhase(gameState);
-      if (killedPlayer) {
-        const player = gameState.players.find((p) => p.id === killedPlayer.id);
-        if (player) {
-          player.isAlive = false;
-        }
-      }
-      gameState.messages.push(message);
-      gameState.phase = 'day';
-      gameState.currentPlayerIndex = 0;
-      gameState.messages.push(
-        addMessage(gameState, 'system', '天亮了。开始讨论时间！', 'system'),
-      );
-    } else if (gameState.phase === 'day') {
+    if (gameState.phase === 'day') {
+      // Day phase ended, go to voting
       gameState.phase = 'voting';
       gameState.currentPlayerIndex = 0;
       gameState.votes = [];
       gameState.messages.push(
-        addMessage(gameState, 'system', '投票时间！', 'system'),
+        addMessage(gameState, 'system', '讨论结束。现在开始投票！', 'system', 'all'),
       );
     } else if (gameState.phase === 'voting') {
-      // Voting phase ended, process votes
+      // Voting phase ended, process votes and go to night
       const { eliminated, message } = processVoting(gameState);
       if (eliminated) {
         const player = gameState.players.find((p) => p.id === eliminated.id);
@@ -169,11 +155,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
       gameState.messages.push(message);
-      gameState.round += 1;
       gameState.phase = 'night';
       gameState.currentPlayerIndex = 0;
       gameState.messages.push(
-        addMessage(gameState, 'system', `第 ${gameState.round} 回合开始。夜幕降临...`, 'system'),
+        addMessage(gameState, 'system', '夜幕降临... 狼人请睁眼', 'system', 'all'),
+      );
+    } else if (gameState.phase === 'night') {
+      // Night phase ended, process night actions and go to day
+      const { killedPlayer, message } = processNightPhase(gameState);
+      if (killedPlayer) {
+        const player = gameState.players.find((p) => p.id === killedPlayer.id);
+        if (player) {
+          player.isAlive = false;
+        }
+      }
+      gameState.messages.push(message);
+      gameState.round += 1;
+      gameState.phase = 'day';
+      gameState.currentPlayerIndex = 0;
+      gameState.messages.push(
+        addMessage(gameState, 'system', `第 ${gameState.round} 回合。天亮了！`, 'system', 'all'),
       );
     }
 
@@ -201,10 +202,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const currentPlayer = alivePlayers[gameState.currentPlayerIndex];
 
     try {
+      // Determine message visibility based on phase and role
+      let visibility: Message['visibility'] = 'all';
+      if (gameState.phase === 'night' && currentPlayer.role === 'werewolf') {
+        visibility = 'werewolf'; // Only werewolves can see night discussion
+      }
+
       // Get prompt for display
       const prompt = getPromptForDisplay(currentPlayer, gameState);
 
-      // Add prompt message
+      // Add prompt message with same visibility as response
       gameState.messages.push({
         id: `prompt-${Date.now()}`,
         type: 'prompt',
@@ -213,6 +220,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         timestamp: Date.now(),
         round: gameState.round,
         phase: gameState.phase,
+        visibility,
       });
 
       set({ gameState: { ...gameState } });
@@ -223,7 +231,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Add thinking/response message
       const messageType = gameState.phase === 'voting' ? 'vote' : 'speech';
       gameState.messages.push(
-        addMessage(gameState, currentPlayer.name, response, messageType),
+        addMessage(gameState, currentPlayer.name, response, messageType, visibility),
       );
 
       // Record vote if in voting phase
@@ -261,7 +269,16 @@ function getPromptForDisplay(
   const { phase, round, messages } = gameState;
   const alivePlayers = getAlivePlayers(gameState);
 
-  const recentMessages = messages
+  // Filter messages based on visibility
+  const visibleMessages = messages.filter((m) => {
+    if (m.visibility === 'all') return true;
+    if (m.visibility === 'werewolf' && player.role === 'werewolf') return true;
+    if (m.visibility === 'seer' && player.role === 'seer') return true;
+    if (typeof m.visibility === 'object' && m.visibility.player === player.name) return true;
+    return false;
+  });
+
+  const recentMessages = visibleMessages
     .filter((m) => m.type === 'speech' || m.type === 'vote' || m.type === 'system')
     .slice(-10);
 
