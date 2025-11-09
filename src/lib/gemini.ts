@@ -137,6 +137,18 @@ function buildPrompt(player: Player, gameState: GameState): string {
     ? players.filter((p) => p.role === 'werewolf' && p.name !== player.name)
     : [];
 
+  // Get seer check info
+  const seerCheckInfo = player.role === 'seer' && phase === 'day'
+    ? `
+【你的查验记录】
+${gameState.seerChecks.length > 0
+  ? gameState.seerChecks.map((check) => `第${check.round}回合查验：${check.target} 是 ${roleNames[check.role]}`).join('\n')
+  : round === 1
+    ? '⚠️ 重要：游戏没有第0晚！你现在还没有进行过任何查验，因此没有任何查验信息。你的第一次查验将在今晚（第1回合夜晚）进行。'
+    : '你还没有查验任何人'
+}`
+    : '';
+
   const basePrompt = `你是 ${player.name}，正在玩狼人杀游戏。
 
 【你的性格设定】
@@ -148,6 +160,7 @@ ${player.personality || '你是一个普通玩家，按照自己的判断行事�
 回合数：${round}
 存活玩家：${alivePlayers.map((p) => p.name).join('、')}
 ${werewolfTeammates.length > 0 ? `你的狼人队友：${werewolfTeammates.map((p) => p.name).join('、')}` : ''}
+${seerCheckInfo}
 
 ${getRoleInstructions(player.role, phase, nightPhase)}
 
@@ -291,7 +304,14 @@ function getRoleInstructions(role: string, phase: string, nightPhase?: string): 
 - 不要解释原因，不要说其他内容
 - 查验结果只有你能看到`;
       }
-      return '你是预言家。每晚可以查验一名玩家的身份。谨慎使用你的知识，避免过早暴露身份。';
+      return `【预言家身份】
+你是预言家，每晚可以查验一名玩家的真实身份。
+⚠️ 关于查验信息的使用：
+- 查验结果会显示在上方的【你的查验记录】中
+- 如果记录为空，说明你还没有查验信息
+- 你可以选择公开查验结果来获取信任，但这会让你成为狼人的目标
+- 你也可以选择隐藏身份，多活几轮收集更多信息
+- 谨慎使用你的知识，根据局势选择最优策略`;
     case 'villager':
       return '你是村民。通过讨论和投票找出狼人。仔细观察每个人的发言和行为。';
     case 'witch':
