@@ -33,6 +33,7 @@ export interface Player {
   role: Role;
   isAlive: boolean;
   isAI: boolean;
+  personality?: string;  // Optional personality prompt for AI players
 }
 
 /**
@@ -83,7 +84,8 @@ export interface GameState {
   round: number;
   players: Player[];
   messages: Message[];
-  votes: Vote[];
+  votes: Vote[];  // Day voting
+  nightVotes: Vote[];  // Night werewolf voting for kill
   nightActions: NightAction[];
   winner?: 'werewolf' | 'villager';
   createdAt: number;

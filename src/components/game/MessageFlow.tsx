@@ -9,22 +9,23 @@ import type { Message } from '@/types/game';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Brain } from 'lucide-react';
 
 interface MessageFlowProps {
   messages: Message[];
 }
 
 /**
- * Message type styling
+ * Message type styling - Stone theme with semantic colors and accent borders
  */
 const messageStyles: Record<string, string> = {
-  system: 'bg-gray-100 border-l-4 border-gray-500',
-  speech: 'bg-blue-50 border-l-4 border-blue-500',
-  vote: 'bg-orange-50 border-l-4 border-orange-500',
-  death: 'bg-red-50 border-l-4 border-red-500',
-  action: 'bg-purple-50 border-l-4 border-purple-500',
-  prompt: 'bg-yellow-50 border-l-4 border-yellow-500',
-  thinking: 'bg-green-50 border-l-4 border-green-500',
+  system: 'bg-muted/50 border-l-4 border-yellow-500',
+  speech: 'bg-card border-l-4 border-blue-500',
+  vote: 'bg-card border-l-4 border-orange-500',
+  death: 'bg-card border-l-4 border-red-500',
+  action: 'bg-card border-l-4 border-purple-500',
+  prompt: 'bg-secondary border-l-4 border-cyan-500',
+  thinking: 'bg-accent/30 border-l-4 border-emerald-500 italic',
 };
 
 /**
@@ -72,8 +73,8 @@ export function MessageFlow({ messages }: MessageFlowProps) {
   }, [messages]);
 
   return (
-    <ScrollArea className="h-full w-full rounded-lg border bg-white">
-      <div ref={scrollRef} className="space-y-2 p-4">
+    <ScrollArea className="h-full w-full rounded-lg border bg-background">
+      <div ref={scrollRef} className="space-y-3 p-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <p>暂无消息。开始游戏后将显示游戏进程！</p>
@@ -83,17 +84,20 @@ export function MessageFlow({ messages }: MessageFlowProps) {
             <div
               key={message.id}
               className={cn(
-                'rounded-lg p-3 transition-all',
-                messageStyles[message.type] || 'bg-gray-50',
+                'rounded-lg p-3 transition-all hover:scale-[1.01] shadow-md',
+                messageStyles[message.type] || 'bg-card',
               )}
             >
-              <div className="mb-1 flex items-center justify-between gap-2">
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">
+                  <span className="font-bold text-sm text-foreground">
                     {message.from}
                   </span>
                   {message.type !== 'system' && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="text-xs"
+                    >
                       {messageTypeNames[message.type] || message.type}
                     </Badge>
                   )}
@@ -102,17 +106,25 @@ export function MessageFlow({ messages }: MessageFlowProps) {
                   {formatTime(message.timestamp)}
                 </span>
               </div>
-              <div className="text-sm leading-relaxed">
+              <div className={cn(
+                "text-sm leading-relaxed",
+                message.type === 'thinking' ? 'text-emerald-400' : 'text-foreground'
+              )}>
                 {message.type === 'prompt' ? (
-                  <pre className="whitespace-pre-wrap font-mono text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto">
+                  <pre className="whitespace-pre-wrap font-mono text-xs bg-secondary/50 text-cyan-400 p-3 rounded overflow-x-auto border border-cyan-500/30">
                     {message.content}
                   </pre>
+                ) : message.type === 'thinking' ? (
+                  <div className="pl-3 border-l-2 border-emerald-500/50 flex items-start gap-2">
+                    <Brain className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>{message.content}</span>
+                  </div>
                 ) : (
                   message.content
                 )}
               </div>
               {message.phase && message.round && (
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
                   第 {message.round} 回合 • {phaseNames[message.phase] || message.phase}
                 </div>
               )}

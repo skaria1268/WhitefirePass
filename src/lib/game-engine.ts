@@ -34,6 +34,7 @@ export function createGame(config: GameConfig): GameState {
       },
     ],
     votes: [],
+    nightVotes: [],
     nightActions: [],
     createdAt: Date.now(),
     lastUpdated: Date.now(),
@@ -57,6 +58,17 @@ function createPlayers(roles: Role[]): Player[] {
     'Henry',
   ];
 
+  const personalities = [
+    '你是一个逻辑清晰、善于分析的侦探型玩家，喜欢通过推理找出矛盾点。',
+    '你是一个直觉敏锐、情绪化的玩家，经常凭第一感觉做判断。',
+    '你是一个谨慎小心、不轻易表态的观察者，喜欢在关键时刻发言。',
+    '你是一个热情主动、喜欢带节奏的领导型玩家，经常提出投票建议。',
+    '你是一个幽默风趣、喜欢活跃气氛的玩家，但也会认真分析局势。',
+    '你是一个冷静理性、数据导向的玩家，喜欢用概率和数据说话。',
+    '你是一个新手玩家，比较容易被说服，但也会学习模仿高手的打法。',
+    '你是一个老练的玩家，喜欢反向思维，经常提出不同寻常的观点。',
+  ];
+
   const shuffledRoles = shuffle([...roles]);
 
   return shuffledRoles.map((role, index) => ({
@@ -65,6 +77,7 @@ function createPlayers(roles: Role[]): Player[] {
     role,
     isAlive: true,
     isAI: true,
+    personality: personalities[index],
   }));
 }
 
@@ -108,30 +121,50 @@ export function checkWinCondition(
 }
 
 /**
- * Process night phase
+ * Process night phase - werewolf kill based on votes
  */
 export function processNightPhase(state: GameState): {
   killedPlayer: Player | null;
   message: Message;
 } {
-  const targets = state.players.filter(
-    (p) => p.isAlive && p.role !== 'werewolf',
-  );
-
-  if (targets.length === 0) {
+  if (state.nightVotes.length === 0) {
     return {
       killedPlayer: null,
-      message: createMessage('system', '没有可攻击的目标'),
+      message: createMessage('system', '昨夜平安无事'),
     };
   }
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  // Count votes
+  const voteCounts = new Map<string, number>();
+  state.nightVotes.forEach((vote) => {
+    voteCounts.set(vote.target, (voteCounts.get(vote.target) ?? 0) + 1);
+  });
+
+  // Find player with most votes
+  let maxVotes = 0;
+  let killedName: string | null = null;
+
+  voteCounts.forEach((count, target) => {
+    if (count > maxVotes) {
+      maxVotes = count;
+      killedName = target;
+    }
+  });
+
+  const player = state.players.find((p) => p.name === killedName);
+
+  if (!player || !player.isAlive) {
+    return {
+      killedPlayer: null,
+      message: createMessage('system', '昨夜平安无事'),
+    };
+  }
 
   return {
-    killedPlayer: target,
+    killedPlayer: player,
     message: createMessage(
       'system',
-      `夜幕降临... 狼人选择了 ${target.name}`,
+      `昨夜 ${player.name} 被狼人杀害了`,
     ),
   };
 }
@@ -174,19 +207,11 @@ export function processVoting(state: GameState): {
     };
   }
 
-  const roleNames: Record<string, string> = {
-    werewolf: '狼人',
-    villager: '村民',
-    seer: '预言家',
-    witch: '女巫',
-    hunter: '猎人',
-  };
-
   return {
     eliminated: player,
     message: createMessage(
       'system',
-      `${player.name} 被投票淘汰了。Ta 的身份是${roleNames[player.role]}。`,
+      `${player.name} 被投票淘汰了。`,
     ),
   };
 }

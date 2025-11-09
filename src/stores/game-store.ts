@@ -3,7 +3,8 @@
  */
 
 import { create } from 'zustand';
-import type { GameState, GameConfig, Message } from '@/types/game';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type { GameState, GameConfig, Message, Player } from '@/types/game';
 import {
   createGame,
   checkWinCondition,
@@ -31,6 +32,7 @@ interface GameStore {
   executeNextStep: () => Promise<void>;
   retryCurrentStep: () => Promise<void>;
   clearError: () => void;
+  updatePlayerPersonality: (playerId: string, personality: string) => void;
 
   // Internal actions
   advanceToNextPhase: () => void;
@@ -38,9 +40,11 @@ interface GameStore {
 }
 
 /**
- * Create game store
+ * Create game store with persistence
  */
-export const useGameStore = create<GameStore>((set, get) => ({
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
   gameState: null,
   isProcessing: false,
   apiKey: '',
@@ -73,6 +77,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
    */
   clearError: () => {
     set({ lastError: null });
+  },
+
+  /**
+   * Update player personality
+   */
+  updatePlayerPersonality: (playerId: string, personality: string) => {
+    const { gameState } = get();
+    if (!gameState) return;
+
+    const player = gameState.players.find((p) => p.id === playerId);
+    if (player) {
+      player.personality = personality;
+      set({ gameState: { ...gameState } });
+    }
   },
 
   /**
@@ -157,6 +175,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameState.messages.push(message);
       gameState.phase = 'night';
       gameState.currentPlayerIndex = 0;
+      gameState.nightVotes = [];  // Clear night votes for new night
       gameState.messages.push(
         addMessage(gameState, 'system', '夜幕降临... 狼人请睁眼', 'system', 'all'),
       );
@@ -228,20 +247,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Get AI response
       const response = await getAIResponse(currentPlayer, gameState, { apiKey });
 
-      // Add thinking/response message
+      // Parse thinking and speech
+      const { thinking, speech } = parseAIResponse(response);
+
+      // Add thinking message (only visible to the player itself and user)
+      if (thinking) {
+        gameState.messages.push(
+          addMessage(
+            gameState,
+            currentPlayer.name,
+            thinking,
+            'thinking',
+            { player: currentPlayer.name },
+          ),
+        );
+      }
+
+      // Add speech/vote message
       const messageType = gameState.phase === 'voting' ? 'vote' : 'speech';
       gameState.messages.push(
-        addMessage(gameState, currentPlayer.name, response, messageType, visibility),
+        addMessage(gameState, currentPlayer.name, speech, messageType, visibility),
       );
 
-      // Record vote if in voting phase
-      if (gameState.phase === 'voting') {
-        const votedName = response.trim();
-        const targetPlayer = getPlayerByName(gameState, votedName);
-        if (targetPlayer?.isAlive) {
-          gameState.votes.push({ from: currentPlayer.name, target: votedName });
-        }
-      }
+      // Record vote using helper function (use speech part for voting)
+      recordVote(gameState, currentPlayer, speech);
 
       // Move to next player only on success
       gameState.currentPlayerIndex += 1;
@@ -257,7 +286,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
     }
   },
-}));
+}),
+    {
+      name: 'werewolf-game-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        gameState: state.gameState,
+        apiKey: state.apiKey,
+      }),
+    },
+  ),
+);
 
 /**
  * Get prompt text for display
@@ -275,12 +314,14 @@ function getPromptForDisplay(
     if (m.visibility === 'werewolf' && player.role === 'werewolf') return true;
     if (m.visibility === 'seer' && player.role === 'seer') return true;
     if (typeof m.visibility === 'object' && m.visibility.player === player.name) return true;
+    // AI can see its own thinking
+    if (m.type === 'thinking' && m.from === player.name) return true;
     return false;
   });
 
   const recentMessages = visibleMessages
-    .filter((m) => m.type === 'speech' || m.type === 'vote' || m.type === 'system')
-    .slice(-10);
+    .filter((m) => m.type === 'speech' || m.type === 'vote' || m.type === 'system' || m.type === 'thinking')
+    .slice(-50);
 
   const roleNames: Record<string, string> = {
     werewolf: '狼人',
@@ -312,7 +353,50 @@ ${roleInstructions}
 最近的对话：
 ${recentMessages.map((m) => `${m.from}: ${m.content}`).join('\n')}
 
-${phase === 'day' ? '请发表你的看法（1-2句话）' : phase === 'voting' ? '请投票选择一个玩家（只回复名字）' : ''}`;
+${phase === 'day' ? '请发表你的看法（1-2句话）' : phase === 'voting' ? '请投票选择一个玩家（只回复名字）' : phase === 'night' && player.role === 'werewolf' ? '请选择今晚要杀的玩家（只回复名字）' : ''}`;
+}
+
+/**
+ * Parse AI response into thinking and speech parts
+ */
+function parseAIResponse(response: string): {
+  thinking: string;
+  speech: string;
+} {
+  const thinkingMatch = response.match(/【思考】\s*([\s\S]*?)(?=【发言】|$)/);
+  const speechMatch = response.match(/【发言】\s*([\s\S]*?)$/);
+
+  const thinking = thinkingMatch?.[1]?.trim() || '';
+  const speech = speechMatch?.[1]?.trim() || response.trim();
+
+  return { thinking, speech };
+}
+
+/**
+ * Record vote based on player response
+ */
+function recordVote(
+  gameState: GameState,
+  currentPlayer: Player,
+  response: string,
+): void {
+  const votedName = response.trim();
+  const targetPlayer = getPlayerByName(gameState, votedName);
+
+  // Record day vote
+  if (gameState.phase === 'voting') {
+    if (targetPlayer?.isAlive) {
+      gameState.votes.push({ from: currentPlayer.name, target: votedName });
+    }
+    return;
+  }
+
+  // Record night vote (werewolf only)
+  if (gameState.phase === 'night' && currentPlayer.role === 'werewolf') {
+    if (targetPlayer?.isAlive && targetPlayer.role !== 'werewolf') {
+      gameState.nightVotes.push({ from: currentPlayer.name, target: votedName });
+    }
+  }
 }
 
 /**
@@ -322,10 +406,12 @@ function getRoleInstructionsForDisplay(role: string, phase: string): string {
   if (role === 'werewolf') {
     if (phase === 'night') {
       return `【狼人身份 - 夜晚阶段】
-你是狼人。现在是夜晚，只有狼人在讨论。
-- 你可以和其他狼人商量要杀谁
-- 讨论策略和白天如何伪装
-- 这些讨论其他玩家听不到`;
+你是狼人。现在是夜晚，只有狼人能看到这些对话。
+⚠️ 重要：你需要投票选择今晚要杀的人
+- 分析白天的讨论，选择威胁最大的玩家
+- 优先杀掉发言好、逻辑清晰的玩家
+- 只回复要杀的玩家名字（如：Alice）
+- 不要解释原因，不要说其他内容`;
     }
     return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
 你是狼人，但必须伪装成村民。

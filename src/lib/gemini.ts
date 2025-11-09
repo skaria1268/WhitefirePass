@@ -92,10 +92,12 @@ function buildPrompt(player: Player, gameState: GameState): string {
     if (m.visibility === 'werewolf' && player.role === 'werewolf') return true;
     if (m.visibility === 'seer' && player.role === 'seer') return true;
     if (typeof m.visibility === 'object' && m.visibility.player === player.name) return true;
+    // AI can see its own thinking
+    if (m.type === 'thinking' && m.from === player.name) return true;
     return false;
   });
 
-  const recentMessages = visibleMessages.slice(-10);
+  const recentMessages = visibleMessages.slice(-50);
   const messageHistory = recentMessages
     .map((m) => `${m.from}: ${m.content}`)
     .join('\n');
@@ -117,6 +119,11 @@ function buildPrompt(player: Player, gameState: GameState): string {
   };
 
   const basePrompt = `你是 ${player.name}，正在玩狼人杀游戏。
+
+【你的性格设定】
+${player.personality || '你是一个普通玩家，按照自己的判断行事。'}
+
+【游戏信息】
 你的身份：${roleNames[player.role]}
 当前阶段：${phaseNames[phase]}
 回合数：${round}
@@ -131,18 +138,41 @@ ${messageHistory}
 
   if (phase === 'day') {
     return `${basePrompt}
-现在是讨论时间。分享你的想法、怀疑对象，或为自己辩护。
-保持简短（1-2句话）。根据你的身份制定策略。
+现在是讨论时间。请按照以下格式回复：
 
-你的发言：`;
+【思考】
+（在这里写出你的分析和推理过程，2-3句话）
+
+【发言】
+（在这里写出你要对大家说的话，1-2句话）
+
+注意：思考部分只有你自己能看到，发言部分所有人都能看到。`;
   }
 
   if (phase === 'voting') {
     return `${basePrompt}
-投票时间到了。选择一个玩家淘汰。
-只回复玩家名字，不要有其他内容。
+投票时间到了。请按照以下格式回复：
 
-你的投票：`;
+【思考】
+（在这里写出你的投票理由和分析，2-3句话）
+
+【发言】
+（只写要投票的玩家名字，不要有其他内容）
+
+注意：思考部分只有你自己能看到，发言部分（投票结果）所有人都能看到。`;
+  }
+
+  if (phase === 'night' && player.role === 'werewolf') {
+    return `${basePrompt}
+现在是夜晚，选择今晚要杀的玩家。请按照以下格式回复：
+
+【思考】
+（在这里写出你的击杀策略和分析，2-3句话）
+
+【发言】
+（只写要击杀的玩家名字，不要有其他内容）
+
+注意：思考和发言都只有狼人能看到。`;
   }
 
   return basePrompt;
@@ -156,10 +186,12 @@ function getRoleInstructions(role: string, phase: string): string {
     case 'werewolf':
       if (phase === 'night') {
         return `【狼人身份 - 夜晚阶段】
-你是狼人。现在是夜晚，只有狼人在讨论。
-- 你可以和其他狼人商量要杀谁
-- 讨论策略和白天如何伪装
-- 这些讨论其他玩家听不到`;
+你是狼人。现在是夜晚，只有狼人能看到这些对话。
+⚠️ 重要：你需要投票选择今晚要杀的人
+- 分析白天的讨论，选择威胁最大的玩家
+- 优先杀掉发言好、逻辑清晰的玩家
+- 只回复要杀的玩家名字（如：Alice）
+- 不要解释原因，不要说其他内容`;
       }
       return `【狼人身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
 你是狼人，但必须伪装成村民。

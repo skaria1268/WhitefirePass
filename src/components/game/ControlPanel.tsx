@@ -12,6 +12,14 @@ import { Badge } from '@/components/ui/badge';
 import { useGameStore } from '@/stores/game-store';
 import { testGeminiKey } from '@/lib/gemini';
 import type { GameConfig, GameState } from '@/types/game';
+import {
+  Gamepad2,
+  Loader2,
+  Pause,
+  Dog,
+  Users,
+  Eye,
+} from 'lucide-react';
 
 const DEFAULT_CONFIG: GameConfig = {
   playerCount: 6,
@@ -109,7 +117,17 @@ function ControlButtons({
         className="w-full"
         disabled={isValidating}
       >
-        {isValidating ? '⏳ 验证 API 密钥...' : '🎮 开始新游戏'}
+        {isValidating ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            验证 API 密钥...
+          </>
+        ) : (
+          <>
+            <Gamepad2 className="w-4 h-4 mr-2" />
+            开始新游戏
+          </>
+        )}
       </Button>
     );
   }
@@ -158,7 +176,19 @@ function GameStatus({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">状态：</span>
-        <Badge>{isRunning ? '🎮 运行中' : '⏸️ 已暂停'}</Badge>
+        <Badge className="flex items-center gap-1">
+          {isRunning ? (
+            <>
+              <Gamepad2 className="w-3 h-3" />
+              运行中
+            </>
+          ) : (
+            <>
+              <Pause className="w-3 h-3" />
+              已暂停
+            </>
+          )}
+        </Badge>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">阶段：</span>
@@ -171,8 +201,18 @@ function GameStatus({
       {winner && (
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">胜利者：</span>
-          <Badge className="bg-green-600">
-            {winner === 'werewolf' ? '🐺 狼人阵营' : '👥 村民阵营'}
+          <Badge className="bg-green-600 flex items-center gap-1">
+            {winner === 'werewolf' ? (
+              <>
+                <Dog className="w-3 h-3" />
+                狼人阵营
+              </>
+            ) : (
+              <>
+                <Users className="w-3 h-3" />
+                村民阵营
+              </>
+            )}
           </Badge>
         </div>
       )}
@@ -280,9 +320,15 @@ export function ControlPanel() {
             <p className="text-sm font-medium">默认配置：</p>
             <ul className="text-xs space-y-1 text-muted-foreground">
               <li>• 6 名玩家（全部为 AI）</li>
-              <li>• 2 名狼人 🐺</li>
-              <li>• 3 名村民 👤</li>
-              <li>• 1 名预言家 🔮</li>
+              <li className="flex items-center gap-1">
+                • 2 名狼人 <Dog className="w-3 h-3" />
+              </li>
+              <li className="flex items-center gap-1">
+                • 3 名村民 <Users className="w-3 h-3" />
+              </li>
+              <li className="flex items-center gap-1">
+                • 1 名预言家 <Eye className="w-3 h-3" />
+              </li>
             </ul>
           </div>
         )}
