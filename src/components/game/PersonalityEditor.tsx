@@ -210,31 +210,15 @@ function TravelerDetail({ player }: { player: Player }) {
       {/* Personality */}
       <div className="border border-amber-900/30 rounded-lg p-5 bg-slate-950/50">
         <h4 className="text-sm font-semibold text-amber-400 mb-3 font-cinzel tracking-wider">
-          旅者人设
+          旅者自述
         </h4>
-        <p className="text-sm text-slate-300 leading-relaxed font-serif">
-          {player.personality || '暂无人设描述'}
-        </p>
-      </div>
-
-      {/* Role abilities */}
-      <div className="border border-amber-900/30 rounded-lg p-5 bg-slate-950/50">
-        <h4 className="text-sm font-semibold text-amber-400 mb-3 font-cinzel tracking-wider">
-          角色能力
-        </h4>
-        <p className="text-sm text-slate-400 italic">
-          详细能力说明将在此显示...
-        </p>
-      </div>
-
-      {/* Game records */}
-      <div className="border border-amber-900/30 rounded-lg p-5 bg-slate-950/50">
-        <h4 className="text-sm font-semibold text-amber-400 mb-3 font-cinzel tracking-wider">
-          游戏记录
-        </h4>
-        <p className="text-sm text-slate-400 italic">
-          该旅者的行动记录将在此显示...
-        </p>
+        <div className="text-sm text-slate-300 leading-relaxed font-serif space-y-3">
+          {player.personality ? (
+            <p className="whitespace-pre-line">{player.personality}</p>
+          ) : (
+            <p className="text-slate-400 italic">暂无人设描述</p>
+          )}
+        </div>
       </div>
     </div>
   );
