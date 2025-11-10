@@ -74,8 +74,8 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
                 : 'opacity-100'
             }`}
           >
-            <div className="h-full overflow-y-auto py-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 px-4">
+            <div className="h-full overflow-y-auto overflow-x-hidden py-6 px-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4">
                 {gameState.players.map((player) => (
                   <div
                     key={player.id}
@@ -85,6 +85,7 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
                     <TarotCard
                       player={player}
                       isFlipped={false}
+                      size="small"
                       className="hover:scale-105 transition-transform duration-300"
                     />
                   </div>

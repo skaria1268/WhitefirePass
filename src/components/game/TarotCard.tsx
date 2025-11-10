@@ -346,7 +346,7 @@ function RoleSymbol({ role }: { role: string }) {
   );
 }
 
-export function TarotCard({ player, className, isFlipped = false }: TarotCardProps) {
+export function TarotCard({ player, className, isFlipped = false, size = 'default' }: TarotCardProps & { size?: 'small' | 'default' | 'large' }) {
   const roleNames: Record<string, { name: string; subtitle: string }> = {
     marked: { name: '烙印者', subtitle: 'The Marked' },
     heretic: { name: '背誓者', subtitle: 'The Heretic' },
@@ -357,10 +357,17 @@ export function TarotCard({ player, className, isFlipped = false }: TarotCardPro
     innocent: { name: '无知者', subtitle: 'The Innocent' },
   };
 
+  const sizeClasses = {
+    small: 'w-40 h-60',
+    default: 'w-64 h-96',
+    large: 'w-72 h-[432px]',
+  };
+
   return (
     <div
       className={cn(
-        'relative w-64 h-96 cursor-pointer transition-transform duration-500 preserve-3d',
+        'relative cursor-pointer transition-transform duration-500 preserve-3d',
+        sizeClasses[size],
         className
       )}
       style={{
