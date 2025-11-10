@@ -17,165 +17,178 @@ interface StoryIntroProps {
 }
 
 /**
- * Diary entries - A lost traveler's testament from the previous ritual
+ * Diary entries - Testament from one of the original 15 travelers
+ * The first lamb to be sacrificed in their ritual
  * Format: {keyword:type}text{/keyword}
  */
 const DIARY_ENTRIES = [
   {
+    date: '10月24日',
+    text: `我们一行{warning:fifteen}十五人{/fifteen}，是从城里来{place:white}白烬山口{/place}登山的旅行团。
+
+导游说这条路线很经典，秋天的景色最美。大家都很兴奋。
+
+天气预报说有{curse:storm}暴风雪{/storm}，但导游说问题不大。我们准备充分，有足够的补给。
+
+下午四点，我们抵达半山腰的{place:lodge}避难山庄{/lodge}。这是一座很古老的木屋，据说以前是{cult:hunter}猎人的驻地{/cult}。
+
+导游说我们会在这里过夜，明天继续上山。
+
+现在是晚上八点。风雪突然{warning:warning}大得可怕{/warning}。
+
+导游的脸色{fear:strange}很难看{/strange}。他一直在看手机，但{warning:signal}已经没有信号了{/signal}。`,
+  },
+  {
+    date: '10月25日',
+    text: `暴风雪还没停。
+
+更糟的是，{warning:door}门打不开了{/door}。
+
+我们所有人都试过。窗户也是。就像有{warning:seal}什么东西把我们封在里面{/seal}。
+
+导游说这很不正常。他说自己来过这里{warning:times}很多次{/times}，从来没遇到过这种情况。
+
+大厅里有个{cold:fire}壁炉{/fire}，火焰是{cold:white}白色的{/white}。我问导游这是什么，他说不知道，{warning:strange}这火昨晚就在这里燃烧{/strange}，也不知道是谁点的。
+
+{cold:cold}火焰散发的是寒意，不是温暖{/cold}。
+
+墙上有一幅画。十五个人围成一圈，中间是{sacrifice:blood}一滩血{/blood}。画很旧，很模糊，但让人{fear:fear}不安{/fear}。
+
+晚上，我听到{fear:whisper}低语{/whisper}。
+
+不是风声，也不是人声。
+
+是从{cold:fire}白色的火焰{/fire}里传来的。`,
+  },
+  {
+    date: '10月26日',
+    text: `今天早上，{warning:change}有些人变了{/change}。
+
+我说不清是哪里不对，但我能{fear:feel}感觉到{/feel}。
+
+他们的眼神，说话的方式，看彼此的表情...都{fear:strange}不太一样了{/strange}。
+
+导游把大家召集起来。他的声音在{fear:tremble}颤抖{/tremble}。
+
+"昨晚，"他说，"昨晚我听到了声音。"
+
+"{contract:contract}山灵的契约。{/contract}"
+
+他说这座山庄是{warning:cursed}被诅咒的{/cursed}。据说很久以前，这里的{cult:hunter}猎人违背了山灵的禁忌{/cult}，屠杀了山中的生灵。
+
+{warning:punishment}山灵降下了惩罚。{/punishment}
+
+任何{warning:fifteen}十五人一同进入这座山庄{/fifteen}的群体，都会触发{contract:contract}契约{/contract}。
+
+{contract:pact}必须献祭过半数，幸存者才能离开。{/pact}
+
+{evil:marked}其中三人会被山灵标记{/marked}，成为{evil:hunter}收割者{/hunter}。
+
+{lamb:innocent}剩下的人是羔羊{/innocent}，必须找出收割者，否则会被一个个{evil:kill}杀死{/kill}。
+
+我以为他疯了。
+
+但{cold:fire}白色的火焰{/fire}还在燃烧。
+
+{warning:door}门还是打不开{/door}。
+
+而且...{fear:eyes}有些人的眼神确实变了{/eyes}。`,
+  },
+  {
     date: '10月27日',
-    text: `我迷路了。
+    text: `{warning:warning}仪式开始了。{/warning}
 
-手机没有信号，GPS也失灵。暴风雪来得太突然，我只能沿着{place:white}白烬山口{/place}的山路向下走。
+昨晚有人死了。
 
-天快黑了。气温骤降。我知道如果找不到避难所，今晚我会{fear:freeze}冻死在山里{/freeze}。
+是团里的{sacrifice:first}一个年轻人{/first}。我们早上发现他的时候，他躺在走廊里，{dead:dead}已经没有呼吸{/dead}。
 
-就在我快要{fear:despair}绝望{/despair}的时候，我看到了{cold:fire}白光{/fire}。
+身上{sacrifice:wound}没有伤口{/wound}，但表情{fear:terror}极度恐惧{/terror}。
 
-一座{place:lodge}山庄{/place}，孤零零地立在山坳里。透过窗户，我能看到里面有光，有{cold:white}白色的火焰{/white}在燃烧。
+就像被{cold:freeze}冻死的{/freeze}。
 
-我敲门。门开了。
+{evil:marked}被标记的三个人{/marked}在夜里做了这件事。
 
-一个面容憔悴的男人站在门口，身后还有十几个人，他们都{fear:stare}看着我{/stare}，眼神...很奇怪。
+但我们不知道是谁。
 
-"快进来，"男人说，"外面太危险了。"
+白天，我们要{lamb:vote}投票决定献祭谁{/vote}。
 
-他的声音在{fear:tremble}颤抖{/tremble}。`,
+这是{contract:rule}契约的规则{/rule}：白天投票，晚上猎杀。直到一方全灭，或者{sacrifice:half}献祭过半{/half}。
+
+团里有些人有{lamb:special}特殊能力{/special}。{lamb:seer}聆心者说他昨晚看到了某人是"污秽"{/seer}。{lamb:twin}两个共誓者认出了彼此{/twin}。
+
+但{evil:lie}谁说的是真话？谁又在说谎？{/lie}
+
+{fear:chaos}所有人都在互相指责，互相怀疑{/chaos}。
+
+最后，投票的结果是{sacrifice:vote}一个一直沉默的女孩{/vote}。
+
+{warning:warning}而那个女孩，是我的朋友。{/warning}
+
+{fear:guilt}我也投了她。{/guilt}
+
+因为{fear:survive}我想活下来{/survive}。`,
   },
   {
     date: '10月28日',
-    text: `这座山庄里有{warning:fifteen}十五个人{/fifteen}。
+    text: `又过了一天。
 
-他们说自己是一周前被{curse:storm}暴风雪{/curse}困在这里的旅行团。向导早就跑了，只剩下他们。
+又死了两个人。昨晚死了一个，今天白天被献祭了一个。
 
-但我总觉得不对劲。
+{sacrifice:count}我们还剩十一个人{/count}。
 
-他们看我的眼神太{fear:strange}诡异{/strange}了。有些人看我时眼里闪烁着{evil:hunger}某种饥渴{/hunger}，有些人则满是{fear:fear}恐惧{/fear}，还有人一直在{fear:avoid}躲避我的视线{/avoid}。
+{fear:collapse}团队已经崩溃了{/collapse}。没有人相信任何人。{lamb:seer}声称能看穿真相的人{/seer}可能在{evil:lie}说谎{/lie}。{lamb:twin}说自己是共誓者的人{/twin}可能在{evil:fake}伪装{/fake}。
 
-大厅里的{cold:fire}白色火焰{/fire}从来不灭。我试着靠近，想要取暖，却发现{cold:cold}它散发的不是热量，而是寒意{/cold}。
+{evil:marked}被烙印的三个人{/marked}隐藏得很好。他们{evil:blend}混在人群中{/blend}，{evil:lie}说谎、引导、制造混乱{/lie}。
 
-墙上挂着一幅{warning:painting}古老的画{/painting}。画面破损严重，但我能辨认出：十五个人围成一圈，中间是{sacrifice:blood}一滩血迹{/blood}。
+而我们这些{lamb:innocent}羔羊{/innocent}，只能{fear:guess}靠猜测和恐惧{/guess}来做出判断。
 
-我问那是什么画。
+{warning:warning}我怀疑我会是下一个。{/warning}
 
-"不知道，"有人回答，"这房子本来就有的。"
+因为我{fear:vocal}一直在质疑，在提出不同意见{/vocal}。
 
-但他在{evil:lie}说谎{/lie}。我看得出来。`,
+{evil:marked}收割者不会放过这样的人{/marked}。
+
+{fear:target}我成了他们的目标。{/target}
+
+今晚，如果{lamb:guard}设闩者{/guard}不保护我...
+
+我可能{dead:die}活不过明天{/die}。`,
   },
   {
-    date: '10月29日',
-    text: `今天我试图离开。
-
-门打不开了。窗户也是。就像被{warning:seal}某种力量封印{/seal}了一样。
-
-我开始{fear:panic}恐慌{/panic}，质问他们发生了什么。
-
-"山灵的契约，"一个女人终于说话了，声音{fear:hollow}空洞得可怕{/hollow}。
-
-"{contract:pact}十五个人，困于此地。必须献祭过半，方能离开。{/pact}"
-
-我以为她疯了。但其他人的表情告诉我，她说的是{evil:truth}真话{/truth}。
-
-"我们已经{fear:trapped}困在这里十二天了{/trapped}，"另一个男人说，"我们以为...以为再也出不去了。"
-
-"直到你来。"
-
-我突然明白了那些眼神的含义。
-
-{evil:hunger}饥饿{/hunger}——因为我是他们的{sacrifice:hope}希望{/hope}。
-
-{fear:terror}恐惧{/terror}——因为他们知道接下来会发生什么。
-
-{contract:contract}我的到来，重启了这场仪式。{/contract}`,
-  },
-  {
-    date: '10月30日',
-    text: `昨晚我听到了{fear:whisper}低语{/whisper}。
-
-不是从任何人口中传来的，而是从{cold:fire}白色火焰{/fire}里。
-
-"{contract:contract}第十六人...平衡已成...献祭之夜...即将开始...{/contract}"
-
-我试图和他们谈判，求他们放我走。但没有用。
-
-"我们也不想这样，"有个女孩哭着说，"但{warning:warning}契约一旦启动，就无法停止{/warning}。"
-
-她告诉我规则：
-
-每天晚上，{evil:marked}被山灵标记的人{/marked}会{evil:hunt}集体投票杀死一个人{/hunt}。
-
-每天白天，所有人会{lamb:vote}投票献祭一个人{/vote}。
-
-{contract:rule}当献祭的人数超过半数，幸存者可以离开。{/rule}
-
-"你是第十六个人，"她说，"{sacrifice:first}按照惯例，第一个被献祭的...总是打破平衡的那个人。{/first}"
-
-我问她什么是"惯例"。她没有回答。
-
-但我在她眼中看到了{fear:guilt}愧疚{/guilt}。
-
-她经历过这个。她知道{evil:truth}这一切都会重复{/truth}。`,
-  },
-  {
-    date: '10月31日 凌晨',
-    text: `今晚就是{sacrifice:night}献祭之夜{/night}。
-
-他们在{fear:prepare}准备{/prepare}了。我能感觉到。
-
-有三个人眼睛里闪烁着{evil:mark}异样的光{/mark}——那是{evil:marked}被烙印者{/marked}。他们会在夜里{evil:kill}杀死一个人{/kill}。
-
-而白天，剩下的人会{lamb:vote}投票决定由谁去死{/vote}。
-
-我想我会是第一个。
-
-{warning:warning}不，我一定是第一个。{/warning}
-
-因为我是{sacrifice:balance}打破平衡的第十六人{/balance}。因为{contract:contract}契约需要一个开端{/contract}。因为{evil:truth}这就是规则{/truth}。
-
-我在墙上看到了{warning:mark}划痕{/mark}——之前的受害者留下的。
-
-一道道。一层层。
-
-{fear:many}不知道有多少人，死在了这里。{/many}
-
-这不是第一次仪式。
-
-{evil:cycle}这是一个永无止境的循环。{/cycle}`,
-  },
-  {
-    date: '10月31日 黄昏',
+    date: '10月29日 清晨',
     text: `{warning:warning}如果有人读到这封遗书...{/warning}
 
-{fear:run}逃。立刻逃。{/run}
+{fear:die}我今晚会死{/die}。
 
-远离{place:white}白烬山口{/place}。远离那座{place:lodge}山庄{/lodge}。
+我能感觉到。{evil:marked}他们的眼神已经锁定了我{/marked}。
 
-如果你已经进去了，如果{curse:storm}暴风雪封锁了门{/storm}，如果你听到了{fear:whisper}白色火焰的低语{/whisper}...
+白天的投票也会{sacrifice:vote}指向我{/vote}。因为{evil:frame}他们成功地把我塑造成了威胁{/frame}。
 
-那么{fear:sorry}对不起，已经太迟了{/sorry}。
+{fear:sorry}对不起，我想把真相记录下来{/sorry}。
 
-但你还有机会{lamb:survive}活下来{/survive}。
+{warning:warning}这座{place:lodge}山庄{/lodge}不是避难所，是{sacrifice:altar}祭坛{/altar}。{/warning}
 
-{lamb:observe}仔细观察他们的行为。{/observe}被{evil:marked}烙印的人{/marked}会在夜晚暴露真面目。他们会{evil:lie}说谎，会伪装，会互相配合{/lie}。
+{contract:contract}山灵的契约是真实的。{/contract}{warning:fifteen}每当有十五人进入这里{/fifteen}，{evil:curse}诅咒就会启动{/curse}。
 
-{lamb:trust}寻找可以信任的人。{/trust}有些角色会在夜里得到信息。{lamb:seer}聆心者能看穿污秽{/seer}，{lamb:coroner}食灰者能验明死者{/coroner}，{lamb:twin}共誓者彼此相知{/twin}。
+{lamb:survive}如果你想活下来：{/survive}
 
-但{warning:warning}不要轻易相信任何人。{/warning}
+{lamb:observe}仔细观察每个人的行为{/observe}。{evil:marked}被烙印的人{/marked}会在{evil:lie}言语上露出破绽{/lie}，会{evil:coordinate}相互配合{/coordinate}，会{evil:deflect}转移怀疑{/deflect}。
 
-{evil:lie}谎言是这场游戏的核心。{/lie}
+{lamb:trust}寻找可以信任的角色{/trust}。{lamb:seer}聆心者能验人{/seer}，{lamb:coroner}食灰者能验尸{/coroner}，{lamb:twin}共誓者互相知晓{/twin}，{lamb:guard}设闩者能保护{/guard}。
+
+但{warning:warning}永远不要完全相信任何人{/warning}。{evil:lie}这场游戏的核心就是谎言和伪装{/lie}。
 
 我听到{fear:footsteps}脚步声{/footsteps}了。
 
-他们来了。
+{cold:fire}白色的火焰在等待。{/fire}
 
-{sacrifice:blood}白色火焰在等待血祭。{/blood}
+{warning:warning}对不起。{/warning}
 
-{warning:warning}对不起，我尽力了。{/warning}
+——{dead:last}一个即将被献祭的羔羊的最后遗言{/last}
 
-——{dead:last}一个迷路旅人的最后遗言{/last}
+{contract:contract}仪式会继续。{/contract}
 
-{contract:contract}仪式永不停息。{/contract}
-
-{evil:cycle}下一个第十六人，正在路上。{/cycle}`,
+{evil:cycle}直到这座山庄被彻底摧毁。{/cycle}`,
   },
 ];
 
@@ -222,10 +235,15 @@ function getKeywordClasses(type: string): string {
     marked: 'text-red-500 font-bold underline decoration-wavy',
     mark: 'text-red-400 font-bold animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,1)]',
     hunt: 'text-red-600 font-semibold',
+    hunter: 'text-slate-400 font-semibold',
     kill: 'text-red-700 font-bold',
     lie: 'text-red-400 font-semibold italic',
     truth: 'text-red-500 font-bold drop-shadow-[0_0_12px_rgba(239,68,68,1)]',
     cycle: 'text-red-400 font-bold italic drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]',
+    fake: 'text-red-400 italic line-through',
+    blend: 'text-red-400 italic',
+    coordinate: 'text-red-400 font-semibold',
+    deflect: 'text-red-400 font-semibold',
 
     // Sacrifice/Death
     sacrifice: 'text-red-700 font-bold drop-shadow-[0_0_8px_rgba(127,29,29,0.9)]',
@@ -237,6 +255,11 @@ function getKeywordClasses(type: string): string {
     price: 'text-amber-600 font-bold',
     dead: 'text-slate-500 font-bold line-through decoration-double',
     last: 'text-slate-400 italic',
+    wound: 'text-red-500 italic',
+    half: 'text-amber-500 font-bold',
+    vote: 'text-blue-300 font-semibold',
+    count: 'text-amber-400 font-bold',
+    altar: 'text-purple-500 font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]',
 
     // Contract/Rule
     contract: 'text-amber-400 font-bold tracking-wide drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]',
@@ -264,6 +287,15 @@ function getKeywordClasses(type: string): string {
     prepare: 'text-slate-400 font-semibold',
     many: 'text-slate-500 italic',
     run: 'text-red-500 font-bold underline decoration-double',
+    feel: 'text-slate-400 italic',
+    eyes: 'text-slate-300 font-semibold',
+    chaos: 'text-red-400 font-bold italic',
+    collapse: 'text-red-500 font-bold',
+    guess: 'text-slate-400 italic',
+    vocal: 'text-slate-400 italic underline',
+    target: 'text-red-500 font-bold underline',
+    die: 'text-red-600 font-bold',
+    frame: 'text-red-400 font-semibold italic',
 
     // Cold/Ice
     cold: 'text-cyan-300 font-semibold drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]',
@@ -277,6 +309,12 @@ function getKeywordClasses(type: string): string {
     painting: 'text-amber-300 font-semibold italic',
     seal: 'text-purple-400 font-semibold',
     close: 'text-red-500 font-bold',
+    signal: 'text-slate-400 line-through',
+    door: 'text-red-400 font-bold',
+    times: 'text-slate-400 italic',
+    change: 'text-amber-400 font-bold',
+    cursed: 'text-purple-500 font-bold italic drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]',
+    punishment: 'text-red-500 font-bold',
 
     // Curse/Storm
     curse: 'text-amber-500 font-semibold drop-shadow-[0_0_8px_rgba(245,158,11,0.7)]',
@@ -285,16 +323,17 @@ function getKeywordClasses(type: string): string {
     // Good/Observation/Survival
     lamb: 'text-blue-400 font-semibold drop-shadow-[0_0_6px_rgba(96,165,250,0.6)]',
     observe: 'text-blue-400 font-semibold underline decoration-dotted',
-    vote: 'text-blue-300 font-semibold',
     survive: 'text-blue-400 font-bold underline',
     trust: 'text-blue-400 font-semibold italic',
     seer: 'text-purple-400 font-semibold',
     coroner: 'text-cyan-500 font-semibold',
     twin: 'text-teal-400 font-semibold',
+    guard: 'text-amber-400 font-semibold',
+    special: 'text-blue-300 italic',
+    innocent: 'text-blue-300 font-semibold',
 
     // Cult/Mystery
     cult: 'text-purple-400 font-semibold italic',
-    hunter: 'text-slate-400 font-semibold',
 
     // Pain
     pain: 'text-red-500 font-bold animate-pulse',
