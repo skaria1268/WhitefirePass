@@ -98,11 +98,11 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 overflow-y-auto relative">
           {!showDetail ? (
             /* Gallery View - responsive grid */
             <div
-              className={`h-full overflow-y-auto overflow-x-hidden py-6 px-4 ${
+              className={`py-6 px-4 ${
                 flippingCardId ? 'pointer-events-none' : ''
               }`}
             >
@@ -126,23 +126,21 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
           ) : (
             /* Detail View - full container */
             selectedPlayer && (
-              <div className="h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 animate-in fade-in duration-500">
-                <div className="h-full overflow-y-auto">
-                  <div className="max-w-6xl mx-auto p-6 sm:p-8">
-                    <div className="flex flex-col lg:flex-row gap-8 items-start">
-                      {/* Left: Card */}
-                      <div className="flex-shrink-0 w-full lg:w-auto flex justify-center perspective-1000">
-                        <TarotCard
-                          player={selectedPlayer}
-                          isFlipped={true}
-                          size="default"
-                        />
-                      </div>
+              <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 animate-in fade-in duration-500">
+                <div className="max-w-6xl mx-auto p-6 sm:p-8">
+                  <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    {/* Left: Card */}
+                    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center perspective-1000">
+                      <TarotCard
+                        player={selectedPlayer}
+                        isFlipped={true}
+                        size="default"
+                      />
+                    </div>
 
-                      {/* Right: Detail panel */}
-                      <div className="flex-1 min-w-0">
-                        <TravelerDetail player={selectedPlayer} />
-                      </div>
+                    {/* Right: Detail panel */}
+                    <div className="flex-1 min-w-0">
+                      <TravelerDetail player={selectedPlayer} />
                     </div>
                   </div>
                 </div>
