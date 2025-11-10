@@ -81,8 +81,15 @@ export function GameBoard() {
   const phase = gameState?.phase || 'setup';
   const theme = getPhaseTheme(phase);
   const [showTransition, setShowTransition] = useState(false);
-  const [previousPhase, setPreviousPhase] = useState<string>('setup');
+  const [previousPhase, setPreviousPhase] = useState<string | null>(null);
   const [isGameEntering, setIsGameEntering] = useState(false);
+
+  // Initialize previousPhase on first render
+  useEffect(() => {
+    if (previousPhase === null && gameState) {
+      setPreviousPhase(phase);
+    }
+  }, [previousPhase, phase, gameState]);
 
   // Detect phase change from setup to night - show transition
   useEffect(() => {
@@ -90,7 +97,9 @@ export function GameBoard() {
       setShowTransition(true);
       setIsGameEntering(true);
     }
-    setPreviousPhase(phase);
+    if (previousPhase !== null && previousPhase !== phase) {
+      setPreviousPhase(phase);
+    }
   }, [phase, previousPhase, gameState]);
 
   // Game entry animation

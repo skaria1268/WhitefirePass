@@ -177,11 +177,7 @@ export function StartMenu() {
 
     saveApiKey(trimmedKey);
     startGame(DEFAULT_CONFIG);
-
-    // Automatically start the first day
-    setTimeout(() => {
-      void executeNextStep();
-    }, 100);
+    // Game will start at prologue phase, user needs to click next to proceed
   };
 
   return (
