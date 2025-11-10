@@ -78,15 +78,17 @@ export const TRAVELER_TESTAMENT: Clue = {
 
 据记载，很久以前，这座山庄的主人违背了{redacted:taboo}███{/redacted}，在山中犯下了{redacted:sin}███{/redacted}的罪行。
 
-山灵降下了{warning:cursed}永恒的诅咒{/warning}。
+{warning:cursed}山灵降下了永恒的诅咒{/warning}。
 
 任何{warning:fifteen}十五人一同进入这座山庄{/warning}的群体，都会触发这古老的契约。
 
-{contract:pact}必须献祭过半数，幸存者方可离开{/contract}。
+{contract:pact}山灵会从十五人中标记三人{/contract}，赋予他们{redacted:power}███{/redacted}的力量，让他们成为{evil:marked}山灵的收割者{/evil}。
 
-契约会{evil:marked}标记其中三人{/evil}，赋予他们{redacted:power}███{/redacted}的力量，让他们成为收割者。
+这三人会在夜晚{evil:hunt}猎杀人类{/evil}，直到{evil:kill}所有人类羔羊死绝{/kill}。
 
-其余的人是羔羊，必须找出收割者并将他们献祭，否则会在{redacted:nights}███{/redacted}夜之内被逐一猎杀。
+而人类要想活命，{sacrifice:vote}必须在白昼找出这三个收割者{/sacrifice}，将他们{sacrifice:altar}献祭给山灵{/sacrifice}。
+
+{contract:rule}只有献祭了所有收割者，幸存的人类方可离开{/contract}。
 
 我想说他疯了。
 
@@ -112,7 +114,13 @@ export const TRAVELER_TESTAMENT: Clue = {
 
 白天，我们必须{lamb:vote}投票决定献祭谁{/lamb}。
 
-这是{contract:rule}契约的铁律{/contract}：白昼审判，黑夜狩猎。要么{evil:hunt}猎杀所有羔羊{/evil}，要么{sacrifice:half}献祭过半数{/sacrifice}。
+这是{contract:rule}契约的铁律{/contract}：{sacrifice:vote}白昼审判，黑夜狩猎{/sacrifice}。
+
+{evil:marked}收割者{/evil}的目标是{evil:hunt}猎杀所有人类羔羊{/evil}。
+
+而{lamb:vote}人类羔羊{/lamb}必须{sacrifice:altar}找出并献祭所有收割者{/sacrifice}。
+
+这是{contract:pact}山灵设下的生死博弈{/contract}。
 
 队伍中有几个人声称得到了{redacted:gift}███{/redacted}。
 
