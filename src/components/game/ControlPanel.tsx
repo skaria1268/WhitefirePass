@@ -466,7 +466,10 @@ export function ControlPanel() {
   return (
     <>
     <Card className="shadow-inner-glow">
-      <CardHeader className="bg-gradient-to-r from-card via-card/50 to-card border-b border-border">
+      <CardHeader className="bg-gradient-to-r from-card via-card/50 to-card border-b border-border relative">
+        {/* Title decorative elements */}
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-foreground/20" />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-foreground/20" />
         <CardTitle className="font-cinzel tracking-wide">
           游戏控制
           <span className="block text-[10px] text-muted-foreground font-normal tracking-widest opacity-60 mt-1">

@@ -267,7 +267,10 @@ export function GameBoard() {
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* Game Log with Tabs */}
           <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card relative">
+              {/* Title decorative elements */}
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-foreground/20" />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 w-1 h-1 rounded-full bg-foreground/20" />
               <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">
                 游戏日志
                 <span className="block text-[10px] text-muted-foreground font-normal tracking-widest opacity-60 mt-0.5">
