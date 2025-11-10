@@ -79,7 +79,7 @@ const DIARY_ENTRIES = [
 
 "{contract:contract}山灵的契约{/contract}。"
 
-他念出了笔记本上的内容。那是用拉丁文和古汉语混合写成的诅咒。
+他念出了笔记本上的内容。那是用拉丁文和古汉语混合写成的{warning:cursed}警示{/warning}。
 
 据记载，很久以前，这座山庄的主人违背了{redacted:taboo}███{/redacted}，在山中犯下了{redacted:sin}███{/redacted}的罪行。
 
@@ -87,19 +87,23 @@ const DIARY_ENTRIES = [
 
 任何{warning:fifteen}十五人一同进入这座山庄{/warning}的群体，都会触发这古老的契约。
 
-{contract:pact}山灵会从十五人中标记三人{/contract}，赋予他们{redacted:power}███{/redacted}的力量，让他们成为{evil:marked}山灵的收割者{/evil}。
+{contract:pact}契约警告：你们之中混入了三个非人者{/contract}。
 
-这三人会在夜晚{evil:hunt}猎杀人类{/evil}，直到{evil:kill}所有人类羔羊死绝{/kill}。
+他们不是人类。他们是{evil:marked}山魔的化身{/evil}，会在夜晚{evil:hunt}猎杀真正的人类{/evil}。
 
-而人类要想活命，{sacrifice:vote}必须在白昼找出这三个收割者{/sacrifice}，将他们{sacrifice:altar}献祭给山灵{/sacrifice}。
+{contract:rule}你们必须在白昼找出这三个非人者{/contract}，将他们{sacrifice:altar}献祭{/sacrifice}，否则{evil:kill}所有人类都会死{/kill}。
 
-{contract:rule}只有献祭了所有收割者，幸存的人类方可离开{/contract}。
+{contract:pact}只有献祭了所有非人者，真正的人类才能离开{/contract}。
+
+这是山灵给予你们的{redacted:chance}███{/redacted}。
 
 我想说他疯了。
 
 但那{cold:white}苍白的火焰{/cold}仍在燃烧，{warning:door}门窗依旧紧闭{/warning}。
 
-而某些人的眼睛里，确实有某种{evil:dark}黑暗的东西{/evil}在闪烁。`,
+而某些人的眼神...{fear:change}确实变了{/fear}。
+
+{fear:doubt}他们真的不是人类了吗{/fear}？`,
   },
   {
     date: '1913年10月27日',
@@ -113,25 +117,27 @@ const DIARY_ENTRIES = [
 
 他的皮肤{cold:frozen}冰冷如霜{/cold}，就像被冻死的。但屋里并不冷。
 
-那三个被标记的人，在昨夜做了这件事。
+是{evil:marked}那些非人者{/evil}在昨夜做的。
 
-但我们不知道他们是谁。
+但我们{fear:doubt}不知道他们是谁{/fear}。
 
 白天，我们必须{lamb:vote}投票决定献祭谁{/lamb}。
 
 这是{contract:rule}契约的铁律{/contract}：{sacrifice:vote}白昼审判，黑夜狩猎{/sacrifice}。
 
-{evil:marked}收割者{/evil}的目标是{evil:hunt}猎杀所有人类羔羊{/evil}。
+那{evil:marked}三个非人者{/evil}会在夜晚{evil:hunt}猎杀我们{/evil}。
 
-而{lamb:vote}人类羔羊{/lamb}必须{sacrifice:altar}找出并献祭所有收割者{/sacrifice}。
+而我们这些{lamb:vote}真正的人类{/lamb}，必须在白昼{sacrifice:altar}找出并献祭那些怪物{/sacrifice}。
 
-这是{contract:pact}山灵设下的生死博弈{/contract}。
+{contract:pact}这是山灵给我们的唯一生机{/contract}。
 
 队伍中有几个人声称得到了{redacted:gift}███{/redacted}。
 
-有人说他能看穿谁是{evil:marked}被标记者{/evil}，有人说他们两个心灵相连，有人说他能验明死者的身份。
+有人说他能{redacted:see}███{/redacted}，能看穿谁是{evil:marked}非人者{/evil}。有人说他们两个{redacted:bond}███{/redacted}，心灵相连。有人说他能{redacted:know}███{/redacted}，验明死者的真实身份。
 
-但契约的力量扭曲了一切。谁说的是真话？谁又在{evil:lie}编织谎言{/evil}？
+但谁说的是真话？谁又在{evil:lie}编织谎言{/evil}？
+
+那些{evil:marked}怪物{/evil}混在我们中间，{fear:doubt}也许他们正在假装自己也是人类{/fear}。
 
 争吵持续了整整五个小时。所有人都在{fear:accuse}互相指责{/fear}，互相怀疑。
 
@@ -159,17 +165,17 @@ const DIARY_ENTRIES = [
 
 那些宣称彼此{redacted:bond}███{/redacted}的人，可能在伪装。
 
-{evil:marked}被烙印的三人{/evil}隐藏得太好了。他们混在我们中间，{evil:lie}编织谎言{/evil}，引导猜疑，制造混乱。
+{evil:marked}那三个怪物{/evil}隐藏得太好了。他们混在我们中间，{fear:doubt}装作人类的样子{/fear}，{evil:lie}编织谎言{/evil}，引导猜疑，制造混乱。
 
-而我们这些羔羊，只能凭借{fear:guess}猜测和恐惧{/fear}做出判断。
+而我们这些{lamb:vote}真正的人类{/lamb}，只能凭借{fear:guess}猜测和恐惧{/fear}做出判断。
 
 我开始怀疑，我会是下一个。
 
 因为我一直在{redacted:question}███{/redacted}，在提出不同的意见。
 
-收割者不会放过这样的人。我看到了{evil:eyes}他们的眼神{/evil}。
+{evil:marked}那些非人者{/evil}不会放过我。我感觉到了{evil:eyes}某种恶意的注视{/evil}。
 
-{fear:target}我成了他们的目标{/fear}。
+{fear:target}我被那些怪物盯上了{/fear}。
 
 今夜，如果那个声称能{redacted:protect}███{/redacted}的人不保护我...
 
@@ -183,9 +189,9 @@ const DIARY_ENTRIES = [
 
 我在天亮前会死。
 
-我{fear:certain}确信无疑{/fear}。昨夜我看到了{evil:eyes}他们的眼神{/evil}，那种{redacted:hunger}███{/redacted}的眼神。
+我{fear:certain}确信无疑{/fear}。昨夜我感觉到了{evil:eyes}某些人投来的眼神{/evil}，那种{redacted:hunger}███{/redacted}的眼神。
 
-白昼的投票也会指向我。他们已经成功地在众人面前{evil:frame}将我塑造成了威胁{/evil}。
+白昼的投票也会指向我。{evil:frame}他们已经成功地让其他人相信，我是怪物{/evil}。
 
 我想在生命的最后时刻，把真相记录下来。
 
@@ -195,15 +201,17 @@ const DIARY_ENTRIES = [
 
 {contract:contract}山灵的契约是真实存在的{/contract}。{warning:fifteen}每当有十五人同时踏入这里{/warning}，{warning:cursed}古老的诅咒{/warning}就会苏醒。
 
-如果你想在这场{fear:nightmare}噩梦{/fear}中幸存：
+如果你想在这场{fear:nightmare}噩梦{/fear}中活下来：
 
-仔细观察每个人。{evil:marked}被烙印者{/evil}会在言语中露出破绽，会彼此{redacted:signal}███{/redacted}，会转移怀疑。
+仔细观察每个人。{evil:marked}那些非人者{/evil}会在言语中露出破绽，他们会彼此{redacted:signal}███{/redacted}，会转移怀疑。
 
-寻找那些得到{redacted:gift}███{/redacted}的人。有人能{redacted:see}███{/redacted}，有人能{redacted:know}███{/redacted}，有人能{redacted:protect}███{/redacted}。
+寻找那些得到{redacted:gift}███{/redacted}的人类。有人能{redacted:see}███{/redacted}识破怪物，有人能{redacted:know}███{/redacted}看清真相，有人能{redacted:protect}███{/redacted}守护同伴。
 
 但{warning:warning}永远不要完全相信任何人{/warning}。
 
-这场仪式的本质就是{evil:lie}谎言{/evil}和{fear:betrayal}背叛{/fear}。
+{fear:doubt}也许...山灵在撒谎{/fear}。
+
+也许{evil:lie}真正的怪物，并不是那些被指认的人{/evil}。
 
 我听到{fear:footsteps}脚步声{/fear}了。在走廊上。在门外。
 
