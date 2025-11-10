@@ -628,21 +628,6 @@ export const useGameStore = create<GameStore>()(
         }
       }
 
-      // Get prompt for display
-      const prompt = getPromptForDisplay(currentPlayer, gameState);
-
-      // Add prompt message with same visibility as response
-      gameState.messages.push({
-        id: `prompt-${Date.now()}`,
-        type: 'prompt',
-        from: currentPlayer.name,
-        content: prompt,
-        timestamp: Date.now(),
-        round: gameState.round,
-        phase: gameState.phase,
-        visibility,
-      });
-
       set({ gameState: { ...gameState } });
 
       // Build and record full prompt for transparency
@@ -741,93 +726,6 @@ export const useGameStore = create<GameStore>()(
     },
   ),
 );
-
-/**
- * Get prompt text for display
- */
-function getPromptForDisplay(
-  player: { name: string; role: string },
-  gameState: GameState,
-): string {
-  const { phase, round, messages, players } = gameState;
-  const alivePlayers = getAlivePlayers(gameState);
-
-  // Heretics don't know they are heretics until Day 2
-  const effectiveRole = (player.role === 'heretic' && round === 1) ? 'innocent' : player.role;
-
-  // Filter messages based on visibility (use actual role for message filtering)
-  // eslint-disable-next-line complexity
-  const visibleMessages = messages.filter((m) => {
-    if (m.visibility === 'all') return true;
-    if (m.visibility === 'marked' && player.role === 'marked') return true;
-    if (m.visibility === 'listener' && player.role === 'listener') return true;
-    if (m.visibility === 'coroner' && player.role === 'coroner') return true;
-    if (m.visibility === 'guard' && player.role === 'guard') return true;
-    if (m.visibility === 'twins' && player.role === 'twin') return true;
-    if (typeof m.visibility === 'object' && m.visibility.player === player.name) return true;
-    // AI can see its own thinking
-    if (m.type === 'thinking' && m.from === player.name) return true;
-    return false;
-  });
-
-  const recentMessages = visibleMessages
-    .filter((m) => m.type !== 'prompt')  // Exclude prompt messages
-    .slice(-20);  // 保留最近20条对话
-
-  const roleNames: Record<string, string> = {
-    marked: '烙印者',
-    heretic: '背誓者',
-    listener: '聆心者',
-    coroner: '食灰者',
-    twin: '共誓者',
-    guard: '设闩者',
-    innocent: '无知者',
-  };
-
-  const phaseNames: Record<string, string> = {
-    setup: '准备',
-    night: '夜晚',
-    day: '白天',
-    voting: '投票',
-    end: '结束',
-  };
-
-  // Get teammate information for marked (use actual role)
-  const markedTeammates = player.role === 'marked'
-    ? players.filter((p) => p.role === 'marked' && p.name !== player.name)
-    : [];
-
-  // Use effective role for display (heretics see innocent info on day 1)
-  const roleInstructions = getRoleInstructionsForDisplay(effectiveRole, phase, gameState.nightPhase);
-
-  // Get phase display name
-  let phaseDisplay = phaseNames[phase];
-  if (phase === 'night' && gameState.nightPhase) {
-    const nightPhaseNames: Record<string, string> = {
-      'listener': '夜晚-聆心者查验',
-      'marked-discuss': '夜晚-烙印者讨论',
-      'marked-vote': '夜晚-烙印者投票',
-      'guard': '夜晚-设闩者守护',
-      'coroner': '夜晚-食灰者验尸',
-    };
-    phaseDisplay = nightPhaseNames[gameState.nightPhase] || phaseDisplay;
-  }
-
-  return `【AI Prompt】
-玩家：${player.name}
-身份：${roleNames[effectiveRole]}
-阶段：${phaseDisplay}
-回合：${round}
-存活玩家：${alivePlayers.map((p) => p.name).join('、')}
-${markedTeammates.length > 0 ? `烙印者队友：${markedTeammates.map((p) => p.name).join('、')}` : ''}
-
-${roleInstructions}
-
-最近的对话：
-${recentMessages.map((m) => `${m.from}: ${m.content}`).join('\n')}
-
-${getActionPrompt(phase, gameState.nightPhase, effectiveRole)}`;
-}
 
 /**
  * Parse AI response into thinking and speech parts
@@ -983,68 +881,6 @@ function recordGuardAction(
       'guard',
     ),
   );
-}
-
-/**
- * Get role instructions for display in prompt
- */
-// eslint-disable-next-line complexity
-function getRoleInstructionsForDisplay(role: string, phase: string, nightPhase?: string): string {
-  if (role === 'marked') {
-    if (phase === 'night') {
-      if (nightPhase === 'marked-discuss') {
-        return `【烙印者身份 - 讨论阶段】
-你是烙印者。饥饿驱使着你。现在只有烙印者能看到这些对话。
-【当前阶段】讨论今晚的猎物
-- 和其他烙印者交流你的想法
-- 分析哪个羔羊威胁最大
-- 可以提出建议但不要做最终决定
-- 保持 1-2 句话即可`;
-      } else if (nightPhase === 'marked-vote') {
-        return `【烙印者身份 - 投票阶段】
-你是烙印者。现在需要投票决定猎杀目标。
-【重要】投票选择今晚要杀的人
-- 根据刚才的讨论做出决定
-- 只回复要杀的玩家名字（如：诺拉）
-- 不要解释原因，不要说其他内容`;
-      }
-    }
-    return `【烙印者身份 - ${phase === 'day' ? '白天' : '投票'}阶段】
-你是烙印者，但必须伪装成羔羊。
-【重要规则】
-- 绝不暴露自己的烙印
-- 绝不暴露其他烙印者的身份
-- 像羔羊一样恐惧、怀疑、指控
-- 把怀疑引向真正的羔羊`;
-  }
-  if (role === 'listener') {
-    if (phase === 'night' && nightPhase === 'listener') {
-      return `【聆心者身份 - 查验阶段】
-你是聆心者。现在是倾听时间。
-【重要】选择一个玩家倾听其灵魂
-- 根据白天的讨论选择最可疑的人
-- 只回复要查验的玩家名字（如：诺拉）
-- 不要解释原因，不要说其他内容
-- 查验结果只有你能看到`;
-    }
-    return '你是聆心者。每晚可以倾听一名玩家的灵魂，判断其清白或污秽。谨慎使用你的知识，避免过早暴露。';
-  }
-  if (role === 'innocent') {
-    return '你是无知者。通过讨论和投票找出烙印者。仔细观察每个人的发言和行为。';
-  }
-  if (role === 'heretic') {
-    return '你是背誓者。你的灵魂与烙印者一样污秽，但你没有任何特殊能力。制造混乱，帮助烙印者获胜。';
-  }
-  if (role === 'twin') {
-    return '你是共誓者。你知道另一个共誓者是谁，你们彼此信任。';
-  }
-  if (role === 'guard') {
-    return '你是设闩者。每晚可以锁死一个人的房门，保护其免受烙印者的袭击。';
-  }
-  if (role === 'coroner') {
-    return '你是食灰者。每晚可以检查被献祭者的真实身份。';
-  }
-  return '';
 }
 
 /**
@@ -1218,30 +1054,6 @@ function enterNightPhase(gameState: GameState): void {
       addMessage(gameState, '叙述者', '夜幕降临... 饥饿者的时刻到了。', 'system', 'all'),
     );
   }
-}
-
-/**
- * Get action prompt based on phase and role
- */
-function getActionPrompt(phase: string, nightPhase: string | undefined, role: string): string {
-  if (phase === 'day') {
-    return '请发表你的看法';
-  }
-  if (phase === 'voting') {
-    return '请投票选择一个玩家（只回复名字）';
-  }
-  if (phase === 'night') {
-    if (nightPhase === 'listener' && role === 'listener') {
-      return '请选择要倾听的玩家（只回复名字）';
-    }
-    if (nightPhase === 'marked-discuss' && role === 'marked') {
-      return '请和队友讨论今晚的目标';
-    }
-    if (nightPhase === 'marked-vote' && role === 'marked') {
-      return '请投票选择今晚要杀的玩家（只回复名字）';
-    }
-  }
-  return '';
 }
 
 /**
