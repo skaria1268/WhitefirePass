@@ -4,13 +4,10 @@
 
 'use client';
 
-import { useState } from 'react';
 import type { Player } from '@/types/game';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useGameStore } from '@/stores/game-store';
 import {
   User,
   Bot,
@@ -123,59 +120,7 @@ function PlayerAvatar({
   );
 }
 
-function PersonalityEditor({
-  player,
-  isEditing,
-  onToggleEdit,
-}: {
-  player: { id: string; personality?: string };
-  isEditing: boolean;
-  onToggleEdit: () => void;
-}) {
-  const [text, setText] = useState(player.personality || '');
-  const { updatePlayerPersonality } = useGameStore();
-
-  const handleSave = () => {
-    updatePlayerPersonality(player.id, text);
-    onToggleEdit();
-  };
-
-  return (
-    <div className="mt-3 border-t pt-2">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-foreground">人设设定</span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 px-2 text-xs"
-          onClick={onToggleEdit}
-        >
-          {isEditing ? '取消' : '编辑'}
-        </Button>
-      </div>
-      {isEditing ? (
-        <div className="space-y-2">
-          <textarea
-            className="w-full min-h-[80px] p-2 text-xs bg-background border rounded resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="输入 AI 玩家的性格设定..."
-          />
-          <Button size="sm" className="w-full h-7 text-xs" onClick={handleSave}>
-            保存
-          </Button>
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground line-clamp-2">
-          {player.personality || '暂无人设'}
-        </p>
-      )}
-    </div>
-  );
-}
-
 export function PlayerCard({ player, showRole = false, isCurrent = false }: PlayerCardProps) {
-  const [isEditingPersonality, setIsEditingPersonality] = useState(false);
   const borderColor = roleBorderColors[player.role];
 
   return (
@@ -239,12 +184,6 @@ export function PlayerCard({ player, showRole = false, isCurrent = false }: Play
             </>
           )}
         </div>
-
-        <PersonalityEditor
-          player={player}
-          isEditing={isEditingPersonality}
-          onToggleEdit={() => setIsEditingPersonality(!isEditingPersonality)}
-        />
       </CardContent>
     </Card>
   );
