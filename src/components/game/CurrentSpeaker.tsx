@@ -7,7 +7,22 @@
 import type { GameState, Player } from '@/types/game';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  MessageSquare,
+  Loader2,
+  CheckCircle2,
+  Sun,
+  Moon,
+  Vote,
+  Eye,
+  Flame,
+  Shield,
+  Search,
+  Users,
+  Ghost,
+  Ear,
+  User,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CurrentSpeakerProps {
@@ -34,6 +49,29 @@ const roleColors: Record<string, string> = {
   innocent: 'bg-blue-600',
 };
 
+const roleGradients: Record<string, string> = {
+  marked: 'from-red-600 to-red-900',
+  heretic: 'from-slate-600 to-slate-900',
+  listener: 'from-purple-600 to-purple-900',
+  coroner: 'from-cyan-700 to-cyan-900',
+  twin: 'from-teal-600 to-teal-900',
+  guard: 'from-amber-600 to-amber-900',
+  innocent: 'from-blue-600 to-blue-900',
+};
+
+const getRoleIcon = (role: string) => {
+  const icons: Record<string, React.ReactNode> = {
+    marked: <Flame className="w-8 h-8" />,
+    heretic: <Ghost className="w-8 h-8" />,
+    listener: <Ear className="w-8 h-8" />,
+    coroner: <Search className="w-8 h-8" />,
+    twin: <Users className="w-8 h-8" />,
+    guard: <Shield className="w-8 h-8" />,
+    innocent: <User className="w-8 h-8" />,
+  };
+  return icons[role] || <User className="w-8 h-8" />;
+};
+
 // eslint-disable-next-line complexity
 export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
   const { players, currentPlayerIndex, phase } = gameState;
@@ -55,7 +93,7 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
     currentPlayer = alivePlayers[currentPlayerIndex] || null;
   }
 
-  // Get phase display
+  // Get phase display and icon
   const getPhaseDisplay = () => {
     if (phase === 'night' && gameState.nightPhase) {
       const nightPhaseNames: Record<string, string> = {
@@ -77,6 +115,27 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
     return phaseNames[phase] || phase;
   };
 
+  const getPhaseIcon = () => {
+    if (phase === 'night' && gameState.nightPhase) {
+      const icons: Record<string, React.ReactNode> = {
+        'listener': <Eye className="w-3 h-3" />,
+        'marked-discuss': <Users className="w-3 h-3" />,
+        'marked-vote': <Flame className="w-3 h-3" />,
+        'guard': <Shield className="w-3 h-3" />,
+        'coroner': <Search className="w-3 h-3" />,
+      };
+      return icons[gameState.nightPhase] || <Moon className="w-3 h-3" />;
+    }
+    const icons: Record<string, React.ReactNode> = {
+      day: <Sun className="w-3 h-3" />,
+      voting: <Vote className="w-3 h-3" />,
+      night: <Moon className="w-3 h-3" />,
+      setup: <MessageSquare className="w-3 h-3" />,
+      end: <CheckCircle2 className="w-3 h-3" />,
+    };
+    return icons[phase] || <MessageSquare className="w-3 h-3" />;
+  };
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-shrink-0 pb-2 px-4 py-3">
@@ -90,7 +149,8 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
           {/* Phase Display */}
           <div className="text-center">
             <div className="text-xs text-muted-foreground mb-1">当前阶段</div>
-            <Badge variant="outline" className="text-sm px-3 py-0.5">
+            <Badge variant="outline" className="text-sm px-3 py-0.5 flex items-center gap-1.5 justify-center">
+              {getPhaseIcon()}
               {getPhaseDisplay()}
             </Badge>
           </div>
@@ -100,11 +160,11 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
             <div className="text-center space-y-2">
               <div
                 className={cn(
-                  'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white text-xl font-bold shadow-lg',
-                  `bg-gradient-to-br ${roleColors[currentPlayer.role] || 'from-gray-600 to-gray-800'}`,
+                  'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-white shadow-lg',
+                  `bg-gradient-to-br ${roleGradients[currentPlayer.role] || 'from-gray-600 to-gray-800'}`,
                 )}
               >
-                {currentPlayer.name.charAt(0)}
+                {getRoleIcon(currentPlayer.role)}
               </div>
               <div>
                 <div className="text-lg font-bold text-foreground">{currentPlayer.name}</div>
