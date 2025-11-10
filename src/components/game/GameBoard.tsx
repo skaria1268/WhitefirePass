@@ -140,7 +140,10 @@ export function GameBoard() {
               {gameState ? (
                 gameState.players.map((player, index) => {
                   // Determine if this player is currently speaking
+                  // No current player during prologue/setup phases
                   const isCurrent =
+                    gameState.phase !== 'prologue' &&
+                    gameState.phase !== 'setup' &&
                     !gameState.waitingForNextStep &&
                     index === gameState.currentPlayerIndex &&
                     player.isAlive;
