@@ -127,7 +127,7 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
             AI 人设编辑器
@@ -137,8 +137,8 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
+          <div className="space-y-4 pb-4">
             {gameState.players.map((player) => {
               const isExpanded = expandedPlayer === player.id;
               const currentPersonality = editingPersonalities[player.id] ?? '';
@@ -252,7 +252,7 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
           </div>
         </ScrollArea>
 
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Users className="w-3 h-3" />
             共 {gameState.players.length} 名玩家
