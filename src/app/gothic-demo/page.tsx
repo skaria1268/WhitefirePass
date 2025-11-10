@@ -1,16 +1,12 @@
 /**
- * Gothic Design Demo - Using Mature UI Components
- * Based on established patterns from Diablo, Darkest Dungeon UI
+ * Gothic Design Demo Page
+ * Using classic medieval manuscript border decorations
  */
 
 'use client';
 
 import { useState } from 'react';
-import {
-  Mountain, Skull, Flame, Moon, Crown, Sword,
-  ChevronLeft, ChevronRight, X, Award, Shield,
-  Sparkles, Target, Zap
-} from 'lucide-react';
+import { Mountain, Skull, Flame, Moon, Crown, Sword } from 'lucide-react';
 
 export default function GothicDemoPage() {
   const [activeButton, setActiveButton] = useState<string | null>(null);
@@ -20,182 +16,171 @@ export default function GothicDemoPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Page Header */}
         <div className="text-center space-y-4 mb-16">
-          <div className="inline-block relative">
-            <h1 className="text-6xl font-cinzel text-amber-200 tracking-wider relative z-10
-              [text-shadow:_0_0_30px_rgb(251_191_36_/_50%),_0_2px_4px_rgb(0_0_0_/_80%)]">
-              Gothic UI System
-            </h1>
-            {/* Decorative underline */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-64 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-48 h-px bg-gradient-to-r from-transparent via-amber-600/50 to-transparent" />
-          </div>
-          <p className="text-slate-400 font-serif text-lg">
-            Production-Ready Dark Fantasy Components
+          <h1 className="text-5xl font-cinzel text-slate-200 tracking-wider">
+            Gothic Design System
+          </h1>
+          <p className="text-slate-400 font-serif">
+            Classic medieval manuscript border decorations
           </p>
         </div>
 
-        {/* Buttons Section */}
-        <section className="space-y-8">
-          <SectionHeader icon={<Sparkles className="w-6 h-6" />} title="Action Buttons" />
+        {/* Gothic Buttons Section */}
+        <section className="space-y-6">
+          <h2 className="text-3xl font-cinzel text-slate-300 mb-8">Illuminated Buttons</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DiabloButton
-              variant="gold"
-              icon={<Crown className="w-5 h-5" />}
-              onClick={() => setActiveButton('gold')}
-            >
-              Golden Action
-            </DiabloButton>
-
-            <DiabloButton
-              variant="red"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <GothicButton
+              variant="primary"
               icon={<Flame className="w-5 h-5" />}
-              onClick={() => setActiveButton('red')}
+              onClick={() => setActiveButton('primary')}
+              active={activeButton === 'primary'}
+            >
+              Primary Action
+            </GothicButton>
+
+            <GothicButton
+              variant="danger"
+              icon={<Skull className="w-5 h-5" />}
+              onClick={() => setActiveButton('danger')}
+              active={activeButton === 'danger'}
             >
               Danger Action
-            </DiabloButton>
+            </GothicButton>
 
-            <DiabloButton
-              variant="purple"
+            <GothicButton
+              variant="royal"
+              icon={<Crown className="w-5 h-5" />}
+              onClick={() => setActiveButton('royal')}
+              active={activeButton === 'royal'}
+            >
+              Royal Action
+            </GothicButton>
+
+            <GothicButton
+              variant="shadow"
               icon={<Moon className="w-5 h-5" />}
-              onClick={() => setActiveButton('purple')}
+              onClick={() => setActiveButton('shadow')}
+              active={activeButton === 'shadow'}
             >
-              Magic Action
-            </DiabloButton>
+              Shadow Action
+            </GothicButton>
 
-            <DiabloButton
-              variant="blue"
-              icon={<Shield className="w-5 h-5" />}
-              onClick={() => setActiveButton('blue')}
+            <GothicButton
+              variant="battle"
+              icon={<Sword className="w-5 h-5" />}
+              onClick={() => setActiveButton('battle')}
+              active={activeButton === 'battle'}
             >
-              Defense Action
-            </DiabloButton>
+              Battle Action
+            </GothicButton>
 
-            <DiabloButton
-              variant="green"
-              icon={<Target className="w-5 h-5" />}
-              onClick={() => setActiveButton('green')}
+            <GothicButton
+              variant="mountain"
+              icon={<Mountain className="w-5 h-5" />}
+              onClick={() => setActiveButton('mountain')}
+              active={activeButton === 'mountain'}
             >
-              Success Action
-            </DiabloButton>
-
-            <DiabloButton
-              variant="gray"
-              icon={<Skull className="w-5 h-5" />}
-              onClick={() => setActiveButton('gray')}
-            >
-              Neutral Action
-            </DiabloButton>
+              Mountain Action
+            </GothicButton>
           </div>
         </section>
 
-        {/* Panels Section */}
-        <section className="space-y-8">
-          <SectionHeader icon={<Award className="w-6 h-6" />} title="Content Panels" />
+        {/* Gothic Containers Section */}
+        <section className="space-y-6">
+          <h2 className="text-3xl font-cinzel text-slate-300 mb-8">Illuminated Panels</h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <DiabloPanel variant="gold" title="Character Stats">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <GothicContainer variant="ornate">
               <div className="space-y-4">
-                <StatBar label="Health" value={850} max={1000} color="red" />
-                <StatBar label="Mana" value={420} max={500} color="blue" />
-                <StatBar label="Stamina" value={750} max={800} color="green" />
+                <h3 className="text-2xl font-cinzel text-amber-300 flex items-center gap-2">
+                  <Crown className="w-6 h-6" />
+                  Ornate Manuscript
+                </h3>
+                <p className="text-slate-300 font-serif leading-relaxed text-sm">
+                  Inspired by the Book of Hours, featuring intricate gold leaf borders,
+                  floral marginalia, and elaborate corner pieces typical of 14th century
+                  illuminated manuscripts.
+                </p>
               </div>
-            </DiabloPanel>
+            </GothicContainer>
 
-            <DiabloPanel variant="red" title="Active Effects">
-              <div className="space-y-2">
-                <EffectBadge icon={<Flame />} label="Burning" stacks={3} />
-                <EffectBadge icon={<Shield />} label="Protected" stacks={1} />
-                <EffectBadge icon={<Zap />} label="Empowered" stacks={2} />
+            <GothicContainer variant="shadow">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-cinzel text-purple-300 flex items-center gap-2">
+                  <Moon className="w-6 h-6" />
+                  Shadow Codex
+                </h3>
+                <p className="text-slate-300 font-serif leading-relaxed text-sm">
+                  Dark purple borders with silver accents, reminiscent of ecclesiastical
+                  manuscripts from Gothic cathedrals. Features delicate filigree work.
+                </p>
               </div>
-            </DiabloPanel>
+            </GothicContainer>
 
-            <DiabloPanel variant="purple" title="Inventory">
-              <div className="grid grid-cols-4 gap-2">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square border-2 border-purple-500/30 bg-purple-950/20
-                      hover:border-purple-400/60 hover:bg-purple-900/30 transition-all cursor-pointer
-                      flex items-center justify-center text-purple-500/30 text-xs"
-                  >
-                    {i === 0 && <Sword className="w-6 h-6 text-purple-400" />}
-                    {i === 1 && <Shield className="w-6 h-6 text-blue-400" />}
-                    {i === 2 && <Crown className="w-6 h-6 text-amber-400" />}
-                  </div>
-                ))}
+            <GothicContainer variant="blood">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-cinzel text-red-300 flex items-center gap-2">
+                  <Flame className="w-6 h-6" />
+                  Crimson Testament
+                </h3>
+                <p className="text-slate-300 font-serif leading-relaxed text-sm">
+                  Red and gold borders inspired by royal manuscripts, featuring bold
+                  geometric patterns mixed with organic vine motifs.
+                </p>
               </div>
-            </DiabloPanel>
+            </GothicContainer>
 
-            <DiabloPanel variant="blue" title="Quest Log">
-              <div className="space-y-3">
-                <QuestItem
-                  title="Defeat the Marked"
-                  progress={2}
-                  total={3}
-                  status="active"
-                />
-                <QuestItem
-                  title="Protect the Innocent"
-                  progress={5}
-                  total={5}
-                  status="complete"
-                />
-                <QuestItem
-                  title="Discover the Truth"
-                  progress={0}
-                  total={1}
-                  status="locked"
-                />
+            <GothicContainer variant="frost">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-cinzel text-cyan-300 flex items-center gap-2">
+                  <Mountain className="w-6 h-6" />
+                  Frost Psalter
+                </h3>
+                <p className="text-slate-300 font-serif leading-relaxed text-sm">
+                  Cool blue illumination with silver details, evoking northern European
+                  manuscripts with their crystalline precision.
+                </p>
               </div>
-            </DiabloPanel>
+            </GothicContainer>
           </div>
         </section>
 
-        {/* Modal Example */}
-        <section className="space-y-8">
-          <SectionHeader icon={<Mountain className="w-6 h-6" />} title="Dialog / Modal" />
+        {/* Large Feature Container */}
+        <section>
+          <h2 className="text-3xl font-cinzel text-slate-300 mb-8">Featured Illumination</h2>
 
-          <DiabloModal>
+          <GothicContainer variant="ornate" size="large">
             <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <Crown className="w-16 h-16 mx-auto text-amber-400" />
-                <h2 className="text-3xl font-cinzel text-amber-200">The Whitefire Covenant</h2>
-                <p className="text-sm text-slate-400 font-cinzel tracking-widest uppercase">
-                  A Sacred Contract
+              <div className="text-center space-y-3">
+                <Crown className="w-16 h-16 mx-auto text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" />
+                <h3 className="text-4xl font-cinzel text-amber-300 drop-shadow-[0_2px_10px_rgba(251,191,36,0.3)]">
+                  The Whitefire Covenant
+                </h3>
+                <p className="text-sm font-cinzel tracking-widest text-slate-400 uppercase">
+                  A Sacred Contract Written in Snow and Ash
                 </p>
               </div>
 
               <div className="h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
 
-              <div className="space-y-4 text-slate-300 font-serif">
-                <p>
-                  Fifteen travelers stand at the threshold of fate. The mountain spirit has spoken:
-                  only truth shall break the storm.
-                </p>
-                <p>
-                  Three souls bear the mark of harvest. Twelve seek salvation.
-                  All must choose: sacrifice or damnation.
-                </p>
-              </div>
-
-              <div className="flex gap-4">
-                <DiabloButton variant="gold" icon={<ChevronRight className="w-4 h-4" />}>
-                  Accept Contract
-                </DiabloButton>
-                <DiabloButton variant="gray" icon={<X className="w-4 h-4" />}>
-                  Decline
-                </DiabloButton>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3 text-center">
+                  <h4 className="text-lg font-cinzel text-amber-200">⚔ The Harvest ⚔</h4>
+                  <p className="text-slate-400 font-serif text-sm leading-relaxed">
+                    Three marked souls, bound by ancient hunger, hunt beneath the pale moon.
+                    Their covenant written in shadow and flame, sealed by blood and darkness.
+                  </p>
+                </div>
+                <div className="space-y-3 text-center">
+                  <h4 className="text-lg font-cinzel text-amber-200">✟ The Lamb ✟</h4>
+                  <p className="text-slate-400 font-serif text-sm leading-relaxed">
+                    Twelve innocent travelers, armed with faith and reason, must pierce
+                    the veil of deception before winter's mercy fades forever.
+                  </p>
+                </div>
               </div>
             </div>
-          </DiabloModal>
-        </section>
-
-        {/* Navigation Example */}
-        <section className="space-y-8">
-          <SectionHeader icon={<Target className="w-6 h-6" />} title="Navigation" />
-
-          <DiabloNavigation />
+          </GothicContainer>
         </section>
       </div>
     </div>
@@ -203,74 +188,145 @@ export default function GothicDemoPage() {
 }
 
 /**
- * Section Header Component
+ * Medieval Manuscript Ornaments
+ * Classic decorative elements from illuminated manuscripts
  */
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+
+// Border corner piece - complex geometric and floral pattern
+function CornerOrnament({ className = '', color = 'currentColor' }: { className?: string; color?: string }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-400">
-        {icon}
-      </div>
-      <h2 className="text-2xl font-cinzel text-amber-200 tracking-wide">{title}</h2>
-      <div className="flex-1 h-px bg-gradient-to-r from-amber-500/30 to-transparent" />
-    </div>
+    <svg width="120" height="120" viewBox="0 0 120 120" className={className}>
+      <defs>
+        <radialGradient id={`corner-gradient-${color}`}>
+          <stop offset="0%" stopColor={color} stopOpacity="0.6" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.2" />
+        </radialGradient>
+      </defs>
+      <g fill={color} opacity="0.4">
+        {/* Outer decorative frame */}
+        <path d="M 10,10 L 10,50 Q 10,10 50,10 L 10,10 Z" stroke={color} strokeWidth="2" fill="none" />
+        <path d="M 5,5 L 5,60 Q 5,5 60,5 L 5,5 Z" stroke={color} strokeWidth="1" fill="none" opacity="0.5" />
+
+        {/* Inner flourish */}
+        <circle cx="30" cy="30" r="20" fill={`url(#corner-gradient-${color})`} />
+        <circle cx="30" cy="30" r="15" fill="none" stroke={color} strokeWidth="1.5" />
+        <circle cx="30" cy="30" r="10" fill="none" stroke={color} strokeWidth="1" />
+
+        {/* Decorative petals */}
+        <path d="M 30,15 Q 35,20 30,25 Q 25,20 30,15 Z" />
+        <path d="M 45,30 Q 40,35 35,30 Q 40,25 45,30 Z" />
+        <path d="M 30,45 Q 25,40 30,35 Q 35,40 30,45 Z" />
+        <path d="M 15,30 Q 20,25 25,30 Q 20,35 15,30 Z" />
+
+        {/* Diagonal decorative lines */}
+        <path d="M 50,10 L 80,10 M 55,15 L 85,15 M 60,20 L 90,20" stroke={color} strokeWidth="1" opacity="0.3" />
+        <path d="M 10,50 L 10,80 M 15,55 L 15,85 M 20,60 L 20,90" stroke={color} strokeWidth="1" opacity="0.3" />
+
+        {/* Corner flourish extensions */}
+        <path d="M 60,5 Q 70,8 80,5 T 100,5" stroke={color} strokeWidth="1.5" fill="none" />
+        <path d="M 5,60 Q 8,70 5,80 T 5,100" stroke={color} strokeWidth="1.5" fill="none" />
+      </g>
+    </svg>
+  );
+}
+
+// Elaborate border decoration - inspired by illuminated manuscript margins
+function BorderDecoration({ className = '', color = 'currentColor', vertical = false }: { className?: string; color?: string; vertical?: boolean }) {
+  return (
+    <svg
+      width={vertical ? "60" : "400"}
+      height={vertical ? "400" : "60"}
+      viewBox={vertical ? "0 0 60 400" : "0 0 400 60"}
+      className={className}
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <pattern id={`border-pattern-${color}-${vertical ? 'v' : 'h'}`} x="0" y="0" width="80" height="60" patternUnits="userSpaceOnUse">
+          {/* Repeating decorative motif */}
+          <circle cx="40" cy="30" r="8" fill={color} opacity="0.3" />
+          <circle cx="40" cy="30" r="12" fill="none" stroke={color} strokeWidth="1" opacity="0.2" />
+          <path d="M 30,30 Q 35,25 40,30 Q 35,35 30,30 Z" fill={color} opacity="0.25" />
+          <path d="M 50,30 Q 45,25 40,30 Q 45,35 50,30 Z" fill={color} opacity="0.25" />
+        </pattern>
+      </defs>
+
+      {vertical ? (
+        <g>
+          <rect width="60" height="400" fill={`url(#border-pattern-${color}-v)`} />
+          <path d="M 30,0 Q 35,50 30,100 T 30,200 Q 25,250 30,300 T 30,400"
+                stroke={color} strokeWidth="2" fill="none" opacity="0.4" />
+          <path d="M 20,20 L 25,25 L 20,30 M 40,20 L 35,25 L 40,30"
+                stroke={color} strokeWidth="1" opacity="0.3" />
+        </g>
+      ) : (
+        <g>
+          <rect width="400" height="60" fill={`url(#border-pattern-${color}-h)`} />
+          <path d="M 0,30 Q 50,35 100,30 T 200,30 Q 250,25 300,30 T 400,30"
+                stroke={color} strokeWidth="2" fill="none" opacity="0.4" />
+          <path d="M 20,20 L 25,25 L 30,20 M 20,40 L 25,35 L 30,40"
+                stroke={color} strokeWidth="1" opacity="0.3" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// Central illumination - like a decorated initial letter
+function CentralIllumination({ className = '', color = 'currentColor' }: { className?: string; color?: string }) {
+  return (
+    <svg width="80" height="80" viewBox="0 0 100 100" className={className}>
+      <defs>
+        <radialGradient id={`central-gradient-${color}`}>
+          <stop offset="0%" stopColor={color} stopOpacity="0.8" />
+          <stop offset="70%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Central medallion */}
+      <circle cx="50" cy="50" r="40" fill={`url(#central-gradient-${color})`} />
+      <circle cx="50" cy="50" r="35" fill="none" stroke={color} strokeWidth="2" opacity="0.5" />
+      <circle cx="50" cy="50" r="30" fill="none" stroke={color} strokeWidth="1.5" opacity="0.4" />
+      <circle cx="50" cy="50" r="25" fill="none" stroke={color} strokeWidth="1" opacity="0.3" />
+
+      {/* Decorative rays */}
+      <g opacity="0.4">
+        <path d="M 50,10 L 50,20 M 50,80 L 50,90" stroke={color} strokeWidth="2" />
+        <path d="M 10,50 L 20,50 M 80,50 L 90,50" stroke={color} strokeWidth="2" />
+        <path d="M 20,20 L 27,27 M 73,73 L 80,80" stroke={color} strokeWidth="1.5" />
+        <path d="M 80,20 L 73,27 M 27,73 L 20,80" stroke={color} strokeWidth="1.5" />
+      </g>
+
+      {/* Inner flower pattern */}
+      <g fill={color} opacity="0.5">
+        <path d="M 50,35 Q 55,40 50,45 Q 45,40 50,35 Z" />
+        <path d="M 65,50 Q 60,55 55,50 Q 60,45 65,50 Z" />
+        <path d="M 50,65 Q 45,60 50,55 Q 55,60 50,65 Z" />
+        <path d="M 35,50 Q 40,45 45,50 Q 40,55 35,50 Z" />
+      </g>
+    </svg>
   );
 }
 
 /**
- * Diablo-style Button
+ * Gothic Button Component
  */
-interface DiabloButtonProps {
+interface GothicButtonProps {
   children: React.ReactNode;
-  variant: 'gold' | 'red' | 'purple' | 'blue' | 'green' | 'gray';
+  variant: 'primary' | 'danger' | 'royal' | 'shadow' | 'battle' | 'mountain';
   icon?: React.ReactNode;
   onClick?: () => void;
+  active?: boolean;
 }
 
-function DiabloButton({ children, variant, icon, onClick }: DiabloButtonProps) {
+function GothicButton({ children, variant, icon, onClick, active }: GothicButtonProps) {
   const variants = {
-    gold: {
-      bg: 'bg-gradient-to-b from-amber-600 via-amber-700 to-amber-900',
-      border: 'border-amber-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(217,119,6,0.3)]',
-      hover: 'hover:from-amber-500 hover:via-amber-600 hover:to-amber-800 hover:shadow-[0_0_30px_rgba(217,119,6,0.5)]',
-      text: 'text-amber-50',
-    },
-    red: {
-      bg: 'bg-gradient-to-b from-red-700 via-red-800 to-red-950',
-      border: 'border-red-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(185,28,28,0.3)]',
-      hover: 'hover:from-red-600 hover:via-red-700 hover:to-red-900 hover:shadow-[0_0_30px_rgba(185,28,28,0.5)]',
-      text: 'text-red-50',
-    },
-    purple: {
-      bg: 'bg-gradient-to-b from-purple-700 via-purple-800 to-purple-950',
-      border: 'border-purple-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(126,34,206,0.3)]',
-      hover: 'hover:from-purple-600 hover:via-purple-700 hover:to-purple-900 hover:shadow-[0_0_30px_rgba(126,34,206,0.5)]',
-      text: 'text-purple-50',
-    },
-    blue: {
-      bg: 'bg-gradient-to-b from-blue-700 via-blue-800 to-blue-950',
-      border: 'border-blue-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(29,78,216,0.3)]',
-      hover: 'hover:from-blue-600 hover:via-blue-700 hover:to-blue-900 hover:shadow-[0_0_30px_rgba(29,78,216,0.5)]',
-      text: 'text-blue-50',
-    },
-    green: {
-      bg: 'bg-gradient-to-b from-green-700 via-green-800 to-green-950',
-      border: 'border-green-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(21,128,61,0.3)]',
-      hover: 'hover:from-green-600 hover:via-green-700 hover:to-green-900 hover:shadow-[0_0_30px_rgba(21,128,61,0.5)]',
-      text: 'text-green-50',
-    },
-    gray: {
-      bg: 'bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950',
-      border: 'border-slate-500/60',
-      shadow: 'shadow-[0_0_20px_rgba(71,85,105,0.3)]',
-      hover: 'hover:from-slate-600 hover:via-slate-700 hover:to-slate-900 hover:shadow-[0_0_30px_rgba(71,85,105,0.5)]',
-      text: 'text-slate-50',
-    },
+    primary: { gradient: 'from-amber-600 to-amber-800', color: 'rgb(251,191,36)', textColor: 'text-amber-200' },
+    danger: { gradient: 'from-red-700 to-red-900', color: 'rgb(248,113,113)', textColor: 'text-red-200' },
+    royal: { gradient: 'from-purple-700 to-purple-900', color: 'rgb(216,180,254)', textColor: 'text-purple-200' },
+    shadow: { gradient: 'from-slate-700 to-slate-900', color: 'rgb(203,213,225)', textColor: 'text-slate-200' },
+    battle: { gradient: 'from-orange-700 to-orange-900', color: 'rgb(251,146,60)', textColor: 'text-orange-200' },
+    mountain: { gradient: 'from-cyan-700 to-cyan-900', color: 'rgb(103,232,249)', textColor: 'text-cyan-200' },
   };
 
   const v = variants[variant];
@@ -279,223 +335,181 @@ function DiabloButton({ children, variant, icon, onClick }: DiabloButtonProps) {
     <button
       onClick={onClick}
       className={`
-        relative group px-6 py-3
-        ${v.bg} ${v.border} ${v.text}
-        border-2 border-t-4 border-b
-        ${v.shadow} ${v.hover}
-        font-cinzel tracking-wider text-sm uppercase
-        transition-all duration-300
-        active:translate-y-0.5 active:shadow-none
-
-        before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity
-
-        after:absolute after:inset-x-0 after:top-0 after:h-px after:bg-white/20
+        relative group
+        px-10 py-5
+        bg-gradient-to-br ${v.gradient}
+        border-4 border-double border-opacity-60
+        font-cinzel tracking-widest text-sm uppercase
+        text-white
+        transition-all duration-700
+        shadow-2xl
+        hover:shadow-[0_0_30px_rgba(0,0,0,0.5)]
+        hover:scale-[1.03]
+        overflow-visible
+        ${active ? 'ring-4 ring-offset-2 ring-offset-slate-950' : ''}
       `}
+      style={{ borderColor: v.color }}
     >
-      <span className="relative z-10 flex items-center justify-center gap-2">
+      {/* Corner ornaments */}
+      <CornerOrnament
+        className="absolute -top-8 -left-8 transition-all duration-700 group-hover:scale-110 drop-shadow-2xl"
+        color={v.color}
+      />
+      <CornerOrnament
+        className="absolute -top-8 -right-8 scale-x-[-1] transition-all duration-700 group-hover:scale-110 drop-shadow-2xl"
+        color={v.color}
+      />
+      <CornerOrnament
+        className="absolute -bottom-8 -left-8 scale-y-[-1] transition-all duration-700 group-hover:scale-110 drop-shadow-2xl"
+        color={v.color}
+      />
+      <CornerOrnament
+        className="absolute -bottom-8 -right-8 scale-[-1] transition-all duration-700 group-hover:scale-110 drop-shadow-2xl"
+        color={v.color}
+      />
+
+      {/* Border decorations */}
+      <BorderDecoration
+        className="absolute top-0 left-0 w-full h-full opacity-50 pointer-events-none"
+        color={v.color}
+      />
+
+      {/* Content */}
+      <span className={`relative z-10 flex items-center justify-center gap-3 ${v.textColor} drop-shadow-lg`}>
         {icon}
         {children}
       </span>
 
-      {/* Corner accents */}
-      <span className="absolute top-0 left-0 w-1 h-1 bg-white/40" />
-      <span className="absolute top-0 right-0 w-1 h-1 bg-white/40" />
-      <span className="absolute bottom-0 left-0 w-1 h-1 bg-black/40" />
-      <span className="absolute bottom-0 right-0 w-1 h-1 bg-black/40" />
+      {/* Inner glow */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none"
+        style={{ background: `radial-gradient(circle at center, ${v.color}, transparent)` }}
+      />
     </button>
   );
 }
 
 /**
- * Diablo-style Panel
+ * Gothic Container Component
  */
-interface DiabloPanelProps {
+interface GothicContainerProps {
   children: React.ReactNode;
-  variant: 'gold' | 'red' | 'purple' | 'blue';
-  title: string;
+  variant: 'ornate' | 'shadow' | 'blood' | 'frost';
+  size?: 'normal' | 'large';
 }
 
-function DiabloPanel({ children, variant, title }: DiabloPanelProps) {
+function GothicContainer({ children, variant, size = 'normal' }: GothicContainerProps) {
   const variants = {
-    gold: {
-      border: 'border-amber-600/40',
-      titleBg: 'bg-gradient-to-r from-amber-900/80 to-amber-800/60',
-      titleText: 'text-amber-200',
-      glow: 'shadow-[inset_0_0_20px_rgba(217,119,6,0.1)]',
+    ornate: {
+      gradient: 'from-amber-950/80 via-slate-900/95 to-amber-950/80',
+      color: 'rgb(251,191,36)',
+      border: 'border-amber-500/60'
     },
-    red: {
-      border: 'border-red-600/40',
-      titleBg: 'bg-gradient-to-r from-red-900/80 to-red-800/60',
-      titleText: 'text-red-200',
-      glow: 'shadow-[inset_0_0_20px_rgba(185,28,28,0.1)]',
+    shadow: {
+      gradient: 'from-purple-950/80 via-slate-900/95 to-purple-950/80',
+      color: 'rgb(216,180,254)',
+      border: 'border-purple-500/60'
     },
-    purple: {
-      border: 'border-purple-600/40',
-      titleBg: 'bg-gradient-to-r from-purple-900/80 to-purple-800/60',
-      titleText: 'text-purple-200',
-      glow: 'shadow-[inset_0_0_20px_rgba(126,34,206,0.1)]',
+    blood: {
+      gradient: 'from-red-950/80 via-slate-900/95 to-red-950/80',
+      color: 'rgb(248,113,113)',
+      border: 'border-red-500/60'
     },
-    blue: {
-      border: 'border-blue-600/40',
-      titleBg: 'bg-gradient-to-r from-blue-900/80 to-blue-800/60',
-      titleText: 'text-blue-200',
-      glow: 'shadow-[inset_0_0_20px_rgba(29,78,216,0.1)]',
+    frost: {
+      gradient: 'from-cyan-950/80 via-slate-900/95 to-cyan-950/80',
+      color: 'rgb(103,232,249)',
+      border: 'border-cyan-500/60'
     },
   };
 
   const v = variants[variant];
+  const padding = size === 'large' ? 'p-20' : 'p-12';
 
   return (
-    <div className={`
-      border-4 ${v.border} ${v.glow}
-      bg-gradient-to-br from-slate-900/90 via-slate-950/95 to-black/90
-      backdrop-blur-sm
-    `}>
-      {/* Title bar */}
-      <div className={`
-        ${v.titleBg} ${v.titleText}
-        px-4 py-2 border-b-2 ${v.border}
-        font-cinzel tracking-wider uppercase text-sm
-        flex items-center justify-between
-      `}>
-        <span>{title}</span>
-        <ChevronRight className="w-4 h-4 opacity-50" />
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        {children}
-      </div>
-
-      {/* Corner decorations */}
-      <span className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white/20" />
-      <span className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white/20" />
-      <span className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white/20" />
-      <span className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white/20" />
-    </div>
-  );
-}
-
-/**
- * Modal Component
- */
-function DiabloModal({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="max-w-2xl mx-auto">
-      <div className="
-        relative
-        border-4 border-amber-600/60
-        bg-gradient-to-br from-slate-900 via-slate-950 to-black
-        shadow-[0_0_60px_rgba(217,119,6,0.3),inset_0_0_40px_rgba(0,0,0,0.5)]
-        p-8
-      ">
-        {/* Decorative corners */}
-        <div className="absolute -top-3 -left-3 w-6 h-6 border-t-4 border-l-4 border-amber-500" />
-        <div className="absolute -top-3 -right-3 w-6 h-6 border-t-4 border-r-4 border-amber-500" />
-        <div className="absolute -bottom-3 -left-3 w-6 h-6 border-b-4 border-l-4 border-amber-500" />
-        <div className="absolute -bottom-3 -right-3 w-6 h-6 border-b-4 border-r-4 border-amber-500" />
-
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Navigation Component
- */
-function DiabloNavigation() {
-  const tabs = [
-    { icon: <Sword />, label: 'Combat' },
-    { icon: <Shield />, label: 'Defense' },
-    { icon: <Crown />, label: 'Character' },
-    { icon: <Target />, label: 'Skills' },
-  ];
-
-  return (
-    <div className="flex gap-2 bg-slate-950/50 p-2 border-2 border-slate-700/50">
-      {tabs.map((tab, i) => (
-        <button
-          key={i}
-          className="
-            flex-1 flex items-center justify-center gap-2 px-4 py-3
-            bg-gradient-to-b from-slate-700 to-slate-800
-            border-2 border-slate-600/60
-            hover:from-amber-700 hover:to-amber-800 hover:border-amber-500/60
-            text-slate-300 hover:text-amber-100
-            font-cinzel text-sm uppercase tracking-wider
-            transition-all duration-300
-            active:translate-y-0.5
-          "
-        >
-          <span className="w-5 h-5">{tab.icon}</span>
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Helper Components
- */
-function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: 'red' | 'blue' | 'green' }) {
-  const percentage = (value / max) * 100;
-  const colors = {
-    red: 'bg-red-600',
-    blue: 'bg-blue-600',
-    green: 'bg-green-600',
-  };
-
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs text-slate-400 font-cinzel">
-        <span>{label}</span>
-        <span>{value} / {max}</span>
-      </div>
-      <div className="h-3 bg-slate-950 border border-slate-700">
-        <div
-          className={`h-full ${colors[color]} transition-all duration-300 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]`}
-          style={{ width: `${percentage}%` }}
+    <div className="relative group">
+      <div
+        className={`
+          relative
+          ${padding}
+          bg-gradient-to-br ${v.gradient}
+          border-8 border-double ${v.border}
+          shadow-2xl
+          backdrop-blur-lg
+          transition-all duration-1000
+          hover:shadow-[0_0_50px_rgba(0,0,0,0.7)]
+          overflow-visible
+        `}
+      >
+        {/* Corner ornaments - larger and more elaborate */}
+        <CornerOrnament
+          className="absolute -top-12 -left-12 transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
         />
-      </div>
-    </div>
-  );
-}
+        <CornerOrnament
+          className="absolute -top-12 -right-12 scale-x-[-1] transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
+        <CornerOrnament
+          className="absolute -bottom-12 -left-12 scale-y-[-1] transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
+        <CornerOrnament
+          className="absolute -bottom-12 -right-12 scale-[-1] transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
 
-function EffectBadge({ icon, label, stacks }: { icon: React.ReactNode; label: string; stacks: number }) {
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-slate-900/50 border border-slate-700/50 hover:border-amber-500/30 transition-colors">
-      <div className="w-8 h-8 flex items-center justify-center text-amber-400">
-        {icon}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm text-slate-200 font-cinzel">{label}</div>
-      </div>
-      <div className="px-2 py-0.5 bg-slate-800 border border-slate-600 text-xs text-slate-300 font-bold">
-        x{stacks}
-      </div>
-    </div>
-  );
-}
+        {/* Side center illuminations */}
+        <CentralIllumination
+          className="absolute top-1/2 -left-10 -translate-y-1/2 transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
+        <CentralIllumination
+          className="absolute top-1/2 -right-10 -translate-y-1/2 transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
+        <CentralIllumination
+          className="absolute -top-10 left-1/2 -translate-x-1/2 transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
+        <CentralIllumination
+          className="absolute -bottom-10 left-1/2 -translate-x-1/2 transition-all duration-1000 group-hover:scale-110 drop-shadow-2xl"
+          color={v.color}
+        />
 
-function QuestItem({ title, progress, total, status }: { title: string; progress: number; total: number; status: 'active' | 'complete' | 'locked' }) {
-  const statusColors = {
-    active: 'border-blue-500/40 text-blue-300',
-    complete: 'border-green-500/40 text-green-300',
-    locked: 'border-slate-600/40 text-slate-500',
-  };
+        {/* Border decorations */}
+        <BorderDecoration
+          className="absolute top-0 left-0 w-full opacity-40 pointer-events-none"
+          color={v.color}
+        />
+        <BorderDecoration
+          className="absolute bottom-0 left-0 w-full opacity-40 pointer-events-none scale-y-[-1]"
+          color={v.color}
+        />
+        <BorderDecoration
+          className="absolute left-0 top-0 h-full opacity-40 pointer-events-none"
+          color={v.color}
+          vertical
+        />
+        <BorderDecoration
+          className="absolute right-0 top-0 h-full opacity-40 pointer-events-none scale-x-[-1]"
+          color={v.color}
+          vertical
+        />
 
-  return (
-    <div className={`p-3 border-2 ${statusColors[status]} bg-slate-950/30`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-cinzel">{title}</span>
-        <span className="text-xs">{progress}/{total}</span>
-      </div>
-      <div className="h-1 bg-slate-900 border border-slate-800">
+        {/* Multiple inner borders for manuscript effect */}
+        <div className="absolute inset-6 border-4 border-double border-white/10 pointer-events-none" />
+        <div className="absolute inset-10 border-2 border-white/5 pointer-events-none" />
+        <div className="absolute inset-12 border border-white/5 pointer-events-none" />
+
+        {/* Content */}
+        <div className="relative z-10">
+          {children}
+        </div>
+
+        {/* Hover glow overlay */}
         <div
-          className="h-full bg-current transition-all duration-300"
-          style={{ width: `${(progress / total) * 100}%` }}
+          className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 pointer-events-none"
+          style={{ background: `radial-gradient(circle at center, ${v.color}, transparent 70%)` }}
         />
       </div>
     </div>
