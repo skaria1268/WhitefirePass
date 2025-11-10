@@ -140,6 +140,12 @@ function createPlayers(roles: Role[]): Player[] {
     '艾米莉', '本杰明', '伊莎贝拉', '亚历山大', '夏洛特',
   ];
 
+  const englishNames = [
+    'Nora Grey', 'Marcus Hawke', 'Eileen Morris', 'Thomas Crowley', 'Lydia Crowley',
+    'Oliver Payne', 'Sophia Ashford', 'Samuel Blackwood', 'Claire Warren', 'Victor Stone',
+    'Emily Carter', 'Benjamin White', 'Isabella Fairfax', 'Alexander Morris', 'Charlotte Winters',
+  ];
+
   const personalities = [
     `【女性】我叫诺拉·格雷，今年二十六岁，曾是伦敦大学的古文字研究员。我有一头深栗色的长发，总是简单地挽在脑后，金边眼镜后是一双灰蓝色的眼睛——冷静、审视，却难掩疲惫。
 
@@ -335,6 +341,7 @@ function createPlayers(roles: Role[]): Player[] {
   return shuffledRoles.map((role, index) => ({
     id: generateId(),
     name: names[index],
+    englishName: englishNames[index],
     role,
     isAlive: true,
     isAI: true,

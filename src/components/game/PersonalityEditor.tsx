@@ -210,15 +210,31 @@ function TravelerDetail({ player }: { player: Player }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h3 className="text-3xl font-bold text-amber-100 font-cinzel tracking-wider mb-2">
+      <div className="border-b border-amber-900/30 pb-5">
+        {/* Name - Chinese */}
+        <h3 className="text-4xl font-bold text-amber-100 mb-2 tracking-wide">
           {player.name}
         </h3>
+        {/* Name - English Gothic */}
+        {player.englishName && (
+          <div className="mb-4">
+            <p className="text-2xl font-cinzel text-amber-500/90 tracking-widest uppercase" style={{ letterSpacing: '0.15em' }}>
+              {player.englishName}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent"></div>
+              <span className="text-amber-800/60 text-xs">✦</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent"></div>
+            </div>
+          </div>
+        )}
+        {/* Role */}
         <div className="flex items-center gap-3">
-          <span className="text-lg text-amber-500 font-cinzel">
+          <span className="text-lg text-amber-500 font-cinzel tracking-wider">
             {roleNames[player.role]?.name}
           </span>
-          <span className="text-sm text-slate-500 font-serif">
+          <span className="text-amber-800/60">•</span>
+          <span className="text-sm text-slate-500 font-cinzel tracking-wide">
             {roleNames[player.role]?.subtitle}
           </span>
         </div>

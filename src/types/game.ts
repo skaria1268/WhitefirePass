@@ -49,6 +49,7 @@ export type MessageType =
 export interface Player {
   id: string;
   name: string;
+  englishName?: string;  // English name for display
   role: Role;
   isAlive: boolean;
   isAI: boolean;
