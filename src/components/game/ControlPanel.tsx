@@ -14,12 +14,13 @@ import { useGameStore } from '@/stores/game-store';
 import { testGeminiKey } from '@/lib/gemini';
 import { SaveGameManager } from '@/components/game/SaveGameManager';
 import { PersonalityEditor } from '@/components/game/PersonalityEditor';
+import { GameGuide } from '@/components/game/GameGuide';
 import type { GameConfig, GameState } from '@/types/game';
 import {
   Gamepad2,
   Loader2,
   Pause,
-  Dog,
+  Mountain,
   Users,
   AlertTriangle,
   CheckCircle2,
@@ -27,6 +28,7 @@ import {
   RotateCw,
   Save,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 
 const DEFAULT_CONFIG: GameConfig = {
@@ -157,6 +159,7 @@ function ControlTabContent({
   onReset,
   onClearError,
   onOpenPersonalityEditor,
+  onOpenGameGuide,
 }: {
   hasActiveGame: boolean;
   gameState: GameState | null;
@@ -173,6 +176,7 @@ function ControlTabContent({
   onReset: () => void;
   onClearError: () => void;
   onOpenPersonalityEditor: () => void;
+  onOpenGameGuide: () => void;
 }) {
   return (
     <>
@@ -215,6 +219,15 @@ function ControlTabContent({
           编辑 AI 人设
         </Button>
       )}
+
+      <Button
+        onClick={onOpenGameGuide}
+        variant="outline"
+        className="w-full flex items-center gap-2"
+      >
+        <HelpCircle className="w-4 h-4" />
+        游戏说明
+      </Button>
 
       {!hasActiveGame && <DefaultConfigInfo />}
     </>
@@ -322,7 +335,8 @@ function ControlButtons({
         onClick={onReset}
         className="w-full bg-red-600 hover:bg-red-700 text-white"
       >
-        🔄 重置游戏
+        <RotateCw className="w-4 h-4 mr-2" />
+        重置游戏
       </Button>
     </>
   );
@@ -369,15 +383,15 @@ function GameStatus({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">胜利者：</span>
           <Badge className="bg-green-600 flex items-center gap-1">
-            {winner === 'werewolf' ? (
+            {winner === 'marked' ? (
               <>
-                <Dog className="w-3 h-3" />
-                狼人阵营
+                <Mountain className="w-3 h-3" />
+                收割阵营
               </>
             ) : (
               <>
                 <Users className="w-3 h-3" />
-                村民阵营
+                羔羊阵营
               </>
             )}
           </Badge>
@@ -403,6 +417,7 @@ export function ControlPanel() {
   const [apiKey, setApiKey] = useState(storedApiKey);
   const [isValidating, setIsValidating] = useState(false);
   const [personalityEditorOpen, setPersonalityEditorOpen] = useState(false);
+  const [gameGuideOpen, setGameGuideOpen] = useState(false);
 
   // Sync local state with persisted apiKey from store
   useEffect(() => {
@@ -439,10 +454,10 @@ export function ControlPanel() {
 
   return (
     <>
-    <Card>
-      <CardHeader>
-        <CardTitle>游戏控制</CardTitle>
-        <CardDescription>
+    <Card className="shadow-inner-glow">
+      <CardHeader className="bg-gradient-to-r from-card via-card/50 to-card border-b border-border">
+        <CardTitle className="font-cinzel tracking-wide">游戏控制</CardTitle>
+        <CardDescription className="font-serif">
           配置并控制 AI 狼人杀游戏
         </CardDescription>
       </CardHeader>
@@ -476,6 +491,7 @@ export function ControlPanel() {
               onReset={resetGame}
               onClearError={clearError}
               onOpenPersonalityEditor={() => setPersonalityEditorOpen(true)}
+              onOpenGameGuide={() => setGameGuideOpen(true)}
             />
           </TabsContent>
 
@@ -490,6 +506,12 @@ export function ControlPanel() {
     <PersonalityEditor
       open={personalityEditorOpen}
       onOpenChange={setPersonalityEditorOpen}
+    />
+
+    {/* Game Guide Dialog */}
+    <GameGuide
+      open={gameGuideOpen}
+      onOpenChange={setGameGuideOpen}
     />
   </>
   );

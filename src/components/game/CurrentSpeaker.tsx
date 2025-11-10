@@ -138,8 +138,8 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="flex-shrink-0 pb-2 px-4 py-3">
-        <CardTitle className="text-base flex items-center gap-2">
+      <CardHeader className="flex-shrink-0 pb-2 px-4 py-3 bg-gradient-to-r from-card via-card/50 to-card border-b border-border">
+        <CardTitle className="text-base flex items-center gap-2 font-cinzel tracking-wide">
           <MessageSquare className="w-4 h-4" />
           当前发言者
         </CardTitle>

@@ -12,7 +12,8 @@ import { VoteTracker } from './VoteTracker';
 import { FactionStats } from './FactionStats';
 import { VotingProgress } from './VotingProgress';
 import { CurrentSpeaker } from './CurrentSpeaker';
-import { Dog, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
+import { StartMenu } from './StartMenu';
+import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -46,7 +47,7 @@ function getPhaseTheme(phase: string) {
       return {
         gradient: 'from-stone-900 via-emerald-950 to-stone-900',
         border: 'border-emerald-500/30',
-        icon: <Dog className="w-8 h-8 text-emerald-400" />,
+        icon: <Mountain className="w-8 h-8 text-emerald-400" />,
         label: '游戏结束',
       };
     case 'setup':
@@ -71,19 +72,26 @@ export function GameBoard() {
   const phase = gameState?.phase || 'setup';
   const theme = getPhaseTheme(phase);
 
+  // Show start menu if no active game
+  if (!gameState || phase === 'setup') {
+    return <StartMenu />;
+  }
+
   return (
     <div className={cn(
       "h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br transition-all duration-1000 ease-in-out",
       theme.gradient
     )}>
       {/* Fixed Header */}
-      <header className="flex-shrink-0 border-b border-border/50 backdrop-blur-sm bg-background/10">
+      <header className="flex-shrink-0 border-b border-border/50 backdrop-blur-sm bg-background/10 shadow-lg">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Dog className="w-8 h-8 text-stone-300" />
+            <Mountain className="w-8 h-8 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">白烬山口</h1>
-              <p className="text-xs text-muted-foreground">
+              <h1 className="text-2xl font-bold text-foreground font-cinzel text-glow tracking-wider">
+                白烬山口
+              </h1>
+              <p className="text-xs text-muted-foreground font-serif">
                 15名旅人被困于寂静山庄，在山灵的契约下展开生死博弈
               </p>
             </div>
@@ -91,13 +99,13 @@ export function GameBoard() {
 
           {gameState && (
             <div className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full border-2 backdrop-blur-md bg-background/20",
+              "flex items-center gap-2 px-4 py-2 rounded-full border-2 backdrop-blur-md bg-background/20 shadow-glow-amber",
               theme.border
             )}>
               {theme.icon}
               <div>
-                <div className="text-sm font-bold text-foreground">{theme.label}</div>
-                <div className="text-xs text-muted-foreground">第 {gameState.round} 回合</div>
+                <div className="text-sm font-bold text-foreground font-cinzel">{theme.label}</div>
+                <div className="text-xs text-muted-foreground font-serif">第 {gameState.round} 回合</div>
               </div>
             </div>
           )}
@@ -109,9 +117,9 @@ export function GameBoard() {
         {/* Left Sidebar - Players & Controls */}
         <div className="w-96 flex flex-col gap-4 overflow-hidden">
           {/* Players List - Scrollable */}
-          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden flex flex-col">
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border">
-              <h2 className="text-lg font-bold text-card-foreground">玩家列表</h2>
+          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
+              <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">玩家列表</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {gameState ? (
@@ -163,9 +171,9 @@ export function GameBoard() {
         {/* Right Main Area - Game Log & Sidebar */}
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* Game Log with Tabs */}
-          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden flex flex-col">
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border">
-              <h2 className="text-lg font-bold text-card-foreground">游戏日志</h2>
+          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
+              <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">游戏日志</h2>
             </div>
             <div className="flex-1 overflow-hidden">
               {gameState ? (
@@ -215,12 +223,12 @@ export function GameBoard() {
           {gameState && (
             <div className="w-80 flex flex-col gap-4 overflow-hidden">
               {/* Current Speaker - Upper section */}
-              <div className="flex-shrink-0 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl">
+              <div className="flex-shrink-0 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow">
                 <CurrentSpeaker gameState={gameState} />
               </div>
 
               {/* Vote Tracker - Lower section (scrollable) */}
-              <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl overflow-hidden">
+              <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden">
                 <VoteTracker gameState={gameState} />
               </div>
             </div>

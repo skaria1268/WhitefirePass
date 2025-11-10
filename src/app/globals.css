@@ -33,26 +33,26 @@
   }
 
   .dark {
-    /* Stone theme - Dark mode */
-    --background: 20 14.3% 4.1%; /* stone-950 */
-    --foreground: 60 9.1% 97.8%; /* stone-50 */
-    --card: 24 9.8% 10%; /* stone-900 */
-    --card-foreground: 60 9.1% 97.8%; /* stone-50 */
-    --popover: 24 9.8% 10%; /* stone-900 */
-    --popover-foreground: 60 9.1% 97.8%;
-    --primary: 60 9.1% 97.8%; /* stone-50 */
-    --primary-foreground: 24 9.8% 10%; /* stone-900 */
-    --secondary: 12 6.5% 15.1%; /* stone-800 */
-    --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 12 6.5% 15.1%; /* stone-800 */
-    --muted-foreground: 24 5.4% 63.9%; /* stone-400 */
-    --accent: 12 6.5% 15.1%; /* stone-800 */
-    --accent-foreground: 60 9.1% 97.8%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%; /* stone-800 */
-    --input: 12 6.5% 15.1%; /* stone-800 */
-    --ring: 24 5.7% 82.9%; /* stone-400 */
+    /* Whitefire Pass theme - Dark mode with fire and ash tones */
+    --background: 20 14.3% 4.1%; /* Deep charcoal */
+    --foreground: 30 15% 92%; /* Warm ash white */
+    --card: 25 12% 8%; /* Darker stone with warm undertone */
+    --card-foreground: 30 15% 92%; /* Warm ash white */
+    --popover: 25 12% 8%;
+    --popover-foreground: 30 15% 92%;
+    --primary: 28 80% 52%; /* Amber fire glow */
+    --primary-foreground: 20 14.3% 4.1%;
+    --secondary: 15 8% 18%; /* Warm dark stone */
+    --secondary-foreground: 30 15% 92%;
+    --muted: 15 8% 18%; /* Warm dark stone */
+    --muted-foreground: 30 10% 65%; /* Warm gray */
+    --accent: 15 8% 18%;
+    --accent-foreground: 30 15% 92%;
+    --destructive: 0 72% 51%; /* Blood red */
+    --destructive-foreground: 30 15% 92%;
+    --border: 20 8% 20%; /* Darker warm border */
+    --input: 20 8% 20%;
+    --ring: 28 80% 52%; /* Amber glow */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -67,9 +67,53 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family:
-      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-      Arial, sans-serif;
+    font-family: var(--font-noto-serif-sc), 'Noto Serif SC', 'Source Han Serif SC',
+      'Songti SC', SimSun, serif;
+    letter-spacing: 0.02em;
+  }
+
+  /* Gothic-style headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cinzel), 'Cinzel', Georgia, serif;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Enhanced text styling for atmospheric feel */
+  .text-glow {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5),
+                 0 0 20px rgba(251, 191, 36, 0.3),
+                 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .text-ember {
+    background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Light theme for start menu */
+  .light-theme {
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 28 80% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+    --accent: 60 4.8% 95.9%;
+    --accent-foreground: 24 9.8% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 28 80% 52%;
   }
 
   /* Custom scrollbar styles - Shadcn/Stone theme */

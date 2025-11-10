@@ -1,6 +1,23 @@
 import type { Metadata } from 'next';
+import { Cinzel, Noto_Serif_SC } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+
+// Gothic-style font for titles and headings
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cinzel',
+  display: 'swap',
+});
+
+// Chinese serif font for body text
+const notoSerifSC = Noto_Serif_SC({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-serif-sc',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: '白烬山口 - Whitefire Pass',
@@ -19,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   return (
-    <html lang="en" className="dark">
+    <html lang="zh-CN" className={`dark ${cinzel.variable} ${notoSerifSC.variable}`}>
       <body className="antialiased">
         <Providers>{children}</Providers>
       </body>

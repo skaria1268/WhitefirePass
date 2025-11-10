@@ -28,12 +28,12 @@ export function VotingProgress({ gameState }: VotingProgressProps) {
   const allVoted = votedCount === totalVoters;
 
   return (
-    <Card className="bg-gradient-to-br from-orange-950/50 to-orange-900/30 border-orange-500/30">
+    <Card className="bg-gradient-to-br from-orange-950/50 to-orange-900/30 border-orange-500/30 shadow-inner-glow">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Vote className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-semibold text-orange-400">投票进度</span>
+            <span className="text-sm font-semibold text-orange-400 font-cinzel tracking-wide">投票进度</span>
           </div>
           {allVoted && (
             <CheckCircle2 className="w-4 h-4 text-green-400 animate-pulse" />
