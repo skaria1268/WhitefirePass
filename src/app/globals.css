@@ -139,4 +139,18 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) hsl(var(--muted) / 0.3);
   }
+
+  /* 3D card flip effects for tarot cards */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
 }
