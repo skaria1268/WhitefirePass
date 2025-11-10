@@ -123,10 +123,7 @@ export function GameBoard() {
       </header>
 
       {/* Main Content Area - No Scroll */}
-      <div className={cn(
-        "flex-1 flex gap-4 p-4 overflow-hidden transition-all duration-1000 ease-out delay-300",
-        isGameEntering ? 'opacity-0 translate-y-8' : 'opacity-100 translate-y-0'
-      )}>
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
         {/* Left Sidebar - Players & Controls */}
         <div className="w-96 flex flex-col gap-4 overflow-hidden">
           {/* Players List - Scrollable */}

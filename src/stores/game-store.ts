@@ -224,15 +224,25 @@ export const useGameStore = create<GameStore>()(
         return;
       }
 
-      // Handle setup phase - game starts with day phase
+      // Handle setup phase - show story messages progressively
       if (gameState.phase === 'setup') {
-        gameState.phase = 'day';
-        gameState.round = 1;
-        gameState.currentPlayerIndex = 0;
-        gameState.messages.push(
-          addMessage(gameState, '旁白', '第 1 回合开始。天亮了，请大家发言！', 'system', 'all'),
-        );
-        set({ gameState: { ...gameState }, isProcessing: false });
+        const progress = gameState.storyProgress || 0;
+
+        // If all 6 story messages have been shown, transition to day phase
+        if (progress >= 6) {
+          gameState.phase = 'day';
+          gameState.round = 1;
+          gameState.currentPlayerIndex = 0;
+          gameState.messages.push(
+            addMessage(gameState, '旁白', '第 1 回合开始。天亮了，请大家发言！', 'system', 'all'),
+          );
+          set({ gameState: { ...gameState }, isProcessing: false });
+          return;
+        }
+
+        // Otherwise, show next story message
+        get().advanceToNextPhase();
+        set({ isProcessing: false });
         return;
       }
 
@@ -383,10 +393,14 @@ export const useGameStore = create<GameStore>()(
     if (!gameState) return;
 
     if (gameState.phase === 'prologue') {
-      // Prologue to setup: Add opening story
+      // Prologue to setup: Initialize story progression
       gameState.phase = 'setup';
+      gameState.storyProgress = 0;
+    } else if (gameState.phase === 'setup') {
+      // Setup: Add story messages one by one
+      const progress = gameState.storyProgress || 0;
 
-      // Count roles
+      // Count roles (needed for final message)
       const roleCounts = gameState.players.reduce(
         (acc, player) => {
           acc[player.role] = (acc[player.role] || 0) + 1;
@@ -395,91 +409,55 @@ export const useGameStore = create<GameStore>()(
         {} as Record<string, number>,
       );
 
-      // Find twin pair
-      const twins = gameState.players.filter((p) => p.role === 'twin');
-      const twinPair = twins.length === 2 ? { twin1: twins[0].name, twin2: twins[1].name } : undefined;
-
-      // Add opening story messages
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '叙述者',
-          `一份神秘的委托书，将十五个陌生人聚集在一起。
+      // Story messages based on progress
+      const storyMessages = [
+        {
+          from: '叙述者',
+          content: `一份神秘的委托书，将十五个陌生人聚集在一起。
 
 有人为了钱，有人为了逃避，有人为了寻找，有人为了赎罪。他们从伦敦、爱丁堡、曼彻斯特等地出发，在1913年深冬的暴雪前夕，抵达了白烬山口。
 
 委托人承诺：完成任务，每人可得五百英镑——足以改变命运的金额。`,
-          'system',
-          'all'
-        )
-      );
-
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '叙述者',
-          `第一天，他们在山口的寂静山庄集合。
+        },
+        {
+          from: '叙述者',
+          content: `第一天，他们在山口的寂静山庄集合。
 
 第二天，委托人没有出现。取而代之的是，暴风雪如约而至——一场诡异的、不合时节的暴雪，封死了下山的所有道路。
 
 第三天，他们在山庄的地窖里发现了一封遗书。`,
-          'system',
-          'all'
-        )
-      );
-
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '叙述者',
-          `遗书是旧主人留下的，字迹潦草，像是在极度恐惧中写成：
+        },
+        {
+          from: '叙述者',
+          content: `遗书是旧主人留下的，字迹潦草，像是在极度恐惧中写成：
 
 "山灵警告：你们之中混入了三个非人者。它们会在夜晚猎杀真正的人类。你们必须在白昼找出这三个非人者并献祭，否则所有人都会死。"
 
 "在收割与羔羊的对抗结束之前，暴风雪永远不会停止。"`,
-          'system',
-          'all'
-        )
-      );
-
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '叙述者',
-          `一开始，没有人相信。
+        },
+        {
+          from: '叙述者',
+          content: `一开始，没有人相信。
 
 有人说这是恶作剧，有人说委托人在戏弄他们。但暴风雪始终没有停止。
 
 第四天、第五天、第六天……食物越来越少，寒冷越来越深。有人开始发烧，有人开始绝望。
 
 这样下去，所有人都会饿死，或冻死。`,
-          'system',
-          'all'
-        )
-      );
-
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '叙述者',
-          `今天，是第七天。
+        },
+        {
+          from: '叙述者',
+          content: `今天，是第七天。
 
 在绝望与恐惧的驱使下，他们决定：按照遗书的指示，举行献祭仪式。
 
 无论这是真是假，他们已经没有别的选择。
 
 黎明到来。游戏，正式开始。`,
-          'system',
-          'all'
-        )
-      );
-
-      // Add role information
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          '旁白',
-          `【身份已被烙印】
+        },
+        {
+          from: '旁白',
+          content: `【身份已被烙印】
 
 收割阵营：${roleCounts['marked'] || 0}名烙印者
 羔羊阵营：${roleCounts['listener'] || 0}名聆心者、${roleCounts['coroner'] || 0}名食灰者、${roleCounts['twin'] || 0}名共誓者、${roleCounts['guard'] || 0}名设闩者、${roleCounts['innocent'] || 0}名无知者
@@ -512,10 +490,19 @@ export const useGameStore = create<GameStore>()(
   - 依靠观察和推理找出收割者
 
 天亮了。第一个白天，开始讨论...`,
-          'system',
-          'all'
-        )
-      );
+        },
+      ];
+
+      if (progress < storyMessages.length) {
+        // Add current story message
+        const message = storyMessages[progress];
+        gameState.messages.push(
+          addMessage(gameState, message.from, message.content, 'system', 'all')
+        );
+        gameState.storyProgress = progress + 1;
+      }
+
+      // If all story messages shown, stay in setup phase but ready to advance to day
     } else if (gameState.phase === 'day') {
       // Day phase ended, go to voting
       gameState.phase = 'voting';

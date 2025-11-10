@@ -172,6 +172,9 @@ export interface GameState {
   // Vote history for all rounds
   voteHistory: Vote[];  // All day votes with round numbers
   nightVoteHistory: Vote[];  // All night votes with round numbers
+
+  // Story progression (for setup phase)
+  storyProgress?: number;  // 0-5: Track which story message to show next (0=not started)
 }
 
 /**

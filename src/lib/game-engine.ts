@@ -71,6 +71,7 @@ export function createGame(config: GameConfig): GameState {
     revoteRound: 0,
     voteHistory: [],
     nightVoteHistory: [],
+    storyProgress: 0,
   };
 }
 

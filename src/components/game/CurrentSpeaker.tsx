@@ -109,7 +109,8 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
       day: '白天讨论',
       voting: '献祭投票',
       night: '夜晚',
-      setup: '准备中',
+      prologue: '序章',
+      setup: '故事叙述',
       end: '游戏结束',
     };
     return phaseNames[phase] || phase;
@@ -163,7 +164,12 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
           </div>
 
           {/* Current Speaker */}
-          {currentPlayer ? (
+          {phase === 'prologue' || phase === 'setup' ? (
+            <div className="text-center text-muted-foreground py-4">
+              <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-xs">故事叙述中...</p>
+            </div>
+          ) : currentPlayer ? (
             <div className="text-center space-y-2">
               <div
                 className={cn(
