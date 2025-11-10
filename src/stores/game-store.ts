@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameState, GameConfig, Message, Player, SavedGame } from '@/types/game';
+import type { GameState, GameConfig, Message, Player, SavedGame, Clue } from '@/types/game';
 import {
   createGame,
   checkWinCondition,
@@ -25,6 +25,7 @@ interface GameStore {
   apiKey: string;
   lastError: string | null;
   retryCount: number;  // Current retry attempt count
+  clues: Clue[];  // Collected clues/documents
 
   // Actions
   setApiKey: (key: string) => void;
@@ -34,6 +35,10 @@ interface GameStore {
   retryCurrentStep: () => Promise<void>;
   clearError: () => void;
   updatePlayerPersonality: (playerId: string, personality: string) => void;
+
+  // Clue actions
+  addClue: (clue: Clue) => void;
+  markClueAsRead: (clueId: string) => void;
 
   // Save/Load actions
   saveGame: (name: string) => SavedGame;
@@ -58,6 +63,7 @@ export const useGameStore = create<GameStore>()(
   apiKey: '',
   lastError: null,
   retryCount: 0,
+  clues: [],
 
   /**
    * Set Gemini API key
@@ -100,6 +106,25 @@ export const useGameStore = create<GameStore>()(
       player.personality = personality;
       set({ gameState: { ...gameState } });
     }
+  },
+
+  /**
+   * Add a new clue to the collection
+   */
+  addClue: (clue: Clue) => {
+    const { clues } = get();
+    set({ clues: [...clues, clue] });
+  },
+
+  /**
+   * Mark a clue as read
+   */
+  markClueAsRead: (clueId: string) => {
+    const { clues } = get();
+    const updatedClues = clues.map((clue) =>
+      clue.id === clueId ? { ...clue, isRead: true } : clue
+    );
+    set({ clues: updatedClues });
   },
 
   /**

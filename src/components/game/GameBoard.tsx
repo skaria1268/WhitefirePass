@@ -15,6 +15,7 @@ import { CurrentSpeaker } from './CurrentSpeaker';
 import { StartMenu } from './StartMenu';
 import { GameTransition } from './GameTransition';
 import { StoryIntro } from './StoryIntro';
+import { CluesPanel } from './CluesPanel';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -70,7 +71,7 @@ function getPhaseTheme(phase: string) {
 }
 
 export function GameBoard() {
-  const { gameState } = useGameStore();
+  const { gameState, clues, markClueAsRead } = useGameStore();
   const phase = gameState?.phase || 'setup';
   const theme = getPhaseTheme(phase);
   const [showTransition, setShowTransition] = useState(false);
@@ -272,7 +273,7 @@ export function GameBoard() {
             </div>
           </div>
 
-          {/* Right Sidebar - Current Speaker & Vote Tracker */}
+          {/* Right Sidebar - Current Speaker & Tabs (Vote Tracker / Clues) */}
           {gameState && (
             <div className="w-80 flex flex-col gap-4 overflow-hidden">
               {/* Current Speaker - Upper section */}
@@ -280,9 +281,27 @@ export function GameBoard() {
                 <CurrentSpeaker gameState={gameState} />
               </div>
 
-              {/* Vote Tracker - Lower section (scrollable) */}
-              <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden">
-                <VoteTracker gameState={gameState} />
+              {/* Tabs - Lower section (Vote Tracker / Clues Panel) */}
+              <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+                <Tabs defaultValue="votes" className="h-full flex flex-col">
+                  <TabsList className="flex-shrink-0 w-full justify-start rounded-none border-b bg-background/50">
+                    <TabsTrigger value="votes">投票记录</TabsTrigger>
+                    <TabsTrigger value="clues" className="relative">
+                      线索收集
+                      {clues.filter((c) => !c.isRead).length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                          {clues.filter((c) => !c.isRead).length}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="votes" className="flex-1 overflow-hidden m-0">
+                    <VoteTracker gameState={gameState} />
+                  </TabsContent>
+                  <TabsContent value="clues" className="flex-1 overflow-hidden m-0">
+                    <CluesPanel clues={clues} onClueRead={markClueAsRead} />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           )}

@@ -186,3 +186,26 @@ export interface SavedGame {
   state: GameState;
   savedAt: number;
 }
+
+/**
+ * Clue category types
+ */
+export type ClueCategory = 'letter' | 'note' | 'diary' | 'document' | 'artifact';
+
+/**
+ * Clue/Document interface for the investigation panel
+ */
+export interface Clue {
+  id: string;
+  title: string;
+  category: ClueCategory;
+  description: string;  // Short preview text
+  date?: string;  // Optional date stamp
+  icon?: string;  // Icon identifier
+  unlockedAt: number;  // Timestamp when unlocked
+  isRead: boolean;  // Whether user has read this clue
+  content: Array<{
+    date?: string;
+    text: string;
+  }>;  // Full content (supports multi-page like diary)
+}

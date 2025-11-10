@@ -459,22 +459,22 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
           </button>
 
           {/* Diary header */}
-          <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b-2 border-amber-800/30">
-            <BookOpen className="w-8 h-8 text-amber-800" />
+          <div className="flex items-center justify-center gap-2 mb-4 pb-3 border-b-2 border-amber-800/30">
+            <BookOpen className="w-6 h-6 text-amber-800" />
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-amber-900 font-serif tracking-wide">
+              <h3 className="text-xl font-bold text-amber-900 font-serif tracking-wide">
                 迷路旅人的遗书
               </h3>
-              <p className="text-xs text-amber-700 mt-1 font-cinzel tracking-widest opacity-60">
+              <p className="text-[10px] text-amber-700 mt-0.5 font-cinzel tracking-widest opacity-60">
                 THE LOST TRAVELER'S TESTAMENT
               </p>
             </div>
-            <Skull className="w-8 h-8 text-red-800/70" />
+            <Skull className="w-6 h-6 text-red-800/70" />
           </div>
 
           {/* Date stamp */}
-          <div className="text-center mb-6">
-            <div className="inline-block px-4 py-2 bg-amber-900/10 border border-amber-800/30 rounded">
+          <div className="text-center mb-4">
+            <div className="inline-block px-3 py-1.5 bg-amber-900/10 border border-amber-800/30 rounded">
               <p className="text-sm font-semibold text-amber-900 font-serif tracking-wide">
                 {currentEntry.date}
               </p>
@@ -482,7 +482,7 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
           </div>
 
           {/* Diary text - paper texture background */}
-          <div className="relative min-h-[320px] flex items-start justify-center px-8 py-6 bg-amber-50/50 border-l-4 border-amber-800/20">
+          <div className="relative min-h-[280px] flex items-start justify-center px-6 py-4 bg-amber-50/50 border-l-4 border-amber-800/20">
             {/* Paper lines effect */}
             <div className="absolute inset-0 pointer-events-none opacity-20">
               {Array.from({ length: 15 }).map((_, i) => (
@@ -494,21 +494,21 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
               ))}
             </div>
 
-            <div className="relative text-amber-950 text-base leading-loose whitespace-pre-wrap font-serif tracking-wide text-left w-full">
+            <div className="relative text-amber-950 text-sm leading-relaxed whitespace-pre-wrap font-serif tracking-wide text-left w-full">
               {renderText()}
               {!isEntryComplete && (
-                <span className="inline-block w-0.5 h-5 bg-amber-900 ml-1 animate-pulse" />
+                <span className="inline-block w-0.5 h-4 bg-amber-900 ml-1 animate-pulse" />
               )}
             </div>
           </div>
 
           {/* Blood stain effect on last entry */}
           {currentEntryIndex === DIARY_ENTRIES.length - 1 && isEntryComplete && (
-            <div className="absolute top-4 right-4 w-20 h-20 bg-red-900/20 rounded-full blur-xl animate-pulse" />
+            <div className="absolute top-4 right-4 w-16 h-16 bg-red-900/20 rounded-full blur-xl animate-pulse" />
           )}
 
           {/* Controls */}
-          <div className="mt-8 flex flex-col items-center gap-4">
+          <div className="mt-5 flex flex-col items-center gap-3">
             {!isEntryComplete && canSkip && (
               <button
                 onClick={handleSkip}
@@ -540,14 +540,14 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
           </div>
 
           {/* Entry indicator */}
-          <div className="mt-6 flex justify-center gap-2">
+          <div className="mt-4 flex justify-center gap-1.5">
             {DIARY_ENTRIES.map((_, index) => (
               <div
                 key={index}
                 className={cn(
-                  'w-2 h-2 rounded-full transition-all duration-300',
+                  'w-1.5 h-1.5 rounded-full transition-all duration-300',
                   index === currentEntryIndex
-                    ? 'bg-amber-800 w-8'
+                    ? 'bg-amber-800 w-6'
                     : index < currentEntryIndex
                     ? 'bg-amber-600'
                     : 'bg-amber-300'
