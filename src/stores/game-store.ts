@@ -79,7 +79,13 @@ export const useGameStore = create<GameStore>()(
   startGame: (config: GameConfig) => {
     const gameState = createGame(config);
     const initialClues = getInitialClues();
-    set({ gameState, isProcessing: false, clues: initialClues });
+    set({
+      gameState,
+      isProcessing: false,
+      clues: initialClues,
+      lastError: null,
+      retryCount: 0,
+    });
   },
 
   /**
