@@ -129,13 +129,18 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
               <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 animate-in fade-in duration-500">
                 <div className="max-w-6xl mx-auto p-6 sm:p-8">
                   <div className="flex flex-col lg:flex-row gap-8 items-start">
-                    {/* Left: Card */}
-                    <div className="flex-shrink-0 w-full lg:w-auto flex justify-center perspective-1000">
-                      <TarotCard
-                        player={selectedPlayer}
-                        isFlipped={true}
-                        size="default"
-                      />
+                    {/* Left: Card and Basic Info */}
+                    <div className="flex-shrink-0 w-full lg:w-auto space-y-6">
+                      <div className="flex justify-center perspective-1000">
+                        <TarotCard
+                          player={selectedPlayer}
+                          isFlipped={true}
+                          size="default"
+                        />
+                      </div>
+                      <div className="max-w-[256px] mx-auto">
+                        <CharacterBasicInfo player={selectedPlayer} />
+                      </div>
                     </div>
 
                     {/* Right: Detail panel */}
@@ -150,6 +155,41 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Character basic info card - below tarot card
+ */
+function CharacterBasicInfo({ player }: { player: Player }) {
+  const infoItems = [
+    { label: '性别', value: player.gender || '未知', icon: '⚥' },
+    { label: '职业', value: player.occupation || '未知', icon: '⚒' },
+    { label: '性格', value: player.trait || '未知', icon: '◈' },
+    { label: '身高', value: player.height || '未知', icon: '⚐' },
+    { label: '血型', value: player.bloodType || '未知', icon: '⚕' },
+  ];
+
+  return (
+    <div className="border border-amber-900/40 rounded-lg p-4 bg-slate-950/70 backdrop-blur-sm">
+      <h4 className="text-xs font-semibold text-amber-400 mb-3 font-cinzel tracking-wider text-center border-b border-amber-900/30 pb-2">
+        BASIC PROFILE
+      </h4>
+      <div className="space-y-2">
+        {infoItems.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between text-xs group"
+          >
+            <span className="flex items-center gap-1.5 text-slate-400">
+              <span className="text-amber-600/60 text-sm">{item.icon}</span>
+              {item.label}
+            </span>
+            <span className="text-slate-200 font-medium">{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

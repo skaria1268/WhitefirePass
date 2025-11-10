@@ -311,6 +311,25 @@ function createPlayers(roles: Role[]): Player[] {
 我要成为明星。这座山只是我传奇故事的开始。`
   ];
 
+  // Character basic info
+  const characterInfo = [
+    { gender: '女性' as const, occupation: '古文字研究员', trait: '理性冷静', height: '165cm', bloodType: 'A型' },
+    { gender: '男性' as const, occupation: '职业猎人', trait: '粗犷直接', height: '182cm', bloodType: 'O型' },
+    { gender: '女性' as const, occupation: '工厂清洁工', trait: '沉默隐忍', height: '158cm', bloodType: 'B型' },
+    { gender: '男性' as const, occupation: '前银行职员', trait: '懦弱虚伪', height: '175cm', bloodType: 'AB型' },
+    { gender: '女性' as const, occupation: '家庭教师', trait: '坚韧冷漠', height: '162cm', bloodType: 'A型' },
+    { gender: '男性' as const, occupation: '药剂师', trait: '胆小谨慎', height: '170cm', bloodType: 'A型' },
+    { gender: '女性' as const, occupation: '落魄贵族', trait: '骄傲虚荣', height: '168cm', bloodType: 'AB型' },
+    { gender: '男性' as const, occupation: '假神父', trait: '伪善赎罪', height: '178cm', bloodType: 'O型' },
+    { gender: '女性' as const, occupation: '逃亡女仆', trait: '卑微谨小', height: '155cm', bloodType: 'O型' },
+    { gender: '男性' as const, occupation: '退伍军官', trait: '暴戾自毁', height: '180cm', bloodType: 'B型' },
+    { gender: '女性' as const, occupation: '战地护士', trait: '坚韧理智', height: '167cm', bloodType: 'A型' },
+    { gender: '男性' as const, occupation: '破产商人', trait: '自私精明', height: '172cm', bloodType: 'B型' },
+    { gender: '女性' as const, occupation: '社交名媛', trait: '操纵狡诈', height: '170cm', bloodType: 'AB型' },
+    { gender: '男性' as const, occupation: '讨债恶棍', trait: '冷酷无情', height: '185cm', bloodType: 'O型' },
+    { gender: '女性' as const, occupation: '三流演员', trait: '野心勃勃', height: '163cm', bloodType: 'B型' },
+  ];
+
   const shuffledRoles = shuffle([...roles]);
 
   return shuffledRoles.map((role, index) => ({
@@ -320,6 +339,7 @@ function createPlayers(roles: Role[]): Player[] {
     isAlive: true,
     isAI: true,
     personality: personalities[index],
+    ...characterInfo[index],
   }));
 }
 

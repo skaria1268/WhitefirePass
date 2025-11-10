@@ -53,6 +53,12 @@ export interface Player {
   isAlive: boolean;
   isAI: boolean;
   personality?: string;  // Optional personality prompt for AI players
+  // Character basic info
+  gender?: '男性' | '女性';
+  occupation?: string;
+  trait?: string;  // Character trait/personality tag
+  height?: string;
+  bloodType?: string;
 }
 
 /**
