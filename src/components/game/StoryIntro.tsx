@@ -1,12 +1,12 @@
 /**
- * Story introduction component with typewriter effect
- * Displays game intro story as a dialog after game starts
+ * Story introduction component with diary/journal format
+ * Displays the story of the "16th person" through diary entries
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mountain } from 'lucide-react';
+import { BookOpen, Skull } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -17,37 +17,101 @@ interface StoryIntroProps {
 }
 
 /**
- * Story segments with special keyword markers
+ * Diary entries with special keyword markers
  * Format: {keyword:type}text{/keyword}
  */
-const STORY_SEGMENTS = [
+const DIARY_ENTRIES = [
   {
-    speaker: '山灵',
-    speakerType: 'spirit',
-    text: `{place:white}白烬山口{/place}，{place:lodge}寂静山庄{/place}。
+    date: '11月13日 下午',
+    text: `我们一行十六人，原本只是路过{place:white}白烬山口{/place}。
 
-一场{curse:storm}非自然的暴风雪{/curse}，将 15 名旅人驱赶至此。
+导游说这里有座废弃的{place:lodge}山庄{/place}，可以暂时避避风雪。
 
-大门{warning:close}轰然关闭{/warning}。篝火散发着{cold:fire}无温度的冰冷白光{/cold}。`,
+山路蜿蜒，积雪很深。我注意到路旁有些{warning:strange}奇怪的石堆{/warning}——像是某种祭坛。
+
+当地向导的脸色很难看，一直在低声念叨着什么。
+
+天色暗得太快了。`,
   },
   {
-    speaker: '山灵',
-    speakerType: 'spirit',
-    text: `"{contract:contract}契约已成。盛宴开始。{/contract}"
+    date: '11月13日 傍晚',
+    text: `山庄比想象中大得多。
 
-"在你们之中，我播撒了'{evil:hunger}饥饿{/evil}'。"
+大厅里有个{cold:fire}巨大的壁炉{/cold}，但火焰是{cold:white}白色的{/cold}，不知为何让我感到{fear:fear}不安{/fear}。
 
-"现在，用你们的{fear:fear}猜疑和恐惧{/fear}，来取悦我。"`,
+墙上挂着一幅褪色的画，画的是十五个人{sacrifice:blood}围着篝火{/sacrifice}，表情扭曲。
+
+向导说这里曾经住过一个{cult:hunter}猎人团体{/cult}，后来全都神秘失踪了。
+
+他警告我们：{warning:warning}"不要在夜里离开房间，不要触碰白色的火焰，不要..."{/warning}
+
+话还没说完，{curse:storm}暴风雪骤然加剧{/curse}。大门被风吹得{warning:close}轰然关闭{/warning}。
+
+再也打不开了。`,
   },
   {
-    speaker: '旁白',
-    speakerType: 'narrator',
-    text: `【{brand:mark}身份已被烙印{/brand}】
+    date: '11月13日 深夜',
+    text: `睡不着。
 
-{evil:harvest}收割阵营{/evil}：3名烙印者
-{lamb:lamb}羔羊阵营{/lamb}：1名聆心者、1名食灰者、2名共誓者、1名设闩者、6名无知者
+总觉得走廊里有{fear:footsteps}脚步声{/fear}。
 
-{warning:warning}夜幕即将降临。第一个夜晚开始...{/warning}`,
+我起身想去看看，走到大厅时，发现白色的篝火{cold:burning}还在燃烧{/cold}。
+
+火焰中似乎有{fear:shadow}影子在舞动{/fear}。
+
+我伸手想要触碰——
+
+{warning:warning}那一刻，我听到了低语。{/warning}
+
+"{contract:contract}第十六人，打破了平衡...{/contract}"
+
+"{sacrifice:price}必须付出代价...{/sacrifice}"
+
+手指碰到火焰的瞬间，{pain:burn}剧痛传来{/pain}，但不是灼烧——是{cold:ice}冰冷刺骨的寒意{/cold}。
+
+{evil:mark}烙印{/evil}，在我手上浮现。`,
+  },
+  {
+    date: '11月14日 凌晨',
+    text: `他们发现我了。
+
+十五双眼睛，在黑暗中{fear:stare}盯着我{/fear}。
+
+不，不对...他们的眼神不一样了。有些人眼中带着{evil:hunger}饥饿{/evil}，有些人眼中充满{fear:terror}恐惧{/fear}。
+
+向导颤抖着说："{contract:pact}契约已成...山灵的规则启动了...{/contract}"
+
+"{warning:warning}十五个人，必须献祭一半以上，才能离开...{/warning}"
+
+"{sacrifice:first}第一个祭品，必须是打破平衡的第十六人...{/sacrifice}"
+
+我终于明白了墙上那幅画的含义。
+
+{warning:warning}不是十五个人围着篝火。{/warning}
+
+{evil:truth}是十五个人，正在献祭第十六个人。{/evil}`,
+  },
+  {
+    date: '日记残页',
+    text: `如果有人读到这篇日记...
+
+{warning:warning}逃。{/warning}
+
+如果来不及逃，记住：
+
+不要相信任何人的话语，{evil:lie}每个人都可能在说谎{/evil}。
+
+{lamb:observe}仔细观察他们的行为{/lamb}，{evil:marked}被烙印的人{/evil}会在夜晚{evil:hunt}露出真面目{/hunt}。
+
+{contract:rule}山灵的契约规定：献祭过半数，幸存者方可离开。{/contract}
+
+但我怀疑...{fear:doubt}即使献祭成功，真的能活着离开吗？{/doubt}
+
+{cold:fire}白色的火焰，永不熄灭。{/cold}
+
+{warning:warning}篝火在等待，下一个祭品。{/warning}
+
+——第十六人的{dead:last}最后遗言{/dead}`,
   },
 ];
 
@@ -79,61 +143,93 @@ function parseStoryText(text: string) {
 }
 
 /**
- * Get CSS classes for keyword types
+ * Get CSS classes for keyword types (diary theme)
  */
 function getKeywordClasses(type: string): string {
   const classes: Record<string, string> = {
+    // Places
     white: 'text-cyan-300 font-bold animate-pulse drop-shadow-[0_0_8px_rgba(165,243,252,0.8)]',
-    lodge: 'text-slate-300 font-semibold tracking-wider',
-    spirit: 'text-blue-400 font-bold animate-pulse drop-shadow-[0_0_12px_rgba(96,165,250,0.9)]',
+    lodge: 'text-amber-200 font-semibold tracking-wider',
+    place: 'text-amber-200 font-semibold',
+
+    // Evil/Danger
     evil: 'text-red-500 font-bold drop-shadow-[0_0_10px_rgba(239,68,68,1)]',
-    harvest: 'text-red-600 font-bold drop-shadow-[0_0_8px_rgba(220,38,38,0.9)]',
     hunger: 'text-red-500 font-bold animate-pulse drop-shadow-[0_0_10px_rgba(239,68,68,1)]',
-    marked: 'text-red-500 font-bold drop-shadow-[0_0_10px_rgba(239,68,68,1)]',
+    marked: 'text-red-500 font-bold underline decoration-wavy',
+    mark: 'text-red-400 font-bold animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,1)]',
+    hunt: 'text-red-600 font-semibold',
+    lie: 'text-red-400 font-semibold italic line-through',
+    truth: 'text-red-500 font-bold drop-shadow-[0_0_12px_rgba(239,68,68,1)]',
+
+    // Sacrifice/Death
+    sacrifice: 'text-red-700 font-bold drop-shadow-[0_0_8px_rgba(127,29,29,0.9)]',
+    blood: 'text-red-700 font-bold',
+    first: 'text-red-600 font-bold underline',
+    price: 'text-amber-600 font-bold',
+    dead: 'text-slate-500 font-bold line-through decoration-double',
+    last: 'text-slate-400 italic',
+
+    // Contract/Rule
+    contract: 'text-amber-400 font-bold tracking-wide drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]',
+    pact: 'text-amber-400 font-bold italic',
+    rule: 'text-amber-300 font-semibold underline decoration-dotted',
+
+    // Fear/Terror
+    fear: 'text-slate-400 font-semibold italic',
+    terror: 'text-slate-300 font-bold animate-pulse',
+    doubt: 'text-slate-400 italic',
+    footsteps: 'text-slate-400 italic underline decoration-wavy',
+    shadow: 'text-slate-500 font-semibold italic',
+    stare: 'text-slate-300 font-bold',
+
+    // Cold/Ice
+    cold: 'text-cyan-300 font-semibold drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]',
+    ice: 'text-cyan-400 font-bold animate-pulse drop-shadow-[0_0_8px_rgba(165,243,252,0.8)]',
+    fire: 'text-cyan-300 font-semibold drop-shadow-[0_0_6px_rgba(165,243,252,0.5)]',
+    burning: 'text-cyan-300 italic',
+
+    // Warning/Danger
+    warning: 'text-red-400 font-bold drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]',
+    strange: 'text-amber-400 font-semibold underline decoration-wavy',
+    close: 'text-red-500 font-bold',
+
+    // Curse/Storm
     curse: 'text-amber-500 font-semibold drop-shadow-[0_0_8px_rgba(245,158,11,0.7)]',
     storm: 'text-slate-400 font-semibold drop-shadow-[0_0_6px_rgba(148,163,184,0.6)]',
-    contract: 'text-amber-400 font-bold tracking-wide drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]',
-    brand: 'text-amber-500 font-bold drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]',
-    mark: 'text-amber-500 font-bold',
+
+    // Good/Observation
     lamb: 'text-blue-400 font-semibold drop-shadow-[0_0_6px_rgba(96,165,250,0.6)]',
-    fear: 'text-slate-400 font-semibold italic',
-    cold: 'text-cyan-300 font-semibold drop-shadow-[0_0_6px_rgba(165,243,252,0.6)]',
-    fire: 'text-cyan-300 font-semibold',
-    close: 'text-red-400 font-semibold',
-    warning: 'text-red-400 font-bold drop-shadow-[0_0_10px_rgba(248,113,113,0.8)] animate-pulse',
+    observe: 'text-blue-400 font-semibold underline decoration-dotted',
+
+    // Cult/Mystery
+    cult: 'text-purple-400 font-semibold italic',
+    hunter: 'text-slate-400 font-semibold',
+
+    // Pain
+    pain: 'text-red-500 font-bold animate-pulse',
+    burn: 'text-red-500 font-bold',
   };
   return classes[type] || '';
 }
 
-/**
- * Get speaker name styling
- */
-function getSpeakerClasses(type: string): string {
-  const classes: Record<string, string> = {
-    spirit: 'text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.9)]',
-    narrator: 'text-slate-400 drop-shadow-[0_0_6px_rgba(148,163,184,0.6)]',
-  };
-  return classes[type] || 'text-slate-400';
-}
-
 export function StoryIntro({ open, onComplete }: StoryIntroProps) {
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const [currentEntryIndex, setCurrentEntryIndex] = useState(0);
   const [displayedChars, setDisplayedChars] = useState(0);
-  const [isSegmentComplete, setIsSegmentComplete] = useState(false);
+  const [isEntryComplete, setIsEntryComplete] = useState(false);
   const [canSkip, setCanSkip] = useState(false);
 
-  const currentSegment = STORY_SEGMENTS[currentSegmentIndex];
-  const segments = parseStoryText(currentSegment.text.trim());
+  const currentEntry = DIARY_ENTRIES[currentEntryIndex];
+  const segments = parseStoryText(currentEntry.text.trim());
   const fullText = segments.map((s) => s.text).join('');
 
-  // Reset when dialog opens or segment changes
+  // Reset when dialog opens or entry changes
   useEffect(() => {
     if (open) {
       setDisplayedChars(0);
-      setIsSegmentComplete(false);
+      setIsEntryComplete(false);
       setCanSkip(false);
     }
-  }, [open, currentSegmentIndex]);
+  }, [open, currentEntryIndex]);
 
   // Typewriter effect with slower speed
   useEffect(() => {
@@ -160,7 +256,7 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
         clearTimeout(skipTimer);
       };
     } else {
-      setIsSegmentComplete(true);
+      setIsEntryComplete(true);
       return () => clearTimeout(skipTimer);
     }
   }, [displayedChars, fullText, open]);
@@ -168,13 +264,13 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
   const handleSkip = () => {
     if (canSkip) {
       setDisplayedChars(fullText.length);
-      setIsSegmentComplete(true);
+      setIsEntryComplete(true);
     }
   };
 
   const handleNext = () => {
-    if (currentSegmentIndex < STORY_SEGMENTS.length - 1) {
-      setCurrentSegmentIndex((prev) => prev + 1);
+    if (currentEntryIndex < DIARY_ENTRIES.length - 1) {
+      setCurrentEntryIndex((prev) => prev + 1);
     } else {
       onComplete();
     }
@@ -216,79 +312,112 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-3xl bg-slate-950/95 backdrop-blur-xl border-2 border-slate-700/50 shadow-2xl"
+        className="max-w-4xl bg-amber-50/95 backdrop-blur-xl border-4 border-amber-900/50 shadow-2xl"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <div className="relative" onClick={handleSkip}>
-          {/* Mountain icon */}
-          <div className="flex justify-center mb-8">
-            <Mountain className="w-16 h-16 text-cyan-300 drop-shadow-[0_0_20px_rgba(165,243,252,0.8)] animate-pulse" />
+          {/* Diary header */}
+          <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b-2 border-amber-800/30">
+            <BookOpen className="w-8 h-8 text-amber-800" />
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-amber-900 font-serif tracking-wide">
+                第十六人的日记
+              </h3>
+              <p className="text-xs text-amber-700 mt-1 font-cinzel tracking-widest opacity-60">
+                THE 16TH TRAVELER'S DIARY
+              </p>
+            </div>
+            <Skull className="w-8 h-8 text-red-800/70" />
           </div>
 
-          {/* Speaker name */}
+          {/* Date stamp */}
           <div className="text-center mb-6">
-            <h3 className={cn(
-              'text-2xl font-cinzel font-bold tracking-wider',
-              getSpeakerClasses(currentSegment.speakerType)
-            )}>
-              {currentSegment.speaker}
-            </h3>
+            <div className="inline-block px-4 py-2 bg-amber-900/10 border border-amber-800/30 rounded">
+              <p className="text-sm font-semibold text-amber-900 font-serif tracking-wide">
+                {currentEntry.date}
+              </p>
+            </div>
           </div>
 
-          {/* Story text */}
-          <div className="relative min-h-[240px] flex items-center justify-center px-8">
-            <div className="text-slate-200 text-lg leading-relaxed whitespace-pre-wrap font-serif tracking-wide text-center">
+          {/* Diary text - paper texture background */}
+          <div className="relative min-h-[320px] flex items-start justify-center px-8 py-6 bg-amber-50/50 border-l-4 border-amber-800/20">
+            {/* Paper lines effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-20">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-px bg-amber-800/20 mb-6"
+                  style={{ marginTop: i === 0 ? '0' : '24px' }}
+                />
+              ))}
+            </div>
+
+            <div className="relative text-amber-950 text-base leading-loose whitespace-pre-wrap font-serif tracking-wide text-left w-full">
               {renderText()}
-              {!isSegmentComplete && (
-                <span className="inline-block w-0.5 h-6 bg-slate-400 ml-1 animate-pulse" />
+              {!isEntryComplete && (
+                <span className="inline-block w-0.5 h-5 bg-amber-900 ml-1 animate-pulse" />
               )}
             </div>
           </div>
 
+          {/* Blood stain effect on last entry */}
+          {currentEntryIndex === DIARY_ENTRIES.length - 1 && isEntryComplete && (
+            <div className="absolute top-4 right-4 w-20 h-20 bg-red-900/20 rounded-full blur-xl animate-pulse" />
+          )}
+
           {/* Controls */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            {!isSegmentComplete && canSkip && (
+            {!isEntryComplete && canSkip && (
               <button
                 onClick={handleSkip}
-                className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
+                className="text-sm text-amber-700 hover:text-amber-900 transition-colors font-serif"
               >
-                点击任意处跳过当前段落...
+                点击任意处跳过当前页...
               </button>
             )}
 
-            {isSegmentComplete && (
+            {isEntryComplete && (
               <Button
                 onClick={handleNext}
                 size="lg"
-                className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-cinzel tracking-wider border-2 border-slate-600 shadow-glow-amber animate-fade-in"
+                className="bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-700 hover:to-amber-800 text-amber-50 font-cinzel tracking-wider border-2 border-amber-700 shadow-lg animate-fade-in"
               >
-                {currentSegmentIndex < STORY_SEGMENTS.length - 1 ? '继续' : '开始游戏'}
-                <Mountain className="w-5 h-5 ml-2" />
+                {currentEntryIndex < DIARY_ENTRIES.length - 1 ? (
+                  <>
+                    <BookOpen className="w-5 h-5 mr-2" />
+                    翻页
+                  </>
+                ) : (
+                  <>
+                    <Skull className="w-5 h-5 mr-2" />
+                    合上日记
+                  </>
+                )}
               </Button>
             )}
           </div>
 
-          {/* Segment indicator */}
+          {/* Entry indicator */}
           <div className="mt-6 flex justify-center gap-2">
-            {STORY_SEGMENTS.map((_, index) => (
+            {DIARY_ENTRIES.map((_, index) => (
               <div
                 key={index}
                 className={cn(
                   'w-2 h-2 rounded-full transition-all duration-300',
-                  index === currentSegmentIndex
-                    ? 'bg-cyan-400 w-8'
-                    : index < currentSegmentIndex
-                    ? 'bg-slate-600'
-                    : 'bg-slate-800'
+                  index === currentEntryIndex
+                    ? 'bg-amber-800 w-8'
+                    : index < currentEntryIndex
+                    ? 'bg-amber-600'
+                    : 'bg-amber-300'
                 )}
               />
             ))}
           </div>
         </div>
 
-        {/* Vignette effect */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-radial from-transparent via-transparent to-slate-950/50 rounded-lg" />
+        {/* Paper texture overlay */}
+        <div className="absolute inset-0 pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iNCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz48L3N2Zz4=')] rounded-lg" />
       </DialogContent>
     </Dialog>
   );
