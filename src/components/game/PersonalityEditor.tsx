@@ -66,49 +66,43 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
-          {/* Gallery View - show all cards */}
-          <div
-            className={`h-full transition-all duration-500 ${
-              selectedPlayer
-                ? 'opacity-0 pointer-events-none absolute'
-                : 'opacity-100'
-            }`}
-          >
-            <div className="h-full overflow-y-auto overflow-x-hidden py-6 px-4">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4">
-                {gameState.players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="perspective-1000 flex justify-center cursor-pointer"
-                    onClick={() => handleCardClick(player.id)}
-                  >
-                    <TarotCard
-                      player={player}
-                      isFlipped={false}
-                      size="small"
-                      className="hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                ))}
-              </div>
+          {/* Gallery View - show all cards in 3x5 grid */}
+          <div className="h-full overflow-y-auto overflow-x-hidden py-6 px-4">
+            <div className="grid grid-cols-3 gap-4 max-w-[550px] mx-auto">
+              {gameState.players.map((player) => (
+                <div
+                  key={player.id}
+                  className="perspective-1000 flex justify-center cursor-pointer"
+                  onClick={() => handleCardClick(player.id)}
+                >
+                  <TarotCard
+                    player={player}
+                    isFlipped={false}
+                    size="small"
+                    className="hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Detail View - show single card + details */}
+          {/* Detail Panel - slides in from right as overlay */}
           {selectedPlayer && (
-            <div className="h-full flex gap-8 p-6 animate-in slide-in-from-right duration-500">
-              {/* Left: Single large tarot card */}
-              <div className="flex-shrink-0 flex items-center justify-center perspective-1000">
-                <TarotCard
-                  player={selectedPlayer}
-                  isFlipped={true}
-                  className="scale-110"
-                />
-              </div>
+            <div className="absolute inset-0 flex items-center justify-end animate-in slide-in-from-right duration-500">
+              <div className="h-full w-[600px] bg-gradient-to-l from-slate-950 via-slate-900 to-slate-950/95 backdrop-blur-md border-l border-amber-900/30 shadow-2xl overflow-y-auto">
+                <div className="p-8 space-y-6">
+                  {/* Card at top */}
+                  <div className="flex justify-center perspective-1000">
+                    <TarotCard
+                      player={selectedPlayer}
+                      isFlipped={true}
+                      size="small"
+                    />
+                  </div>
 
-              {/* Right: Detail panel */}
-              <div className="flex-1 overflow-y-auto">
-                <TravelerDetail player={selectedPlayer} />
+                  {/* Detail panel */}
+                  <TravelerDetail player={selectedPlayer} />
+                </div>
               </div>
             </div>
           )}
