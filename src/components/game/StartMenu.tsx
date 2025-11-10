@@ -54,7 +54,8 @@ export function StartMenu() {
   const {
     apiKey: storedApiKey,
     setApiKey: saveApiKey,
-    startGame
+    startGame,
+    executeNextStep
   } = useGameStore();
 
   useEffect(() => {
@@ -153,6 +154,11 @@ export function StartMenu() {
 
     saveApiKey(trimmedKey);
     startGame(DEFAULT_CONFIG);
+
+    // Automatically start the first day
+    setTimeout(() => {
+      void executeNextStep();
+    }, 100);
   };
 
   return (
