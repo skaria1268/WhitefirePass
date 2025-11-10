@@ -217,13 +217,21 @@ export const useGameStore = create<GameStore>()(
     set({ isProcessing: true });
 
     try {
-      // Handle setup phase - game starts with day phase
+      // Handle prologue phase - just show story, no AI action
+      if (gameState.phase === 'prologue') {
+        get().advanceToNextPhase();
+        set({ isProcessing: false });
+        return;
+      }
+
+      // Handle setup phase - game starts with night phase
       if (gameState.phase === 'setup') {
-        gameState.phase = 'day';
+        gameState.phase = 'night';
         gameState.round = 1;
         gameState.currentPlayerIndex = 0;
+        gameState.nightPhase = 'listener';
         gameState.messages.push(
-          addMessage(gameState, '旁白', '第 1 回合开始。天亮了，请大家发言！', 'system', 'all'),
+          addMessage(gameState, '旁白', '第 1 回合，第 1 夜。聆心者请睁眼...', 'system', 'all'),
         );
         set({ gameState: { ...gameState }, isProcessing: false });
         return;
