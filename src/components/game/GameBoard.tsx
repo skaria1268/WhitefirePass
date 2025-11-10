@@ -52,6 +52,13 @@ function getPhaseTheme(phase: string) {
         icon: <Mountain className="w-8 h-8 text-cyan-300" />,
         label: '游戏结束',
       };
+    case 'prologue':
+      return {
+        gradient: 'from-slate-950 via-slate-900 to-slate-950',
+        border: 'border-slate-400/40',
+        icon: <Mountain className="w-8 h-8 text-slate-300" />,
+        label: '序章',
+      };
     case 'setup':
       return {
         gradient: 'from-slate-950 via-purple-950/50 to-slate-950',
@@ -77,9 +84,9 @@ export function GameBoard() {
   const [previousPhase, setPreviousPhase] = useState<string>('setup');
   const [isGameEntering, setIsGameEntering] = useState(false);
 
-  // Detect phase change from setup to game - show transition
+  // Detect phase change from setup to night - show transition
   useEffect(() => {
-    if (previousPhase === 'setup' && phase !== 'setup' && gameState) {
+    if (previousPhase === 'setup' && phase === 'night' && gameState) {
       setShowTransition(true);
       setIsGameEntering(true);
     }
@@ -97,7 +104,7 @@ export function GameBoard() {
   }, [isGameEntering]);
 
   // Show start menu if no active game
-  if (!gameState || phase === 'setup') {
+  if (!gameState) {
     return <StartMenu />;
   }
 
