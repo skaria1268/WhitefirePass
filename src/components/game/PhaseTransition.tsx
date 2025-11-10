@@ -104,24 +104,30 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
     <div
       className={cn(
         'fixed inset-0 z-50 flex items-center justify-center',
-        'bg-gradient-to-br',
-        config.gradient,
+        'bg-black/60 backdrop-blur-sm',
         'transition-opacity duration-300',
         animationStage === 'enter' ? 'opacity-0' : '',
         animationStage === 'show' ? 'opacity-100' : '',
         animationStage === 'exit' ? 'opacity-0' : '',
       )}
     >
+      {/* Modal card */}
       <div
         className={cn(
-          'flex flex-col items-center gap-6',
+          'relative',
+          'rounded-2xl border-2 shadow-2xl',
+          'bg-gradient-to-br',
+          config.gradient,
+          config.iconColor.replace('text-', 'border-'),
+          'px-12 py-10',
+          'flex flex-col items-center gap-5',
           'transition-all duration-500 ease-out',
-          animationStage === 'enter' ? 'scale-50 opacity-0' : '',
+          animationStage === 'enter' ? 'scale-90 opacity-0' : '',
           animationStage === 'show' ? 'scale-100 opacity-100' : '',
-          animationStage === 'exit' ? 'scale-150 opacity-0' : '',
+          animationStage === 'exit' ? 'scale-90 opacity-0' : '',
         )}
       >
-        {/* Icon with pulsing animation */}
+        {/* Icon */}
         <div
           className={cn(
             'relative',
@@ -130,14 +136,14 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
         >
           <Icon
             className={cn(
-              'w-32 h-32 drop-shadow-2xl',
+              'w-20 h-20 drop-shadow-xl',
               config.iconColor,
             )}
           />
-          {/* Glow effect */}
+          {/* Subtle glow */}
           <div
             className={cn(
-              'absolute inset-0 blur-3xl opacity-50',
+              'absolute inset-0 blur-2xl opacity-30',
               config.iconColor,
             )}
           />
@@ -147,22 +153,14 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
         <div className="text-center">
           <h2
             className={cn(
-              'text-6xl font-bold font-cinzel tracking-wider text-white drop-shadow-lg',
-              'transition-all duration-300',
-              animationStage === 'enter' ? 'translate-y-4 opacity-0' : '',
-              animationStage === 'show' ? 'translate-y-0 opacity-100' : '',
-              animationStage === 'exit' ? '-translate-y-4 opacity-0' : '',
+              'text-4xl font-bold font-cinzel tracking-wider text-white drop-shadow-md',
             )}
           >
             {config.label}
           </h2>
           <p
             className={cn(
-              'text-xl font-cinzel tracking-widest text-white/60 uppercase mt-2',
-              'transition-all duration-300 delay-100',
-              animationStage === 'enter' ? 'translate-y-4 opacity-0' : '',
-              animationStage === 'show' ? 'translate-y-0 opacity-100' : '',
-              animationStage === 'exit' ? '-translate-y-4 opacity-0' : '',
+              'text-sm font-cinzel tracking-widest text-white/50 uppercase mt-1.5',
             )}
           >
             {config.sublabel}
@@ -173,18 +171,20 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
         {round > 0 && (
           <div
             className={cn(
-              'px-6 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20',
-              'transition-all duration-300 delay-200',
-              animationStage === 'enter' ? 'translate-y-4 opacity-0' : '',
-              animationStage === 'show' ? 'translate-y-0 opacity-100' : '',
-              animationStage === 'exit' ? '-translate-y-4 opacity-0' : '',
+              'px-5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20',
             )}
           >
-            <span className="text-lg font-cinzel text-white tracking-wider">
+            <span className="text-sm font-cinzel text-white/90 tracking-wider">
               第 {round} 回合
             </span>
           </div>
         )}
+
+        {/* Decorative corner elements */}
+        <div className="absolute top-3 left-3 w-3 h-3 border-l-2 border-t-2 border-white/30 rounded-tl" />
+        <div className="absolute top-3 right-3 w-3 h-3 border-r-2 border-t-2 border-white/30 rounded-tr" />
+        <div className="absolute bottom-3 left-3 w-3 h-3 border-l-2 border-b-2 border-white/30 rounded-bl" />
+        <div className="absolute bottom-3 right-3 w-3 h-3 border-r-2 border-b-2 border-white/30 rounded-br" />
       </div>
     </div>
   );
