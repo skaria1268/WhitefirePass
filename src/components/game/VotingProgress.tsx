@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Vote, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SECTION_TITLES } from '@/lib/latin-text';
 
 interface VotingProgressProps {
   gameState: GameState;
@@ -33,7 +34,14 @@ export function VotingProgress({ gameState }: VotingProgressProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Vote className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-semibold text-orange-400 font-cinzel tracking-wide">投票进度</span>
+            <div>
+              <span className="text-sm font-semibold text-orange-400 font-cinzel tracking-wide block">
+                {SECTION_TITLES.votingProgress.title}
+              </span>
+              <span className="text-[9px] text-orange-400/50 font-serif italic tracking-wider block">
+                {SECTION_TITLES.votingProgress.latin}
+              </span>
+            </div>
           </div>
           {allVoted && (
             <CheckCircle2 className="w-4 h-4 text-green-400 animate-pulse" />

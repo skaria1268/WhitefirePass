@@ -9,6 +9,7 @@ import type { Message, Player } from '@/types/game';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PHASE_LABELS, TIME_LABELS } from '@/lib/latin-text';
 import {
   Brain,
   MessageSquare,
@@ -172,16 +173,26 @@ function MessageBadges({ message, messageTypeName, playerRole }: {
  */
 function PhaseDivider({ round, phase }: { round?: number; phase?: string }) {
   const phaseName = phase ? (phaseNames[phase] ?? phase) : '';
+  const phaseLabel = phase && PHASE_LABELS[phase as keyof typeof PHASE_LABELS]
+    ? PHASE_LABELS[phase as keyof typeof PHASE_LABELS]
+    : null;
 
   return (
     <div className="flex items-center gap-3 my-4">
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-border" />
-      <div className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-        <span className="text-xs font-semibold text-primary font-cinzel tracking-wider">
-          {round ? `第 ${round} 回合` : ''}
-          {round && phase ? ' · ' : ''}
-          {phaseName}
-        </span>
+      <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+        <div className="flex flex-col items-center">
+          <span className="text-xs font-semibold text-primary font-cinzel tracking-wider">
+            {round ? `${TIME_LABELS.round.chinese} ${round}` : ''}
+            {round && phase ? ' · ' : ''}
+            {phaseName}
+          </span>
+          {phaseLabel && (
+            <span className="text-[9px] text-primary/50 font-serif italic tracking-wide">
+              {phaseLabel.latin}
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border to-border" />
     </div>

@@ -8,6 +8,7 @@ import type { Player } from '@/types/game';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { ROLE_MOTTOS } from '@/lib/latin-text';
 import {
   User,
   Skull,
@@ -167,6 +168,10 @@ export function PlayerCard({ player, showRole = false, isCurrent = false }: Play
               </Badge>
               <div className="text-[10px] text-center text-muted-foreground font-cinzel tracking-wider opacity-70">
                 {roleNames[player.role]?.subtitle}
+              </div>
+              {/* Latin Motto */}
+              <div className="text-[9px] text-center text-muted-foreground font-serif italic opacity-50 pt-1">
+                {ROLE_MOTTOS[player.role as keyof typeof ROLE_MOTTOS]?.latin}
               </div>
             </div>
           )}

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { SECTION_TITLES, FACTION_LABELS, DECORATIVE_QUOTES } from '@/lib/latin-text';
 import {
   Flame,
   Ghost,
@@ -36,9 +37,14 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Mountain className="w-6 h-6" />
-            白烬山口 - 游戏说明
+          <DialogTitle className="text-2xl flex items-center gap-2 flex-col items-start">
+            <div className="flex items-center gap-2">
+              <Mountain className="w-6 h-6" />
+              白烬山口 - {SECTION_TITLES.gameGuide.title}
+            </div>
+            <div className="text-xs text-muted-foreground font-serif italic tracking-wide">
+              {DECORATIVE_QUOTES.mountain} · {DECORATIVE_QUOTES.lodge}
+            </div>
           </DialogTitle>
           <DialogDescription>
             寂静山庄的故事与角色介绍
@@ -49,9 +55,14 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
           <div className="space-y-6">
             {/* Story Background */}
             <section>
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <Snowflake className="w-5 h-5 text-blue-400" />
-                故事背景
+              <h3 className="text-lg font-bold mb-3">
+                <div className="flex items-center gap-2">
+                  <Snowflake className="w-5 h-5 text-blue-400" />
+                  故事背景
+                </div>
+                <div className="text-[10px] text-muted-foreground font-serif italic tracking-wide opacity-60 ml-7">
+                  Historia Arcana
+                </div>
               </h3>
               <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
@@ -80,7 +91,12 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
 
             {/* Win Conditions */}
             <section className="border-t pt-4">
-              <h3 className="text-lg font-bold mb-3">胜利条件</h3>
+              <h3 className="text-lg font-bold mb-3">
+                胜利条件
+                <div className="text-[10px] text-muted-foreground font-serif italic tracking-wide opacity-60">
+                  Conditiones Victoriae
+                </div>
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-red-950/30 border border-red-500/30 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
@@ -105,9 +121,14 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
 
             {/* Harvest Faction */}
             <section className="border-t pt-4">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-red-400">
-                <Skull className="w-5 h-5" />
-                收割阵营 (4人)
+              <h3 className="text-lg font-bold mb-3 text-red-400">
+                <div className="flex items-center gap-2">
+                  <Skull className="w-5 h-5" />
+                  {FACTION_LABELS.harvest.chinese} (4人)
+                </div>
+                <div className="text-[10px] text-red-400/50 font-serif italic tracking-wide">
+                  {FACTION_LABELS.harvest.latin}
+                </div>
               </h3>
               <div className="space-y-4">
                 {/* Marked */}
@@ -153,9 +174,14 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
 
             {/* Lamb Faction */}
             <section className="border-t pt-4">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-blue-400">
-                <Shield className="w-5 h-5" />
-                羔羊阵营 (11人)
+              <h3 className="text-lg font-bold mb-3 text-blue-400">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  {FACTION_LABELS.lamb.chinese} (11人)
+                </div>
+                <div className="text-[10px] text-blue-400/50 font-serif italic tracking-wide">
+                  {FACTION_LABELS.lamb.latin}
+                </div>
               </h3>
               <div className="space-y-4">
                 {/* Listener */}
@@ -259,7 +285,12 @@ export function GameGuide({ open, onOpenChange }: GameGuideProps) {
 
             {/* Game Flow */}
             <section className="border-t pt-4 pb-4">
-              <h3 className="text-lg font-bold mb-3">游戏流程</h3>
+              <h3 className="text-lg font-bold mb-3">
+                游戏流程
+                <div className="text-[10px] text-muted-foreground font-serif italic tracking-wide opacity-60">
+                  Ordo Ludi
+                </div>
+              </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-start gap-2">
                   <Badge variant="outline" className="mt-0.5">1</Badge>

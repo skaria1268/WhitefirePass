@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { Sun, Moon, Vote, Mountain, Users, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PHASE_LABELS } from '@/lib/latin-text';
 import type { GamePhase } from '@/types/game';
 
 interface PhaseTransitionProps {
@@ -19,63 +20,72 @@ interface PhaseTransitionProps {
 const phaseConfig: Record<GamePhase, {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  sublabel: string;
+  latin: string;
+  subtitle: string;
   gradient: string;
   iconColor: string;
 }> = {
   prologue: {
     icon: Mountain,
     label: '序章',
-    sublabel: 'PROLOGUE',
+    latin: PHASE_LABELS.prologue.latin,
+    subtitle: PHASE_LABELS.prologue.subtitle,
     gradient: 'from-slate-900 via-slate-800 to-slate-900',
     iconColor: 'text-slate-300',
   },
   setup: {
     icon: Mountain,
     label: '序章',
-    sublabel: 'SETUP',
+    latin: PHASE_LABELS.setup.latin,
+    subtitle: PHASE_LABELS.setup.subtitle,
     gradient: 'from-slate-900 via-slate-800 to-slate-900',
     iconColor: 'text-slate-300',
   },
   day: {
     icon: Sun,
     label: '白天',
-    sublabel: 'DAY',
+    latin: PHASE_LABELS.day.latin,
+    subtitle: PHASE_LABELS.day.subtitle,
     gradient: 'from-amber-900 via-orange-800 to-amber-900',
     iconColor: 'text-amber-300',
   },
   voting: {
     icon: Vote,
     label: '投票',
-    sublabel: 'VOTING',
+    latin: PHASE_LABELS.voting.latin,
+    subtitle: PHASE_LABELS.voting.subtitle,
     gradient: 'from-orange-900 via-red-800 to-orange-900',
     iconColor: 'text-orange-300',
   },
   secret_meeting: {
     icon: Users,
     label: '密会',
-    sublabel: 'SECRET MEETING',
+    latin: PHASE_LABELS.secret_meeting.latin,
+    subtitle: PHASE_LABELS.secret_meeting.subtitle,
     gradient: 'from-purple-900 via-violet-800 to-purple-900',
     iconColor: 'text-purple-300',
   },
   event: {
     icon: Sparkles,
     label: '事件',
-    sublabel: 'EVENT',
+    latin: PHASE_LABELS.event.latin,
+    subtitle: PHASE_LABELS.event.subtitle,
     gradient: 'from-teal-900 via-cyan-800 to-teal-900',
     iconColor: 'text-teal-300',
   },
   night: {
     icon: Moon,
     label: '夜晚',
-    sublabel: 'NIGHT',
+    latin: PHASE_LABELS.night.latin,
+    subtitle: PHASE_LABELS.night.subtitle,
     gradient: 'from-blue-950 via-indigo-900 to-blue-950',
     iconColor: 'text-blue-300',
   },
   end: {
     icon: Mountain,
     label: '游戏结束',
-    sublabel: 'GAME OVER',
+    latin: PHASE_LABELS.end.latin,
+    subtitle: PHASE_LABELS.end.subtitle,
     gradient: 'from-slate-900 via-cyan-900 to-slate-900',
     iconColor: 'text-cyan-300',
   },
@@ -164,7 +174,7 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
         </div>
 
         {/* Phase label */}
-        <div className="text-center">
+        <div className="text-center space-y-1">
           <h2
             className={cn(
               'text-4xl font-bold font-cinzel tracking-wider text-white drop-shadow-md',
@@ -174,10 +184,17 @@ export function PhaseTransition({ phase, round, onComplete }: PhaseTransitionPro
           </h2>
           <p
             className={cn(
-              'text-sm font-cinzel tracking-widest text-white/50 uppercase mt-1.5',
+              'text-lg font-cinzel tracking-widest text-white/70 uppercase',
             )}
           >
-            {config.sublabel}
+            {config.latin}
+          </p>
+          <p
+            className={cn(
+              'text-xs font-serif tracking-wide text-white/40 italic',
+            )}
+          >
+            {config.subtitle}
           </p>
         </div>
 

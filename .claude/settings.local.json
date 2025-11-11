@@ -17,7 +17,11 @@
       "Bash(npx tsc:*)",
       "WebSearch",
       "Bash(git reset:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(timeout 30 npx tsc:*)",
+      "Bash(git rm:*)",
+      "Bash(\"F:\\Wolf\\src\\lib\\game-engine.ts\")",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

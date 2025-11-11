@@ -6,6 +6,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { ROLE_MOTTOS } from '@/lib/latin-text';
 import type { Player } from '@/types/game';
 
 interface TarotCardProps {
@@ -579,12 +580,16 @@ export function TarotCard({ player, className, isFlipped = false, size = 'defaul
             <div className="flex flex-col items-center gap-4">
               <RoleSymbol role={player.role} />
 
-              <div className="text-center">
+              <div className="text-center space-y-1">
                 <div className="text-lg font-bold text-amber-900 font-cinzel">
                   {roleNames[player.role]?.name}
                 </div>
-                <div className="text-xs text-amber-700 font-serif tracking-widest mt-1">
+                <div className="text-xs text-amber-700 font-serif tracking-widest">
                   {roleNames[player.role]?.subtitle}
+                </div>
+                {/* Latin Motto */}
+                <div className="text-[10px] text-amber-600/60 font-serif italic tracking-wide">
+                  {ROLE_MOTTOS[player.role as keyof typeof ROLE_MOTTOS]?.latin}
                 </div>
               </div>
             </div>

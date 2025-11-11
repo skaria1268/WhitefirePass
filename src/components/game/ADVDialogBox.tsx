@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { TarotCard } from './TarotCard';
 import { cn } from '@/lib/utils';
 import type { Player, Message } from '@/types/game';
+import { TYPOGRAPHY, getBorderClass, BADGE } from '@/lib/design-tokens';
 
 interface ADVDialogBoxProps {
   currentMessage?: Message;
@@ -77,7 +78,8 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
 
   return (
     <div className={cn(
-      'relative w-full h-64 bg-gradient-to-b from-slate-900/95 to-slate-950/98 backdrop-blur-sm border-t-2 border-amber-600/30 overflow-hidden',
+      'relative w-full h-64 bg-gradient-to-b from-slate-900/95 to-slate-950/98 backdrop-blur-sm overflow-hidden',
+      getBorderClass('t', 'border-amber-600', 'divider', '2'),
       className
     )}>
       {/* Decorative top border */}
@@ -129,7 +131,7 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
           {/* Name plate */}
           <div className="flex items-baseline gap-3 mb-3">
             <div className="relative">
-              <h3 className="text-amber-100 text-xl font-bold font-cinzel tracking-wider">
+              <h3 className={cn(TYPOGRAPHY.h2, "text-amber-100")}>
                 {currentMessage.from}
               </h3>
               {/* Decorative underline */}
@@ -146,7 +148,7 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
 
             {/* Message type badge */}
             <div className="ml-auto">
-              <span className="px-2 py-0.5 rounded text-xs font-serif bg-amber-900/30 text-amber-500/80 border border-amber-600/20">
+              <span className={cn(BADGE.default, "rounded font-serif bg-amber-900/30 text-amber-500/80", getBorderClass('all', 'border-amber-600', 'divider'))}>
                 {messageTypeName}
               </span>
             </div>

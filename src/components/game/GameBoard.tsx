@@ -23,6 +23,8 @@ import { ADVDialogBox } from './ADVDialogBox';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
 import type { Message } from '@/types/game';
 import { cn } from '@/lib/utils';
+import { TYPOGRAPHY, CARD_HEADER, getBorderClass, ICON, SHADOWS } from '@/lib/design-tokens';
+import { SECTION_TITLES, DECORATIVE_QUOTES } from '@/lib/latin-text';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -209,16 +211,19 @@ export function GameBoard() {
         )}
       >
       {/* Fixed Header */}
-      <header className="flex-shrink-0 border-b border-border/50 backdrop-blur-sm bg-background/10 shadow-lg">
+      <header className={cn("flex-shrink-0 backdrop-blur-sm bg-background/10", getBorderClass('b', 'border', 'divider'), SHADOWS.card)}>
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Mountain className="w-8 h-8 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+            <Mountain className={cn(ICON.lg, "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]")} />
             <div>
-              <h1 className="text-2xl font-bold text-foreground font-cinzel text-glow tracking-wider">
+              <h1 className={TYPOGRAPHY.h1}>
                 白烬山口
+                <span className="block text-[10px] text-muted-foreground font-serif italic tracking-wider opacity-50 mt-0.5">
+                  {DECORATIVE_QUOTES.mountain}
+                </span>
               </h1>
               <p className="text-xs text-muted-foreground font-serif">
-                1913年深冬 · 寂静山庄 · 收割与羔羊的生死博弈
+                1913年深冬 · {DECORATIVE_QUOTES.lodge} · {DECORATIVE_QUOTES.harvest} vs {DECORATIVE_QUOTES.lamb}
               </p>
             </div>
           </div>
@@ -240,9 +245,9 @@ export function GameBoard() {
                   }}
                 >
                   {isMuted ? (
-                    <VolumeX className="w-4 h-4 text-muted-foreground" />
+                    <VolumeX className={cn(ICON.sm, "text-muted-foreground")} />
                   ) : (
-                    <Volume2 className="w-4 h-4 text-foreground" />
+                    <Volume2 className={cn(ICON.sm, "text-foreground")} />
                   )}
                 </Button>
               </PopoverTrigger>
@@ -304,11 +309,11 @@ export function GameBoard() {
         <div className="w-96 flex flex-col gap-4 overflow-hidden">
           {/* Players List - Scrollable */}
           <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
-              <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">
-                玩家列表
-                <span className="block text-[10px] text-muted-foreground font-normal tracking-widest opacity-60 mt-0.5">
-                  TRAVELERS
+            <div className={CARD_HEADER}>
+              <h2 className={TYPOGRAPHY.h2}>
+                {SECTION_TITLES.travelers.title}
+                <span className={cn("block mt-0.5", TYPOGRAPHY.subtitle)}>
+                  {SECTION_TITLES.travelers.latin}
                 </span>
               </h2>
             </div>
@@ -361,11 +366,11 @@ export function GameBoard() {
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* Game Log with Tabs and ADV Dialog */}
           <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
-            <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
-              <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">
-                游戏日志
-                <span className="block text-[10px] text-muted-foreground font-normal tracking-widest opacity-60 mt-0.5">
-                  CHRONICLE
+            <div className={CARD_HEADER}>
+              <h2 className={TYPOGRAPHY.h2}>
+                {SECTION_TITLES.gameLog.title}
+                <span className={cn("block mt-0.5", TYPOGRAPHY.subtitle)}>
+                  {SECTION_TITLES.gameLog.latin}
                 </span>
               </h2>
             </div>
