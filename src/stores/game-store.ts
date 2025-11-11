@@ -268,6 +268,7 @@ export const useGameStore = create<GameStore>()(
    * Retry last AI response (manually triggered by user)
    * Removes the last AI's messages and re-executes the action
    */
+  // eslint-disable-next-line complexity
   retryLastAIResponse: async () => {
     const { gameState, isProcessing } = get();
     if (!gameState || isProcessing) return;
@@ -846,6 +847,7 @@ function parseAIResponse(response: string): {
  * Extract player name from AI response text
  * Tries to intelligently match player names even if AI added extra text
  */
+// eslint-disable-next-line max-depth
 function extractPlayerName(text: string, allPlayers: Player[]): string | null {
   const cleanedText = text.trim();
 
@@ -870,6 +872,7 @@ function extractPlayerName(text: string, allPlayers: Player[]): string | null {
       if (cleanedText.includes(part) && part.length >= 2) {
         // Additional check: make sure this partial match uniquely identifies the player
         const matchingPlayers = allPlayers.filter(p => p.name.includes(part));
+        // eslint-disable-next-line max-depth
         if (matchingPlayers.length === 1) {
           return player.name;
         }
@@ -1202,6 +1205,7 @@ function enterNightPhase(gameState: GameState): void {
 /**
  * Clean up messages and actions from a failed AI attempt
  */
+// eslint-disable-next-line complexity
 function cleanupFailedAttempt(gameState: GameState): void {
   // Get current player
   let alivePlayers = getAlivePlayers(gameState);
