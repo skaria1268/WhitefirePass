@@ -46,12 +46,13 @@ export function GameEndDialog({ gameState, open, onOpenChange }: GameEndDialogPr
     coroner: '食灰者',
     twin: '共誓者',
     villager: '羔羊',
+    innocent: '无知者',
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-2xl font-cinzel tracking-wide">
             {winner === 'marked' ? (
               <div className="flex items-center gap-2 text-red-400">
@@ -72,7 +73,7 @@ export function GameEndDialog({ gameState, open, onOpenChange }: GameEndDialogPr
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="max-h-[calc(85vh-180px)] pr-4 -mr-4 mt-4">
           <div className="space-y-6">
             {/* Game Overview */}
             <div>
