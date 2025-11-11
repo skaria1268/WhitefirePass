@@ -267,6 +267,7 @@ export function buildPrompt(player: Player, gameState: GameState): string {
 
   const recentMessages = visibleMessages
     .filter((m) => m.type !== 'prompt')  // Exclude prompt messages to prevent identity leak
+    .filter((m) => m.type !== 'vote')    // Exclude vote messages (handled separately in voteHistory)
     .slice(-20);  // 保留最近20条对话
   const messageHistory = recentMessages
     .map((m) => `${m.from}: ${m.content}`)
