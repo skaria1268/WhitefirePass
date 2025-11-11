@@ -31,6 +31,7 @@ interface GameStore {
   gameState: GameState | null;
   isProcessing: boolean;
   apiKey: string;
+  apiUrl: string;
   lastError: string | null;
   retryCount: number;  // Current retry attempt count
   clues: Clue[];  // Collected clues/documents
@@ -40,11 +41,20 @@ interface GameStore {
   transitionPhase: GameState['phase'] | null;
   transitionRound: number;
 
+  // Secret meeting UI control
+  showSecretMeetingSelector: boolean;
+
+  // Auto execution control
+  isAutoExecuting: boolean;
+
   // Actions
   setApiKey: (key: string) => void;
+  setApiUrl: (url: string) => void;
   startGame: (config: GameConfig) => void;
   resetGame: () => void;
   executeNextStep: () => Promise<void>;
+  executePhaseAuto: () => Promise<void>;
+  stopAutoExecution: () => void;
   retryCurrentStep: () => Promise<void>;
   retryLastAIResponse: () => Promise<void>;
   clearError: () => void;
@@ -68,6 +78,8 @@ interface GameStore {
   clearPendingStateChanges: () => void;
 
   // Secret meeting actions
+  openSecretMeetingSelector: () => void;
+  closeSecretMeetingSelector: () => void;
   setSecretMeetingParticipants: (participants: [string, string]) => void;
   skipSecretMeeting: () => void;
   executeSecretMeeting: () => Promise<void>;
@@ -90,6 +102,7 @@ export const useGameStore = create<GameStore>()(
   gameState: null,
   isProcessing: false,
   apiKey: '',
+  apiUrl: 'https://generativelanguage.googleapis.com',
   lastError: null,
   retryCount: 0,
   clues: [],
@@ -99,11 +112,24 @@ export const useGameStore = create<GameStore>()(
   transitionPhase: null,
   transitionRound: 0,
 
+  // Secret meeting UI control
+  showSecretMeetingSelector: false,
+
+  // Auto execution control
+  isAutoExecuting: false,
+
   /**
    * Set Gemini API key
    */
   setApiKey: (key: string) => {
     set({ apiKey: key });
+  },
+
+  /**
+   * Set Gemini API URL
+   */
+  setApiUrl: (url: string) => {
+    set({ apiUrl: url });
   },
 
   /**
@@ -202,6 +228,20 @@ export const useGameStore = create<GameStore>()(
   },
 
   /**
+   * Open secret meeting selector UI
+   */
+  openSecretMeetingSelector: () => {
+    set({ showSecretMeetingSelector: true });
+  },
+
+  /**
+   * Close secret meeting selector UI
+   */
+  closeSecretMeetingSelector: () => {
+    set({ showSecretMeetingSelector: false });
+  },
+
+  /**
    * Set secret meeting participants (user selected)
    */
   setSecretMeetingParticipants: (participants: [string, string]) => {
@@ -216,18 +256,34 @@ export const useGameStore = create<GameStore>()(
    */
   skipSecretMeeting: () => {
     const { gameState } = get();
-    if (!gameState) return;
+    if (!gameState || !gameState.pendingSecretMeeting) return;
+
+    // Save timing before skipping (which clears pendingSecretMeeting)
+    const meetingTiming = gameState.pendingSecretMeeting.timing;
+
     engineSkipSecretMeeting(gameState);
-    // Advance to next phase
-    get().advanceToNextPhase();
-    set({ gameState: { ...gameState }, isProcessing: false });
+
+    // Determine next phase based on timing
+    if (meetingTiming === 'before_discussion') {
+      gameState.phase = 'day';
+      gameState.currentPlayerIndex = 0;
+      gameState.messages.push(
+        addMessage(gameState, '叙述者', '跳过密会。白天讨论开始。', 'system', 'all')
+      );
+      set({ gameState: { ...gameState }, isProcessing: false, showSecretMeetingSelector: false });
+      get().triggerTransition('day', gameState.round);
+    } else if (meetingTiming === 'after_sacrifice') {
+      gameState.phase = 'event';
+      set({ gameState: { ...gameState }, isProcessing: false, showSecretMeetingSelector: false });
+      get().triggerTransition('event', gameState.round);
+    }
   },
 
   /**
    * Execute secret meeting between two players
    */
   executeSecretMeeting: async () => {
-    const { gameState, apiKey } = get();
+    const { gameState, apiKey, apiUrl } = get();
     if (!gameState || !gameState.pendingSecretMeeting?.selectedParticipants) return;
 
     const [player1Name, player2Name] = gameState.pendingSecretMeeting.selectedParticipants;
@@ -238,9 +294,9 @@ export const useGameStore = create<GameStore>()(
 
     set({ isProcessing: true });
 
-    try {
-      const messageIds: string[] = [];
+    const messageIds: string[] = [];
 
+    try {
       // Add system message announcing the secret meeting
       const meetingStartMsg = addMessage(
         gameState,
@@ -252,8 +308,28 @@ export const useGameStore = create<GameStore>()(
       gameState.messages.push(meetingStartMsg);
       messageIds.push(meetingStartMsg.id);
 
+      // Build and record Player 1's prompt for transparency
+      const fullPrompt1 = buildPrompt(player1, gameState);
+      const promptMsg1 = addMessage(
+        gameState,
+        `${player1.name} (神谕)`,
+        fullPrompt1,
+        'prompt',
+        { secretMeeting: [player1.name, player2.name] },
+      );
+      gameState.messages.push(promptMsg1);
+      messageIds.push(promptMsg1.id);
+
       // Player 1 speaks
-      const response1 = await getAIResponse(player1, gameState, { apiKey });
+      const response1 = await getAIResponse(player1, gameState, {
+        apiKey,
+        apiUrl,
+        onRetry: (info) => {
+          set({
+            lastError: `${player1.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
+          });
+        },
+      });
       const { thinking: thinking1, speech: speech1 } = parseAIResponse(response1);
 
       if (thinking1) {
@@ -262,7 +338,7 @@ export const useGameStore = create<GameStore>()(
           player1.name,
           thinking1,
           'thinking',
-          { secretMeeting: [player1.name, player2.name] },
+          { player: player1.name },  // Thinking is private, only visible to the player themselves
         );
         gameState.messages.push(thinkingMsg1);
         messageIds.push(thinkingMsg1.id);
@@ -278,8 +354,28 @@ export const useGameStore = create<GameStore>()(
       gameState.messages.push(speechMsg1);
       messageIds.push(speechMsg1.id);
 
+      // Build and record Player 2's prompt for transparency
+      const fullPrompt2 = buildPrompt(player2, gameState);
+      const promptMsg2 = addMessage(
+        gameState,
+        `${player2.name} (神谕)`,
+        fullPrompt2,
+        'prompt',
+        { secretMeeting: [player1.name, player2.name] },
+      );
+      gameState.messages.push(promptMsg2);
+      messageIds.push(promptMsg2.id);
+
       // Player 2 responds
-      const response2 = await getAIResponse(player2, gameState, { apiKey });
+      const response2 = await getAIResponse(player2, gameState, {
+        apiKey,
+        apiUrl,
+        onRetry: (info) => {
+          set({
+            lastError: `${player2.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
+          });
+        },
+      });
       const { thinking: thinking2, speech: speech2 } = parseAIResponse(response2);
 
       if (thinking2) {
@@ -288,7 +384,7 @@ export const useGameStore = create<GameStore>()(
           player2.name,
           thinking2,
           'thinking',
-          { secretMeeting: [player1.name, player2.name] },
+          { player: player2.name },  // Thinking is private, only visible to the player themselves
         );
         gameState.messages.push(thinkingMsg2);
         messageIds.push(thinkingMsg2.id);
@@ -304,19 +400,56 @@ export const useGameStore = create<GameStore>()(
       gameState.messages.push(speechMsg2);
       messageIds.push(speechMsg2.id);
 
+      // Save timing before completing (which clears pendingSecretMeeting)
+      const meetingTiming = gameState.pendingSecretMeeting.timing;
+
       // Complete the meeting
       completeSecretMeeting(gameState, messageIds);
 
-      // Advance to next phase
-      get().advanceToNextPhase();
+      // Determine next phase based on timing
+      if (meetingTiming === 'before_discussion') {
+        gameState.phase = 'day';
+        gameState.currentPlayerIndex = 0;
+        gameState.messages.push(
+          addMessage(gameState, '叙述者', '密会结束。白天讨论开始。', 'system', 'all')
+        );
 
-      set({ gameState: { ...gameState }, isProcessing: false, lastError: null });
+        set({
+          gameState: { ...gameState },
+          isProcessing: false,
+          lastError: null,
+          showSecretMeetingSelector: false,
+        });
+
+        get().triggerTransition('day', gameState.round);
+      } else if (meetingTiming === 'after_sacrifice') {
+        gameState.phase = 'event';
+
+        set({
+          gameState: { ...gameState },
+          isProcessing: false,
+          lastError: null,
+          showSecretMeetingSelector: false,
+        });
+
+        get().triggerTransition('event', gameState.round);
+      }
     } catch (error) {
       console.error('Secret meeting error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Clean up failed messages
+      if (messageIds.length > 0) {
+        gameState.messages = gameState.messages.filter(
+          (m) => !messageIds.includes(m.id)
+        );
+      }
+
       set({
+        gameState: { ...gameState },
         isProcessing: false,
         lastError: `密会执行失败: ${errorMessage}`,
+        // Keep selector open on error to allow retry
       });
     }
   },
@@ -420,7 +553,15 @@ export const useGameStore = create<GameStore>()(
     const { gameState, retryCount } = get();
     if (!gameState) return;
 
-    // Clean up failed attempt
+    // Check if we're in secret meeting phase
+    if (gameState.phase === 'secret_meeting' && gameState.pendingSecretMeeting?.selectedParticipants) {
+      // Retry secret meeting
+      set({ gameState: { ...gameState }, lastError: null, retryCount: 0 });
+      await get().executeSecretMeeting();
+      return;
+    }
+
+    // Clean up failed attempt for normal phases
     cleanupFailedAttempt(gameState);
 
     // Reset retry count when manually retrying
@@ -552,6 +693,52 @@ export const useGameStore = create<GameStore>()(
       console.error('Execute step error:', error);
       set({ isProcessing: false });
     }
+  },
+
+  /**
+   * Auto-execute entire phase without manual intervention
+   */
+  executePhaseAuto: async () => {
+    const { gameState, isProcessing, isAutoExecuting } = get();
+
+    if (!gameState || isProcessing || gameState.phase === 'end' || isAutoExecuting) return;
+
+    set({ isAutoExecuting: true });
+
+    try {
+      // Record the starting phase to know when to stop
+      const startingPhase = gameState.phase;
+      const startingRound = gameState.round;
+
+      // Keep executing until phase changes or game ends
+      while (
+        get().gameState?.phase === startingPhase &&
+        get().gameState?.round === startingRound &&
+        get().gameState?.phase !== 'end' &&
+        get().isAutoExecuting
+      ) {
+        await get().executeNextStep();
+
+        // Small delay to allow UI updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Check if there was an error
+        if (get().lastError) {
+          break;
+        }
+      }
+    } catch (error) {
+      console.error('Auto execution error:', error);
+    } finally {
+      set({ isAutoExecuting: false });
+    }
+  },
+
+  /**
+   * Stop auto execution
+   */
+  stopAutoExecution: () => {
+    set({ isAutoExecuting: false });
   },
 
   /**
@@ -789,9 +976,8 @@ export const useGameStore = create<GameStore>()(
       // Trigger transition animation
       get().triggerTransition('secret_meeting', 1);
     } else if (gameState.phase === 'secret_meeting') {
-      // Secret meeting phase - user should select participants or skip
-      // This will be handled by UI buttons calling setSecretMeetingParticipants or skipSecretMeeting
-      // This function shouldn't be called during secret_meeting phase normally
+      // Secret meeting phase transition is handled in executeSecretMeeting
+      // This shouldn't be called during secret_meeting phase normally
       return;
     } else if (gameState.phase === 'day') {
       // Day phase ended, go to voting
@@ -859,7 +1045,7 @@ export const useGameStore = create<GameStore>()(
    */
   // eslint-disable-next-line complexity
   executeCurrentPlayerAction: async () => {
-    const { gameState, apiKey } = get();
+    const { gameState, apiKey, apiUrl } = get();
     if (!gameState) return;
 
     // Get active players based on current phase
@@ -925,7 +1111,15 @@ export const useGameStore = create<GameStore>()(
       );
 
       // Get AI response
-      const response = await getAIResponse(currentPlayer, gameState, { apiKey });
+      const response = await getAIResponse(currentPlayer, gameState, {
+        apiKey,
+        apiUrl,
+        onRetry: (info) => {
+          set({
+            lastError: `${currentPlayer.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
+          });
+        },
+      });
 
       // Parse thinking and speech
       const { thinking, speech } = parseAIResponse(response);
@@ -943,14 +1137,17 @@ export const useGameStore = create<GameStore>()(
         );
       }
 
-      // Add speech/vote message
-      const messageType = gameState.phase === 'voting' ? 'vote' : 'speech';
-      gameState.messages.push(
-        addMessage(gameState, currentPlayer.name, speech, messageType, visibility),
-      );
+      // Add speech message (only for non-voting phases)
+      if (gameState.phase !== 'voting') {
+        gameState.messages.push(
+          addMessage(gameState, currentPlayer.name, speech, 'speech', visibility),
+        );
+      }
 
-      // Record vote using helper function (use speech part for voting)
-      recordVote(gameState, currentPlayer, speech);
+      // Record vote using helper function (voting is stored in voteHistory, not messages)
+      if (gameState.phase === 'voting') {
+        recordVote(gameState, currentPlayer, speech);
+      }
 
       // Move to next player only on success
       gameState.currentPlayerIndex += 1;
@@ -1420,8 +1617,7 @@ function cleanupFailedAttempt(gameState: GameState): void {
     if (msg.from === currentPlayer.name &&
         msg.round === gameState.round &&
         msg.phase === gameState.phase &&
-        (msg.type === 'prompt' || msg.type === 'thinking' ||
-         msg.type === 'speech' || msg.type === 'vote')) {
+        (msg.type === 'prompt' || msg.type === 'thinking' || msg.type === 'speech')) {
       // This message should be removed
       return false;
     }

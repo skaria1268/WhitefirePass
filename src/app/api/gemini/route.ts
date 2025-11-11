@@ -15,10 +15,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       apiKey?: string;
+      apiUrl?: string;
       model?: string;
       prompt?: string;
     };
-    const { apiKey, model, prompt } = body;
+    const { apiKey, apiUrl, model, prompt } = body;
 
     if (!apiKey) {
       return NextResponse.json(
@@ -34,8 +35,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const baseUrl = apiUrl || 'https://generativelanguage.googleapis.com';
     const response = await undiciFetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model ?? 'gemini-2.5-pro'}:generateContent?key=${apiKey}`,
+      `${baseUrl}/v1beta/models/${model ?? 'gemini-2.5-pro'}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {

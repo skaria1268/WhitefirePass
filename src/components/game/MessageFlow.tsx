@@ -38,6 +38,7 @@ const messageStyles: Record<string, string> = {
   action: 'bg-card border-l-4 border-purple-500',
   prompt: 'bg-secondary border-l-4 border-cyan-500',
   thinking: 'bg-accent/30 border-l-4 border-emerald-500 italic',
+  secret: 'bg-purple-950/30 border-l-4 border-purple-400',
 };
 
 /**
@@ -51,6 +52,7 @@ const messageTypeNames: Record<string, string> = {
   action: '行动',
   prompt: 'AI提示词',
   thinking: 'AI思考',
+  secret: '密会',
 };
 
 /**

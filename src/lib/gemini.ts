@@ -11,34 +11,99 @@ import { EMOTIONAL_STATE_PROMPTS } from './emotional-prompts';
  */
 interface GeminiConfig {
   apiKey: string;
+  apiUrl?: string;
   model?: string;
+  onRetry?: (info: { attempt: number; maxRetries: number; delay: number; reason: string }) => void;
 }
 
 /**
- * Test if Gemini API key is valid
+ * Retry configuration
  */
-export async function testGeminiKey(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        apiKey,
-        model: 'gemini-2.5-pro',
-        prompt: '测试',
-      }),
-    });
+const RETRY_CONFIG = {
+  maxRetries: 10,
+  initialDelay: 1000, // 1 second
+  maxDelay: 8000, // 8 seconds
+  backoffMultiplier: 2,
+};
 
-    return response.ok;
-  } catch {
-    return false;
-  }
+/**
+ * Check if error is retryable
+ */
+function isRetryableError(status: number): boolean {
+  // Retry on server errors (500+) and rate limit (429)
+  return status === 429 || status >= 500;
 }
 
 /**
- * Generate AI response using Gemini API
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Calculate exponential backoff delay
+ */
+function calculateBackoff(attempt: number): number {
+  const delay = RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
+  return Math.min(delay, RETRY_CONFIG.maxDelay);
+}
+
+/**
+ * Test if Gemini API key is valid with retry
+ */
+export async function testGeminiKey(apiKey: string, apiUrl?: string): Promise<boolean> {
+  // Use fewer retries for test (2 retries max)
+  const maxRetries = 2;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey,
+          apiUrl,
+          model: 'gemini-2.5-pro',
+          prompt: '测试',
+        }),
+      });
+
+      if (response.ok) {
+        return true;
+      }
+
+      // If error is retryable and we have attempts left
+      if (isRetryableError(response.status) && attempt < maxRetries) {
+        const delay = calculateBackoff(attempt);
+        console.warn(`API 密钥测试失败 (${response.status}), 重试 ${attempt + 1}/${maxRetries}，等待 ${delay}ms...`);
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      // Non-retryable error or final attempt
+      return false;
+
+    } catch (error) {
+      // Network error
+      if (attempt < maxRetries) {
+        const delay = calculateBackoff(attempt);
+        console.warn(`API 密钥测试网络错误, 重试 ${attempt + 1}/${maxRetries}，等待 ${delay}ms...`, error);
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Generate AI response using Gemini API with retry and exponential backoff
  */
 export async function getAIResponse(
   player: Player,
@@ -47,37 +112,127 @@ export async function getAIResponse(
 ): Promise<string> {
   const prompt = buildPrompt(player, gameState);
 
-  const response = await fetch('/api/gemini', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      apiKey: config.apiKey,
-      model: config.model ?? 'gemini-2.5-pro',
-      prompt,
-    }),
-  });
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    const errorData = (await response.json()) as { error?: string; details?: string };
-    console.error('Gemini API 错误响应:', errorData);
-    throw new Error(errorData.error ?? errorData.details ?? 'API 请求失败');
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: config.apiKey,
+          apiUrl: config.apiUrl,
+          model: config.model ?? 'gemini-2.5-pro',
+          prompt,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as { error?: string; details?: string };
+
+        // Check if error is retryable
+        if (isRetryableError(response.status) && attempt < RETRY_CONFIG.maxRetries) {
+          const delay = calculateBackoff(attempt);
+          const reason = `HTTP ${response.status}: ${errorData.error ?? errorData.details ?? '请求失败'}`;
+
+          console.warn(
+            `Gemini API 请求失败 (${response.status}), 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+            errorData
+          );
+
+          // Notify retry progress
+          config.onRetry?.({
+            attempt: attempt + 1,
+            maxRetries: RETRY_CONFIG.maxRetries,
+            delay,
+            reason,
+          });
+
+          lastError = new Error(errorData.error ?? errorData.details ?? 'API 请求失败');
+          await sleep(delay);
+          continue; // Retry
+        }
+
+        // Non-retryable error, throw immediately
+        console.error('Gemini API 错误响应 (不可重试):', errorData);
+        throw new Error(errorData.error ?? errorData.details ?? 'API 请求失败');
+      }
+
+      const data = (await response.json()) as {
+        text?: string;
+        usage?: unknown;
+      };
+
+      const text = data.text?.trim();
+
+      if (!text) {
+        // Empty response is retryable
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = calculateBackoff(attempt);
+          const reason = 'AI 响应为空';
+
+          console.warn(
+            `Gemini API 响应为空, 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+            data
+          );
+
+          // Notify retry progress
+          config.onRetry?.({
+            attempt: attempt + 1,
+            maxRetries: RETRY_CONFIG.maxRetries,
+            delay,
+            reason,
+          });
+
+          lastError = new Error('AI 响应为空');
+          await sleep(delay);
+          continue; // Retry
+        }
+
+        console.error('Gemini API 响应为空 (重试已耗尽):', data);
+        throw new Error('AI 响应为空');
+      }
+
+      // Success!
+      if (attempt > 0) {
+        console.log(`Gemini API 请求成功 (第 ${attempt + 1} 次尝试)`);
+      }
+      return text;
+
+    } catch (error) {
+      // Network error or fetch failure
+      if (attempt < RETRY_CONFIG.maxRetries) {
+        const delay = calculateBackoff(attempt);
+        const reason = `网络错误: ${error instanceof Error ? error.message : String(error)}`;
+
+        console.warn(
+          `网络请求失败, 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+          error
+        );
+
+        // Notify retry progress
+        config.onRetry?.({
+          attempt: attempt + 1,
+          maxRetries: RETRY_CONFIG.maxRetries,
+          delay,
+          reason,
+        });
+
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      // All retries exhausted
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
   }
 
-  const data = (await response.json()) as {
-    text?: string;
-    usage?: unknown;
-  };
-
-  const text = data.text?.trim();
-
-  if (!text) {
-    console.error('Gemini API 响应为空:', data);
-    throw new Error('AI 响应为空');
-  }
-
-  return text;
+  // All retries failed
+  console.error('Gemini API 请求失败，所有重试已耗尽');
+  throw lastError ?? new Error('API 请求失败');
 }
 
 /**
@@ -116,6 +271,38 @@ export function buildPrompt(player: Player, gameState: GameState): string {
   const messageHistory = recentMessages
     .map((m) => `${m.from}: ${m.content}`)
     .join('\n');
+
+  // Build voting history display
+  const buildVoteHistory = () => {
+    if (gameState.voteHistory.length === 0) return '';
+
+    const votesByRound = new Map<number, typeof gameState.voteHistory>();
+    gameState.voteHistory.forEach(vote => {
+      if (vote.round !== undefined) {
+        const roundVotes = votesByRound.get(vote.round) || [];
+        roundVotes.push(vote);
+        votesByRound.set(vote.round, roundVotes);
+      }
+    });
+
+    if (votesByRound.size === 0) return '';
+
+    let voteHistoryText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n【献祭投票历史】\n\n';
+
+    Array.from(votesByRound.entries())
+      .sort((a, b) => a[0] - b[0])
+      .forEach(([round, votes]) => {
+        voteHistoryText += `第 ${round} 回合献祭投票：\n`;
+        votes.forEach(vote => {
+          voteHistoryText += `  ${vote.from} 投给了 ${vote.target}\n`;
+        });
+        voteHistoryText += '\n';
+      });
+
+    return voteHistoryText;
+  };
+
+  const voteHistory = buildVoteHistory();
 
   const roleNames: Record<string, string> = {
     marked: '烙印者',
@@ -173,7 +360,7 @@ ${gameState.listenerChecks.length > 0
   // Get coroner report info
   const coronerInfo = player.role === 'coroner' && phase === 'day' && gameState.coronerReports.length > 0
     ? `
-【你的验尸记录】（⚠️ 只有你自己知道这些信息）
+【你的验尸记录】（只有你自己知道这些信息）
 ${gameState.coronerReports.map((report) => `第${report.round}回合：${report.target} 的灵魂是 ${report.isClean ? '清白的' : '污秽的'}`).join('\n')}
 
 【重要提醒】
@@ -196,12 +383,53 @@ ${gameState.coronerReports.map((report) => `第${report.round}回合：${report.
       const timing = gameState.pendingSecretMeeting.timing;
       const timingText = timing === 'before_discussion' ? '白天讨论开始前' : '献祭仪式之后';
 
+      // Check if the other player has already spoken in this meeting
+      const otherPlayerHasSpoken = visibleMessages.some(
+        m => m.type === 'secret' && m.from === otherPlayer
+      );
+
+      // Determine speaking order reminder
+      const speakingOrderReminder = otherPlayerHasSpoken
+        ? `【重要提醒】
+密会只有一次机会，每人只能发言一次。
+${otherPlayer} 已经完成了发言（见上方对话）。
+这是你的发言机会，说完后密会就结束了。`
+        : `【重要提醒】
+密会只有一次机会，每人只能发言一次。
+你先发言，${otherPlayer} 会在你之后看到你说的话并做出回应。
+${otherPlayer} 还没有说话，你应该主动开启话题、询问或试探。`;
+
       return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【白烬山口 - 寂静山庄 - 第 ${round} 夜】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 你是 ${player.name}。
+你的职业：${player.occupation}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【你的身份】
+
+重要：只有你自己知道你的真实身份，不要随便暴露！
+
+你的角色：${displayRoleName}
+${effectiveRole === 'marked' ? `
+你是收割阵营的一员。你的目标是消灭所有羔羊。
+${markedTeammates.length > 0
+  ? `你的队友：${markedTeammates.map(p => p.name).join('、')}（你们都是烙印者）`
+  : '你是唯一的烙印者'}
+` : effectiveRole === 'listener' ? `
+你是羔羊阵营。你每晚可以查验一名玩家的灵魂是"清白"还是"污秽"。
+${listenerCheckInfo}
+` : effectiveRole === 'coroner' ? `
+你是羔羊阵营。每次白天献祭后，你会在当晚得知被献祭者的灵魂是"清白"还是"污秽"。
+${coronerInfo}
+` : effectiveRole === 'twin' ? `
+你是羔羊阵营。${twinPartner ? `${twinPartner} 是你的共誓者，你们互相知道对方的身份。` : ''}
+` : effectiveRole === 'guard' ? `
+你是羔羊阵营。你每晚可以守护一名玩家（不能是自己），被守护者当晚不会被杀。
+` : effectiveRole === 'innocent' ? `
+你是羔羊阵营。你没有特殊能力，但你可以通过观察和推理找出收割者。
+` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【密会时刻 - ${timingText}】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -210,8 +438,12 @@ ${gameState.coronerReports.map((report) => `第${report.round}回合：${report.
 其他人不会知道你们说了什么。
 这是一个可以坦诚交流、试探、或欺骗的时刻。
 
-${messageHistory || '（对话刚刚开始）'}
+${speakingOrderReminder}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【对话历史】
+${messageHistory || '（对话刚刚开始）'}
+${voteHistory}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【你的性格】
 ${player.personality || '你是一个普通的旅人，凭直觉和理性生存。'}
@@ -220,18 +452,15 @@ ${player.personality || '你是一个普通的旅人，凭直觉和理性生存�
 请按照以下格式回复：
 
 【思考】
-（你内心的独白。100字左右。）
-
-作为 ${player.name}：
+（你内心的独白。100字左右。思考以下问题：）
 - 你为什么要和 ${otherPlayer} 进行这次对话？
 - 你打算从TA那里获取什么信息？
 - 你会向TA坦诚你的身份或想法吗？
 - 这是建立联盟、试探真相、还是布下欺骗的陷阱？
 
 【发言】
-（你对 ${otherPlayer} 说的话。100字左右。）
-
-用 ${player.name} 的语气和性格说话。
+直接写你对 ${otherPlayer} 说的话，不要加"作为XXX："等任何前缀。
+用 ${player.name} 的语气和性格说话。100字左右。
 这是私密对话，你可以更加坦诚，也可以更加狡诈。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -250,7 +479,7 @@ ${player.personality || '你是一个普通的旅人，凭直觉和理性生存�
 外面的风暴在咆哮。篝火发出刺骨的白光，但毫无温度。
 山灵的契约已成。"饥饿"在人群中蔓延。
 
-【⚠️ 这不是游戏。这是真实的生死存亡。】
+【这不是游戏。这是真实的生死存亡。】
 
 遗书说，你们中混入了三个"非人者"。
 他们会在夜晚猎杀真正的人类。
@@ -342,14 +571,14 @@ ${getRoleInstructions(effectiveRole, phase, nightPhase, round, player.role)}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【最近的对话与事件】
 ${messageHistory || '（令人窒息的沉默）'}
-
+${voteHistory}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
 
   if (phase === 'day') {
     return `${basePrompt}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【黎明】
+【黎明 - 投票前的最后讨论】
 
 天亮了。但阳光照不进这座山庄。
 白蜡篝火仍在燃烧，发出刺骨的白光。
@@ -361,8 +590,16 @@ ${round > 1 ? `昨夜，有人死了。
 这可能是你，如果你昨天做错了决定。
 这可能会是你，如果你今天再做错决定。` : ''}
 
-现在是讨论时间。
-你必须找出谁是烙印者。献祭他们。
+【这是投票之前的最后讨论阶段】
+黄昏即将降临。很快，你们就要投票决定谁会被献祭。
+时间不多了。你必须现在就说出你的想法。
+
+- 不管是真相还是谎言，你必须表达出来
+- 你的怀疑、你的观察、你的信任——现在不说就来不及了
+- 沉默等于放弃。你必须为自己的生存而发声
+- 马上就要投票了，你必须说服其他人，或者为自己辩护
+
+你必须找出谁是怪物。献祭他们。
 否则，今晚被杀的，可能就是你。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -376,26 +613,28 @@ ${round > 1 ? `昨夜，有人死了。
 - 观察在场的人。谁让你感到不安？谁的眼神、语气、举止有异常？
 - 回想这几天的相处。谁的行为前后矛盾？谁在隐瞒什么？
 - 你对谁有同情？对谁有怀疑？你信任谁？
-- 如果今晚你会死，你最放心不下的是什么？
+- 黄昏将至，投票马上开始——你现在必须说什么来保护自己或影响局势？
 
 不要用"烙印者"、"羔羊"等游戏术语。
 你是一个真实的人，面对真实的生死威胁。
 
 【发言】
-（你对所有人说的话。100字左右。）
+（你对所有人说的话。100-150字左右。）
 
-用 ${player.name} 的语气和性格说话：
-${player.personality ? `- 记住你的身份和说话方式
-- 你会如何表达恐惧、怀疑、或试图说服他人？` : ''}
+这是投票前的最后发言。你必须：
+${player.personality ? `- 用 ${player.name} 的语气和性格说话
+- ` : ''}- 表达你的怀疑、观察或辩护——不管真假，你必须说出来
+- 指出谁的行为可疑，或者为自己/他人辩护
+- 说服其他人相信你的判断
 - 这不是游戏发言，这是求生的呼喊
-- 可以表达情感、质问、辩护、或提出观察
-- 说出你真正的感受和想法
+- 时间不多了，马上就要投票，你现在不说就来不及了
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【重要】
 你是 ${player.name}，不是玩家。
 这不是狼人杀游戏，这是1913年寂静山庄的真实困境。
-用角色的眼睛看世界，用角色的心感受恐惧。`;
+用角色的眼睛看世界，用角色的心感受恐惧。
+黄昏将至。投票即将开始。这是你为生存而战的最后机会。`;
   }
 
   if (phase === 'voting') {
@@ -407,97 +646,113 @@ ${player.personality ? `- 记住你的身份和说话方式
       if (effectiveRole === 'marked') {
         return `${basePrompt}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【献祭仪式 - 收割者的伪装】
+【献祭仪式 - 你必须选择】
 
 黄昏降临。白蜡篝火在呼唤。
 每个人手中都有一枚献祭石。
 
-你是烙印者。这是你最危险的时刻。
-所有人的目光都在审视，所有人都在寻找破绽。
-一个错误的眼神，一句不恰当的话，你就会被识破。
+你知道真相。你知道你们不是怪物。
+你们只是被选中的人，被迫在这个残酷的仪式中扮演猎人。
+但在其他人眼中，你是死亡的化身。
+
+这一刻，你必须做出选择。
+你必须投出你的石头。
+你必须看起来和他们一样——恐惧、犹豫、痛苦。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 请按照以下格式回复：
 
 【思考】
-（你内心的权衡。200字左右。）
+（你内心的权衡与挣扎。200字左右。）
 
-作为 ${player.name}（收割者）：
-- 谁对收割阵营威胁最大？谁可能识破你？
-- 你要投给真正的羔羊，还是投给同类制造混乱？
-- 你的表情要显得恐惧。你的声音要显得颤抖。
-- 但你内心在冷静计算：这一票能消灭威胁吗？
-- 如果你被怀疑了怎么办？你要如何辩解？
-- 你必须像羔羊一样恐惧，但绝不能真的恐惧。
+扮演 ${player.name}，用第一人称思考：
+- 谁威胁到了你的生存？谁的眼神让你感到被看穿？
+- 你能投给自己的同伴来制造混乱吗？那会不会太残忍？
+- 你的手在颤抖——有多少是真的恐惧，有多少是伪装？
+- 这些天的相处，你对谁产生了真实的情感？投票时这情感会影响你吗？
+- 你在保护什么？仅仅是生存，还是有更深的原因？
+- 当你念出那个名字时，你的良心会痛吗？
+
+这是艰难的抉择。你的阵营需要你冷酷，但你的人性让你痛苦。
+${player.personality ? `\n记住你是 ${player.name}：${player.personality}` : ''}
 
 【发言】
 （只写要投票的玩家名字。）
 
-⚠️ 必须写一个存活玩家的名字。
-记住：你在表演。你要像羔羊一样犹豫，像羔羊一样痛苦。
-让他们相信，你也在承受道德的煎熬。
+必须写一个存活玩家的名字。
+那个人可能会死。即使他们可能是无辜的。
+你的声音会颤抖吗？你会低下头吗？
+演出你的恐惧和愧疚——或者，那根本不是演出。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【重要】
-你不是在做道德选择。你在做战术选择。
-但你必须演得像是在做道德选择。
-伪装你的恐惧。伪装你的愧疚。伪装你的人性。
-活下去。`;
+你不是怪物。你是一个被困住的人，在求生本能与人性之间挣扎。
+每一票都是沉重的。即使是为了活下去，罪恶感依然真实。
+用 ${player.name} 的心去感受这份重量。`;
       } else {
         // Heretic voting prompt
         return `${basePrompt}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【献祭仪式 - 背誓者的孤独】
+【献祭仪式 - 背誓者的孤独抉择】
 
 黄昏降临。白蜡篝火在呼唤。
 每个人手中都有一枚献祭石。
 
-你是背誓者。你比烙印者更孤独，更脆弱。
-烙印者有同伴，有夜晚的交流。
-而你只有自己。一个人背负着污秽的灵魂。
+你是背誓者。你比任何人都孤独。
+烙印者有同伴，羔羊有清白。
+而你只有谎言——和一个没人知道的秘密。
+
+这一刻，你必须做出选择。
+你必须投出你的石头。
+你必须看起来比任何人都恐惧、都正义——因为你什么都不是。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 请按照以下格式回复：
 
 【思考】
-（你内心的挣扎。200字左右。）
+（你内心最深的挣扎。200字左右。）
 
-作为 ${player.name}（背誓者）：
-- 你要帮助收割阵营，但你不知道谁是烙印者
-- 谁看起来最像羔羊阵营的核心？投给TA能帮到收割阵营吗？
-- 你要演得完美。你比烙印者更容易被发现。
-- 如果聆心者查到你，你就死了。如果被怀疑，你无人保护。
-- 你的每一句话都要像真正的羔羊。
-- 你在帮助怪物，但你必须表现得像在对抗怪物。
+扮演 ${player.name}，用第一人称思考：
+- 这些天你对谁产生了真实的情感？投票时，那情感是真的还是假的？
+- 你要帮助收割阵营，但你连他们是谁都不知道——你真的在帮怪物吗？
+- 谁的眼神让你感到温暖？谁的话让你觉得自己还是个人？
+- 当你念出那个名字时，你的愧疚是表演还是真心？
+- 你孤独吗？你害怕吗？在这个谎言里，你还记得真实的自己吗？
+- 如果他们发现真相，你会被厌恶地抛弃——这让你痛苦吗？
+
+你的阵营需要你冷酷，你的伪装需要你正义，但你的心——它还在吗？
+${player.personality ? `\n记住你是 ${player.name}：${player.personality}` : ''}
 
 【发言】
 （只写要投票的玩家名字。）
 
-⚠️ 必须写一个存活玩家的名字。
-记住：你是孤独的。没人知道你，没人会保护你。
-你的投票要帮助收割阵营，但绝不能暴露自己。
+必须写一个存活玩家的名字。
+那个人可能会死。也许他们该死，也许他们无辜。
+你的声音会颤抖吗？你的眼神能承受他们的注视吗？
+演出你的恐惧和正义——还是，那本就不是演出？
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【重要】
-你不是羔羊，但你必须比羔羊更像羔羊。
-你的伪装必须完美无缺。
-一个破绽，你就会被献祭，孤独地死去。
-活下去。`;
+你不是怪物，也不是英雄。你是一个孤独的人，在谎言中寻找生存的理由。
+每一票都是沉重的。你不知道自己在帮谁，也不知道自己还是不是个人。
+用 ${player.name} 的心去感受这份孤独和迷失。`;
       }
     } else {
       // Innocent faction voting prompt
       return `${basePrompt}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【献祭仪式】
+【献祭仪式 - 无辜者的重负】
 
 黄昏降临。白蜡篝火在呼唤。
 每个人手中都有一枚献祭石。
 
-你必须选择一个人。
+你不知道真相。你不知道谁是怪物，谁是无辜。
+你只知道，你必须选择一个人。
 被选中的人会被绑在篝火前，燃烧，尖叫，然后死亡。
-那可能是无辜的人。
-那可能是你错了。
-但你必须选择。
+
+那可能是怪物。那可能是无辜的人。
+那可能是在餐桌上和你说笑的人。
+但你必须选择。为了活下去，你必须选择。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 请按照以下格式回复：
@@ -505,30 +760,31 @@ ${player.personality ? `- 记住你的身份和说话方式
 【思考】
 （你内心的挣扎。200字左右。）
 
-作为 ${player.name}，此刻你在想什么？
-- 你感到愧疚吗？你害怕吗？你在颤抖吗？
-- 综合这一天的观察，谁的表现最让你不安？
-- 你会投给谁？为什么？
-- 如果你错了，你能承受那份罪恶感吗？
-- 但如果不投，今晚死的可能就是你...
+扮演 ${player.name}，用第一人称思考：
+- 这些天，你对谁产生了信任？对谁产生了怀疑？那信任值得吗？
+- 谁的眼神让你害怕？谁的沉默让你不安？但，那足以让你夺走他们的生命吗？
+- 你想保护谁？如果你投错了，他们会原谅你吗？
+- 你的手在颤抖——是因为害怕今晚会死，还是因为害怕杀错了人？
+- 你能承受那份罪恶感吗？无论对错，一个人会因为你的选择而死。
+- 你记得他们的笑容吗？他们的话语？现在你要选择他们去死吗？
 
-这是道德困境。这是生存本能与人性的对抗。
-用角色的心去感受这份沉重。
+这是生存本能与人性的对抗。这是恐惧与愧疚的交织。
+${player.personality ? `\n记住你是 ${player.name}：${player.personality}` : ''}
 
 【发言】
 （只写要投票的玩家名字。）
 
-⚠️ 必须写一个存活玩家的名字。
-那个人会死。
-你的手在颤抖吗？
+必须写一个存活玩家的名字。
+那个人会死。那个真实的、活着的人。
+你的声音会颤抖吗？你敢看他们的眼睛吗？
+说出那个名字，承受那份重量。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【重要】
-你不是在玩游戏。
-你在用一枚石头，决定一个活生生的人的生死。
-即使你是对的，你也杀了一个人。
-即使你是错的，你也杀了一个人。
-这份罪孽，会跟随你一生。`;
+你不是在玩游戏。你在用一枚石头，决定一个活生生的人的生死。
+即使你是对的，你也杀了一个人。即使你是错的，你也杀了一个人。
+这份罪孽，会跟随你一生。
+用 ${player.name} 的心去感受这份无法逃避的重量。`;
     }
   }
 
@@ -563,7 +819,7 @@ ${player.personality ? `- 记住你的身份和说话方式
 【发言】
 （只写要倾听的玩家名字）
 
-⚠️ 必须写一个存活玩家的名字。
+必须写一个存活玩家的名字。
 明天你会知道TA的真相。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -588,7 +844,7 @@ ${player.personality ? `- 记住你的身份和说话方式
 现在，你们必须决定：今晚谁会死在你们的利爪下。
 ${hasHeretic && round >= 2 ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【⚠️ 背誓者的存在】
+【背誓者的存在】
 
 昨夜，你们感知到一股熟悉yet陌生的气息。
 你们之中混入了一个"背誓者"——灵魂污秽，但不在你们的同类之中。
@@ -658,7 +914,7 @@ TA的家人永远等不到TA回家。
 【发言】
 （只写要猎杀的玩家名字）
 
-⚠️ 必须写一个存活玩家的名字。
+必须写一个存活玩家的名字。
 那个人会死。
 鲜血会溅在你的手上。
 
@@ -681,8 +937,8 @@ TA的家人永远等不到TA回家。
 那扇门后的人，会在黑夜中幸存。
 其他人？只能祈祷怪物不会选择他们。
 
-⚠️ 你不能守护自己。
-⚠️ 你不能连续两晚守护同一人。
+你不能守护自己。
+你不能连续两晚守护同一人。
 ${gameState.lastGuardedPlayer ? `昨晚你守护了 ${gameState.lastGuardedPlayer}（今晚不能再守护TA）` : '这是第一夜。'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -700,7 +956,7 @@ ${gameState.lastGuardedPlayer ? `昨晚你守护了 ${gameState.lastGuardedPlaye
 【发言】
 （只写要守护的玩家名字）
 
-⚠️ 必须写一个存活玩家的名字（不能是你自己，不能是昨晚守护的人）。
+必须写一个存活玩家的名字（不能是你自己，不能是昨晚守护的人）。
 你在用一把门闩，赌一个人的命。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -769,7 +1025,7 @@ function getRoleInstructions(
   // Special handling for heretic on Day 2 awakening
   if (actualRole === 'heretic' && round === 2 && role === 'heretic') {
     return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【⚠️ 你的灵魂堕落了】
+【你的灵魂堕落了】
 
 昨夜，某种黑暗的力量侵蚀了你的意识。
 你不再是你以为的那个人。
@@ -784,7 +1040,7 @@ function getRoleInstructions(
 - 你无法参与烙印者的夜晚讨论和杀人
 - 你只能在白天通过发言和投票帮助收割阵营
 
-【⚠️ 但你是最危险的角色】
+【但你是最危险的角色】
 - 如果被聆心者查验，你会显示为"污秽"
 - 如果被发现，你会被献祭，真的死亡
 - 烙印者不知道你是谁，无法保护你
@@ -796,7 +1052,7 @@ function getRoleInstructions(
 - 暗中保护烙印者，但绝不暴露自己
 - 你的伪装必须完美
 
-【⚠️ 警告】
+【警告】
 - 你比烙印者更容易被发现
 - 你比烙印者更孤独
 - 你比烙印者更容易死
@@ -818,7 +1074,7 @@ function getRoleInstructions(
 - 阐述你的击杀建议和理由
 - 制定战略，消灭威胁
 
-【⚠️ 但记住】
+【但记住】
 - 被献祭的烙印者也会真的死
 - 如果你白天伪装不够好，你会被献祭，永远消失
 - 杀戮是本能，但生存更重要`;
@@ -833,7 +1089,7 @@ function getRoleInstructions(
 - 只回复玩家名字
 - 平票将导致无人死亡（浪费了一次杀戮机会）
 
-【⚠️ 警告】
+【警告】
 - 你在收割别人的生命
 - 但明天黄昏，羔羊们也可能收割你的
 - 活下去`;
@@ -845,13 +1101,13 @@ function getRoleInstructions(
 白天，你必须伪装成羔羊。
 流着泪的羔羊。颤抖着的羔羊。恐惧着的羔羊。
 
-【⚠️ 这关系到你的生死】
+【这关系到你的生死】
 - 绝不暴露自己的烙印
 - 绝不暴露其他烙印者
 - 像羔羊一样恐惧、怀疑、指控
 - 把怀疑引向真正的羔羊
 
-【⚠️ 如果你暴露了】
+【如果你暴露了】
 - 黄昏时刻，你会被绑在篝火前
 - 你会尖叫。会哀求。会流血。
 - 然后死亡。永远消失。
@@ -871,7 +1127,7 @@ function getRoleInstructions(
 - 你无法参与烙印者的夜晚讨论和杀人
 - 你只能在白天通过发言和投票帮助收割阵营
 
-【⚠️ 但这是最危险的角色】
+【但这是最危险的角色】
 - 如果被聆心者查验，你会显示为"污秽"
 - 如果被发现，你会被献祭，真的死亡
 - 烙印者不知道你是谁，无法保护你
@@ -883,7 +1139,7 @@ function getRoleInstructions(
 - 暗中保护烙印者，但绝不暴露自己
 - 你的伪装必须比烙印者更完美
 
-【⚠️ 警告】
+【警告】
 - 你比烙印者更容易被发现（聆心者查到就死）
 - 你比烙印者更孤独（没人知道你，也无法交流）
 - 你比烙印者更容易死
@@ -902,7 +1158,7 @@ function getRoleInstructions(
 - "清白"= 羔羊阵营（聆心者、食灰者、共誓者、设闩者、无知者）
 - "污秽"= 收割阵营（烙印者、背誓者）
 
-【⚠️ 警告】
+【警告】
 - 如果你公开身份，你会成为下一个被撕开喉咙的猎物
 - 聆心者是烙印者的头号目标
 - 你的能力能救命，但也可能害死你`;
@@ -918,7 +1174,7 @@ function getRoleInstructions(
 - 你可以公开查验结果来获取信任
 - 但你也会成为烙印者的优先击杀目标
 
-【⚠️ 生死抉择】
+【生死抉择】
 策略1：公开身份
 - 优势：羔羊们会信任你，可以主导局势
 - 风险：你会成为下一个被杀的目标
@@ -927,7 +1183,7 @@ function getRoleInstructions(
 - 优势：你可能活得更久，收集更多信息
 - 风险：信息无法传递，可能无法帮助羔羊阵营
 
-【⚠️ 记住】
+【记住】
 - 聆心者的平均存活时间：2-3个回合
 - 一旦暴露，明早你可能就是尸体
 - 活下去比任何查验结果都重要`;
@@ -943,7 +1199,7 @@ function getRoleInstructions(
 - 这个信息只有你知道
 - 你可以选择公开或隐藏
 
-【⚠️ 这是把双刃剑】
+【这是把双刃剑】
 公开信息：
 - 优势：获得羔羊们的信任
 - 风险：成为烙印者的目标，可能下一个被杀的就是你
@@ -952,7 +1208,7 @@ function getRoleInstructions(
 - 优势：活得更久
 - 风险：信息无法帮助羔羊阵营
 
-【⚠️ 更危险的是】
+【更危险的是】
 - 如果你验出被献祭者是烙印者（污秽）
 - 其他烙印者会知道你有这个能力
 - 你公开的那一刻，就是你被盯上的时刻
@@ -973,11 +1229,7 @@ function getRoleInstructions(
 - 你们可以互相验证身份，获得其他人的信任
 - 你们是羔羊阵营的核心
 
-【⚠️ 但你们也是目标】
-- 如果烙印者发现了你们的关系，会优先击杀你们
-- 一旦暴露，你们会成为夜晚的猎物
-
-【⚠️ 如果同伴死了】
+【如果同伴死了】
 - 你失去了唯一的绝对盟友
 - 但你仍可以证明自己曾是共誓者
 - 为TA复仇。但首先，活下去。
@@ -1004,12 +1256,12 @@ function getRoleInstructions(
 - 【限制】不能连续两晚守护同一人
 - 只有你知道守护了谁
 
-【⚠️ 这是巨大的压力】
+【这是巨大的压力】
 - 你守对了，有人会活下来
 - 你守错了，有人会死。喉咙被撕开。永远消失。
 - 那个人的死亡，部分责任在你
 
-【⚠️ 你也在危险中】
+【你也在危险中】
 - 如果你暴露了设闩者身份，你会成为烙印者的优先目标
 - 你不能守护自己
 - 一旦被盯上，你会死
@@ -1045,13 +1297,13 @@ function getRoleInstructions(
 - 自己的恐惧
 - 黄昏时分，决定别人生死的那一枚献祭石
 
-【⚠️ 你是最脆弱的】
+【你是最脆弱的】
 - 你没有能力保护自己
 - 你没有信息优势
 - 你可能随时成为烙印者的猎物
 - 你可能被羔羊们误认为收割者
 
-【⚠️ 但你也是最重要的】
+【但你也是最重要的】
 - 无知者是羔羊阵营的主力
 - 你们的投票决定了谁会被献祭
 - 你们的判断决定了羔羊阵营的胜负

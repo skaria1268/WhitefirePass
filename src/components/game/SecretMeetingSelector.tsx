@@ -16,14 +16,12 @@ interface SecretMeetingSelectorProps {
   players: Player[];
   timing: 'before_discussion' | 'after_sacrifice';
   onConfirm: (participants: [string, string]) => void;
-  onCancel?: () => void;
 }
 
 export function SecretMeetingSelector({
   players,
   timing,
   onConfirm,
-  onCancel,
 }: SecretMeetingSelectorProps) {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
@@ -130,21 +128,12 @@ export function SecretMeetingSelector({
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            {onCancel && (
-              <Button
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1"
-              >
-                取消
-              </Button>
-            )}
+          <div className="pt-4">
             <Button
               onClick={handleConfirm}
               disabled={selectedPlayers.length !== 2}
               className={cn(
-                'flex-1',
+                'w-full',
                 selectedPlayers.length === 2
                   ? 'bg-amber-500 hover:bg-amber-600 text-white'
                   : 'bg-slate-700 text-slate-400 cursor-not-allowed',

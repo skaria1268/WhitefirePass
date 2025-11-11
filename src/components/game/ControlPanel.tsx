@@ -16,6 +16,7 @@ import { testGeminiKey } from '@/lib/gemini';
 import { SaveGameManager } from '@/components/game/SaveGameManager';
 import { PersonalityEditor } from '@/components/game/PersonalityEditor';
 import { GameGuide } from '@/components/game/GameGuide';
+import { PromptViewer } from '@/components/game/PromptViewer';
 import type { GameConfig, GameState } from '@/types/game';
 import {
   Gamepad2,
@@ -30,6 +31,10 @@ import {
   Save,
   Sparkles,
   HelpCircle,
+  Settings,
+  PlayCircle,
+  XCircle,
+  Brain,
 } from 'lucide-react';
 
 const DEFAULT_CONFIG: GameConfig = {
@@ -89,6 +94,29 @@ function ApiKeyInput({
   );
 }
 
+function ApiUrlInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">API 基础 URL</label>
+      <Input
+        type="text"
+        placeholder="https://generativelanguage.googleapis.com"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <p className="text-xs text-muted-foreground">
+        默认使用 Google 官方 API，也可以填写自定义代理地址
+      </p>
+    </div>
+  );
+}
+
 function ErrorDisplay({
   error,
   onClear,
@@ -96,13 +124,75 @@ function ErrorDisplay({
   error: string;
   onClear: () => void;
 }) {
+  // Check if this is a retry message
+  const isRetrying = error.includes('正在重试');
+
+  // Parse retry information if available
+  const retryMatch = error.match(/\((\d+)\/(\d+)\)/);
+  const attempt = retryMatch ? parseInt(retryMatch[1]) : null;
+  const maxRetries = retryMatch ? parseInt(retryMatch[2]) : null;
+
+  // Extract reason and delay
+  const lines = error.split('\n');
+  const mainMessage = lines[0];
+  const reason = lines.find(line => line.startsWith('原因:'))?.replace('原因:', '').trim();
+  const delay = lines.find(line => line.includes('等待'))?.match(/(\d+\.?\d*)秒/)?.[1];
+
+  if (isRetrying && attempt && maxRetries) {
+    // Retry progress UI
+    const progress = (attempt / maxRetries) * 100;
+
+    return (
+      <div className="rounded-lg bg-amber-50 border border-amber-300 p-3">
+        <div className="flex items-start gap-2">
+          <Loader2 className="w-5 h-5 text-amber-600 flex-shrink-0 animate-spin" />
+          <div className="flex-1 space-y-2">
+            <div>
+              <p className="text-sm font-medium text-amber-900">指数退避重试中</p>
+              <p className="text-xs text-amber-700 mt-1">{mainMessage}</p>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full bg-amber-200 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-amber-600 h-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            {/* Details */}
+            <div className="text-xs text-amber-700 space-y-0.5">
+              <div className="flex items-center gap-1">
+                <span className="font-medium">尝试:</span>
+                <span>{attempt} / {maxRetries}</span>
+              </div>
+              {reason && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">原因:</span>
+                  <span className="truncate">{reason}</span>
+                </div>
+              )}
+              {delay && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">等待:</span>
+                  <span>{delay}秒</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular error UI
   return (
     <div className="rounded-lg bg-red-50 border border-red-200 p-3">
       <div className="flex items-start gap-2">
         <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-medium text-red-900">请求失败</p>
-          <p className="text-xs text-red-700 mt-1">{error}</p>
+          <p className="text-xs text-red-700 mt-1 whitespace-pre-line">{error}</p>
         </div>
         <button
           onClick={onClear}
@@ -147,44 +237,94 @@ const phaseNames: Record<string, string> = {
   end: '结束',
 };
 
+function SettingsTabContent({
+  apiKey,
+  apiUrl,
+  isValidating,
+  onApiKeyChange,
+  onApiUrlChange,
+  onSave,
+}: {
+  apiKey: string;
+  apiUrl: string;
+  isValidating: boolean;
+  onApiKeyChange: (value: string) => void;
+  onApiUrlChange: (value: string) => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <ApiKeyInput value={apiKey} onChange={onApiKeyChange} />
+      <ApiUrlInput value={apiUrl} onChange={onApiUrlChange} />
+
+      <Button
+        onClick={onSave}
+        className="w-full"
+        disabled={isValidating || !apiKey.trim()}
+      >
+        {isValidating ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            验证中...
+          </>
+        ) : (
+          <>
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            验证并保存设置
+          </>
+        )}
+      </Button>
+
+      <p className="text-xs text-muted-foreground text-center">
+        保存前会先验证 API 密钥是否有效
+      </p>
+    </div>
+  );
+}
+
 function ControlTabContent({
   hasActiveGame,
   gameState,
   isGameEnded,
-  apiKey,
   isValidating,
   isProcessing,
+  isAutoExecuting,
   canExecuteNext,
   lastError,
-  onApiKeyChange,
   onStart,
   onNextStep,
+  onAutoExecute,
+  onStopAuto,
   onRetry,
   onReset,
   onClearError,
   onOpenPersonalityEditor,
   onOpenGameGuide,
+  onOpenPromptViewer,
+  onOpenSecretMeeting,
 }: {
   hasActiveGame: boolean;
   gameState: GameState | null;
   isGameEnded: boolean;
-  apiKey: string;
   isValidating: boolean;
   isProcessing: boolean;
+  isAutoExecuting: boolean;
   canExecuteNext: boolean;
   lastError: string | null;
-  onApiKeyChange: (value: string) => void;
   onStart: () => void;
   onNextStep: () => void;
+  onAutoExecute: () => void;
+  onStopAuto: () => void;
   onRetry: () => void;
   onReset: () => void;
   onClearError: () => void;
   onOpenPersonalityEditor: () => void;
   onOpenGameGuide: () => void;
+  onOpenPromptViewer: () => void;
+  onOpenSecretMeeting: () => void;
 }) {
   return (
     <>
-      {!hasActiveGame && <ApiKeyInput value={apiKey} onChange={onApiKeyChange} />}
 
       {hasActiveGame && gameState && (
         <>
@@ -206,10 +346,14 @@ function ControlTabContent({
           isProcessing={isProcessing}
           canExecuteNext={canExecuteNext}
           hasError={Boolean(lastError)}
+          isAutoExecuting={isAutoExecuting}
           onStart={onStart}
           onNextStep={onNextStep}
+          onAutoExecute={onAutoExecute}
+          onStopAuto={onStopAuto}
           onRetry={onRetry}
           onReset={onReset}
+          onOpenSecretMeeting={onOpenSecretMeeting}
         />
       </div>
 
@@ -221,6 +365,17 @@ function ControlTabContent({
         >
           <Sparkles className="w-4 h-4" />
           旅者详情
+        </Button>
+      )}
+
+      {hasActiveGame && (
+        <Button
+          onClick={onOpenPromptViewer}
+          variant="outline"
+          className="w-full flex items-center gap-2"
+        >
+          <Brain className="w-4 h-4" />
+          神谕指引
         </Button>
       )}
 
@@ -239,13 +394,94 @@ function ControlTabContent({
 }
 
 function CurrentPlayerDisplay({ gameState }: { gameState: GameState }) {
+  // Get phase display name
+  const getPhaseDisplay = () => {
+    const { phase, nightPhase } = gameState;
+
+    if (phase === 'prologue' || phase === 'setup') return '序章';
+    if (phase === 'day') return '白天讨论';
+    if (phase === 'voting') return '献祭投票';
+    if (phase === 'secret_meeting') return '密会阶段';
+    if (phase === 'event') return '事件阶段';
+    if (phase === 'end') return '游戏结束';
+
+    if (phase === 'night' && nightPhase) {
+      switch (nightPhase) {
+        case 'listener': return '夜晚 - 聆心者查验';
+        case 'marked-discuss': return '夜晚 - 烙印者讨论';
+        case 'marked-vote': return '夜晚 - 烙印者投票';
+        case 'guard': return '夜晚 - 设闩者守护';
+        case 'coroner': return '夜晚 - 食灰者验尸';
+        default: return '夜晚';
+      }
+    }
+
+    return '未知阶段';
+  };
+
+  // Get role display name
+  const getRoleDisplay = (role: string) => {
+    const roleNames: Record<string, string> = {
+      marked: '烙印者',
+      heretic: '背誓者',
+      listener: '聆心者',
+      coroner: '食灰者',
+      twin: '共誓者',
+      guard: '设闩者',
+      innocent: '无知者',
+    };
+    return roleNames[role] || role;
+  };
+
+  const phaseDisplay = getPhaseDisplay();
+
   // Don't show current player during prologue/setup
   if (gameState.phase === 'prologue' || gameState.phase === 'setup') {
     return (
-      <div className="rounded-lg bg-slate-50 p-3">
-        <p className="text-sm font-medium text-slate-900">
-          序章叙述中...
-        </p>
+      <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
+          <p className="text-sm font-medium text-slate-900">{phaseDisplay}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Special handling for secret meeting
+  if (gameState.phase === 'secret_meeting') {
+    if (gameState.pendingSecretMeeting?.selectedParticipants) {
+      const [p1, p2] = gameState.pendingSecretMeeting.selectedParticipants;
+      return (
+        <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            <p className="text-sm font-medium text-purple-900">{phaseDisplay}</p>
+          </div>
+          <p className="text-xs text-purple-700 pl-4">
+            参与者: {p1} 和 {p2}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="rounded-lg bg-purple-50 border border-purple-200 p-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-purple-500" />
+          <p className="text-sm font-medium text-purple-900">{phaseDisplay}</p>
+        </div>
+        <p className="text-xs text-purple-700 pl-4 mt-1">等待选择密会参与者...</p>
+      </div>
+    );
+  }
+
+  // Special handling for event phase
+  if (gameState.phase === 'event') {
+    return (
+      <div className="rounded-lg bg-teal-50 border border-teal-200 p-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+          <p className="text-sm font-medium text-teal-900">{phaseDisplay}</p>
+        </div>
       </div>
     );
   }
@@ -255,11 +491,44 @@ function CurrentPlayerDisplay({ gameState }: { gameState: GameState }) {
     .filter((p) => gameState.phase !== 'night' || p.role === 'marked');
   const currentPlayer = alivePlayers[gameState.currentPlayerIndex];
 
+  if (!currentPlayer) {
+    return (
+      <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-amber-500" />
+          <p className="text-sm font-medium text-amber-900">{phaseDisplay}</p>
+        </div>
+        <p className="text-xs text-amber-700 pl-4 mt-1">等待进入下一阶段...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-lg bg-blue-50 p-3">
-      <p className="text-sm font-medium text-blue-900">
-        当前操作：{currentPlayer ? currentPlayer.name : '等待下一阶段'}
-      </p>
+    <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 space-y-1">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+        <p className="text-sm font-medium text-blue-900">{phaseDisplay}</p>
+      </div>
+      <div className="text-xs text-blue-700 pl-4 space-y-0.5">
+        <div className="flex items-center gap-1">
+          <span className="font-medium">当前角色:</span>
+          <span>{currentPlayer.name}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="font-medium">身份:</span>
+          <span>{getRoleDisplay(currentPlayer.role)}</span>
+          {currentPlayer.occupation && (
+            <>
+              <span className="text-blue-400">·</span>
+              <span className="text-blue-600">{currentPlayer.occupation}</span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="font-medium">进度:</span>
+          <span>{gameState.currentPlayerIndex + 1} / {alivePlayers.length}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -270,20 +539,28 @@ function ControlButtons({
   isProcessing,
   canExecuteNext,
   hasError,
+  isAutoExecuting,
   onStart,
   onNextStep,
+  onAutoExecute,
+  onStopAuto,
   onRetry,
   onReset,
+  onOpenSecretMeeting,
 }: {
   gameState: GameState | null;
   isValidating: boolean;
   isProcessing: boolean;
   canExecuteNext: boolean;
   hasError: boolean;
+  isAutoExecuting: boolean;
   onStart: () => void;
   onNextStep: () => void;
+  onAutoExecute: () => void;
+  onStopAuto: () => void;
   onRetry: () => void;
   onReset: () => void;
+  onOpenSecretMeeting: () => void;
 }) {
   if (!gameState) {
     return (
@@ -307,44 +584,119 @@ function ControlButtons({
     );
   }
 
+  // Check if we're in secret meeting phase
+  const isSecretMeetingPhase = gameState.phase === 'secret_meeting';
+  const hasSecretMeetingPending = isSecretMeetingPhase && gameState.pendingSecretMeeting && !gameState.pendingSecretMeeting.selectedParticipants;
+  const canStartSecretMeeting = hasSecretMeetingPending && !isProcessing && !hasError;
+  const secretMeetingInProgress = isSecretMeetingPhase && Boolean(gameState.pendingSecretMeeting?.selectedParticipants) && isProcessing && !hasError;
+
   return (
     <>
-      {hasError ? (
-        <Button
-          onClick={onRetry}
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              重试中...
-            </>
+      {/* Secret Meeting Phase - Show only secret meeting button */}
+      {isSecretMeetingPhase ? (
+        <>
+          {hasError ? (
+            <Button
+              onClick={onRetry}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  重试中...
+                </>
+              ) : (
+                <>
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  重试当前步骤
+                </>
+              )}
+            </Button>
           ) : (
-            <>
-              <RotateCw className="w-4 h-4 mr-2" />
-              重试当前步骤
-            </>
+            <Button
+              onClick={onOpenSecretMeeting}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={!canStartSecretMeeting || secretMeetingInProgress}
+            >
+              {secretMeetingInProgress ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  密会进行中...
+                </>
+              ) : (
+                <>
+                  <Users className="w-4 h-4 mr-2" />
+                  发起密会
+                </>
+              )}
+            </Button>
           )}
-        </Button>
+        </>
       ) : (
-        <Button
-          onClick={onNextStep}
-          className="w-full"
-          disabled={!canExecuteNext}
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              处理中...
-            </>
+        /* Normal Phase - Show next step / retry button */
+        <>
+          {hasError ? (
+            <Button
+              onClick={onRetry}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  重试中...
+                </>
+              ) : (
+                <>
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  重试当前步骤
+                </>
+              )}
+            </Button>
           ) : (
             <>
-              <ArrowRight className="w-4 h-4 mr-2" />
-              下一步
+              {/* Auto Execute Phase Button */}
+              {isAutoExecuting ? (
+                <Button
+                  onClick={onStopAuto}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  停止自动执行
+                </Button>
+              ) : (
+                <Button
+                  onClick={onAutoExecute}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={!canExecuteNext}
+                >
+                  <PlayCircle className="w-4 h-4 mr-2" />
+                  自动执行阶段
+                </Button>
+              )}
+
+              {/* Next Step Button */}
+              <Button
+                onClick={onNextStep}
+                className="w-full"
+                disabled={!canExecuteNext || isAutoExecuting}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    处理中...
+                  </>
+                ) : (
+                  <>
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    下一步
+                  </>
+                )}
+              </Button>
             </>
           )}
-        </Button>
+        </>
       )}
       <Button
         onClick={onReset}
@@ -431,19 +783,27 @@ export function ControlPanel() {
   const {
     gameState,
     isProcessing,
+    isAutoExecuting,
     lastError,
     apiKey: storedApiKey,
+    apiUrl: storedApiUrl,
     setApiKey: saveApiKey,
+    setApiUrl: saveApiUrl,
     startGame,
     resetGame,
     executeNextStep,
+    executePhaseAuto,
+    stopAutoExecution,
     retryCurrentStep,
     clearError,
+    openSecretMeetingSelector,
   } = useGameStore();
   const [apiKey, setApiKey] = useState(storedApiKey);
+  const [apiUrl, setApiUrl] = useState(storedApiUrl);
   const [isValidating, setIsValidating] = useState(false);
   const [personalityEditorOpen, setPersonalityEditorOpen] = useState(false);
   const [gameGuideOpen, setGameGuideOpen] = useState(false);
+  const [promptViewerOpen, setPromptViewerOpen] = useState(false);
 
   // Sync local state with persisted apiKey from store
   useEffect(() => {
@@ -452,6 +812,41 @@ export function ControlPanel() {
     }
   }, [storedApiKey]);
 
+  // Sync local state with persisted apiUrl from store
+  useEffect(() => {
+    if (storedApiUrl) {
+      setApiUrl(storedApiUrl);
+    }
+  }, [storedApiUrl]);
+
+  const handleSaveSettings = async () => {
+    const trimmedKey = apiKey.trim();
+    if (!trimmedKey) {
+      alert('请输入你的 Gemini API 密钥');
+      return;
+    }
+
+    const trimmedUrl = apiUrl.trim();
+
+    setIsValidating(true);
+    const isValid = await testGeminiKey(trimmedKey, trimmedUrl);
+    setIsValidating(false);
+
+    if (!isValid) {
+      alert(
+        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常\n4. API URL 是否正确\n\n获取 API 密钥：https://aistudio.google.com/app/apikey',
+      );
+      return;
+    }
+
+    saveApiKey(trimmedKey);
+    if (trimmedUrl) {
+      saveApiUrl(trimmedUrl);
+    }
+
+    alert('设置已保存！');
+  };
+
   const handleStart = async () => {
     const trimmedKey = apiKey.trim();
     if (!trimmedKey) {
@@ -459,18 +854,23 @@ export function ControlPanel() {
       return;
     }
 
+    const trimmedUrl = apiUrl.trim();
+
     setIsValidating(true);
-    const isValid = await testGeminiKey(trimmedKey);
+    const isValid = await testGeminiKey(trimmedKey, trimmedUrl);
     setIsValidating(false);
 
     if (!isValid) {
       alert(
-        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常\n\n获取 API 密钥：https://aistudio.google.com/app/apikey',
+        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常\n4. API URL 是否正确\n\n获取 API 密钥：https://aistudio.google.com/app/apikey',
       );
       return;
     }
 
     saveApiKey(trimmedKey);
+    if (trimmedUrl) {
+      saveApiUrl(trimmedUrl);
+    }
     startGame(DEFAULT_CONFIG);
   };
 
@@ -494,14 +894,18 @@ export function ControlPanel() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="control" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="control" className="flex items-center gap-2">
               <Gamepad2 className="w-4 h-4" />
-              游戏控制
+              控制
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              设置
             </TabsTrigger>
             <TabsTrigger value="saves" className="flex items-center gap-2">
               <Save className="w-4 h-4" />
-              存档管理
+              存档
             </TabsTrigger>
           </TabsList>
 
@@ -510,19 +914,33 @@ export function ControlPanel() {
               hasActiveGame={hasActiveGame}
               gameState={gameState}
               isGameEnded={isGameEnded}
-              apiKey={apiKey}
               isValidating={isValidating}
               isProcessing={isProcessing}
+              isAutoExecuting={isAutoExecuting}
               canExecuteNext={canExecuteNext}
               lastError={lastError}
-              onApiKeyChange={setApiKey}
               onStart={() => void handleStart()}
               onNextStep={() => void executeNextStep()}
+              onAutoExecute={() => void executePhaseAuto()}
+              onStopAuto={stopAutoExecution}
               onRetry={() => void retryCurrentStep()}
               onReset={resetGame}
               onClearError={clearError}
               onOpenPersonalityEditor={() => setPersonalityEditorOpen(true)}
               onOpenGameGuide={() => setGameGuideOpen(true)}
+              onOpenPromptViewer={() => setPromptViewerOpen(true)}
+              onOpenSecretMeeting={openSecretMeetingSelector}
+            />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4 mt-4">
+            <SettingsTabContent
+              apiKey={apiKey}
+              apiUrl={apiUrl}
+              isValidating={isValidating}
+              onApiKeyChange={setApiKey}
+              onApiUrlChange={setApiUrl}
+              onSave={() => void handleSaveSettings()}
             />
           </TabsContent>
 
@@ -543,6 +961,12 @@ export function ControlPanel() {
     <GameGuide
       open={gameGuideOpen}
       onOpenChange={setGameGuideOpen}
+    />
+
+    {/* Prompt Viewer Dialog */}
+    <PromptViewer
+      open={promptViewerOpen}
+      onOpenChange={setPromptViewerOpen}
     />
   </>
   );

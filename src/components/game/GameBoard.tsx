@@ -18,7 +18,9 @@ import { PhaseTransition } from './PhaseTransition';
 import { GameEndDialog } from './GameEndDialog';
 import { EmotionalStateDialog } from './EmotionalStateDialog';
 import { SecretMeetingSelector } from './SecretMeetingSelector';
+import { MessageFilter } from './MessageFilter';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
+import type { Message } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -111,8 +113,8 @@ export function GameBoard() {
     transitionRound,
     completeTransition,
     clearPendingStateChanges,
+    showSecretMeetingSelector,
     setSecretMeetingParticipants,
-    skipSecretMeeting,
     executeSecretMeeting,
   } = useGameStore();
   const phase = gameState?.phase || 'setup';
@@ -124,6 +126,9 @@ export function GameBoard() {
 
   // Game end dialog state
   const [showEndDialog, setShowEndDialog] = useState(false);
+
+  // Filtered messages state for game log
+  const [filteredGameMessages, setFilteredGameMessages] = useState<Message[]>([]);
 
   // Auto-open game end dialog when game ends
   useEffect(() => {
@@ -349,12 +354,19 @@ export function GameBoard() {
                     <TabsTrigger value="thinking">内心独白</TabsTrigger>
                     <TabsTrigger value="prompt">神谕指引</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="game" className="flex-1 overflow-hidden m-0">
-                    <MessageFlow
+                  <TabsContent value="game" className="flex-1 overflow-hidden m-0 flex flex-col">
+                    <MessageFilter
                       messages={gameState.messages}
                       players={gameState.players}
-                      filterTypes={['system', 'speech', 'vote', 'death', 'action']}
+                      onFilterChange={setFilteredGameMessages}
                     />
+                    <div className="flex-1 overflow-hidden">
+                      <MessageFlow
+                        messages={filteredGameMessages.length > 0 ? filteredGameMessages : gameState.messages}
+                        players={gameState.players}
+                        filterTypes={['system', 'speech', 'death', 'action', 'secret']}
+                      />
+                    </div>
                   </TabsContent>
                   <TabsContent value="thinking" className="flex-1 overflow-hidden m-0">
                     <MessageFlow
@@ -438,8 +450,8 @@ export function GameBoard() {
         />
       )}
 
-      {/* Secret Meeting Selector */}
-      {gameState && gameState.phase === 'secret_meeting' && gameState.pendingSecretMeeting && !gameState.pendingSecretMeeting.selectedParticipants && (
+      {/* Secret Meeting Selector - Only show when explicitly opened */}
+      {gameState && gameState.phase === 'secret_meeting' && gameState.pendingSecretMeeting && !gameState.pendingSecretMeeting.selectedParticipants && showSecretMeetingSelector && (
         <SecretMeetingSelector
           players={gameState.players}
           timing={gameState.pendingSecretMeeting.timing}
@@ -447,7 +459,6 @@ export function GameBoard() {
             setSecretMeetingParticipants(participants);
             void executeSecretMeeting();
           }}
-          onCancel={skipSecretMeeting}
         />
       )}
     </>

@@ -6,19 +6,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Mountain, Settings, Play } from 'lucide-react';
+import { Mountain, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGameStore } from '@/stores/game-store';
-import { testGeminiKey } from '@/lib/gemini';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import type { GameConfig } from '@/types/game';
 
 interface Snowflake {
@@ -47,9 +37,6 @@ const DEFAULT_CONFIG: GameConfig = {
 
 export function StartMenu() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
 
   // Animation stages
   const [stage, setStage] = useState<'initial' | 'icon' | 'title' | 'divider' | 'subtitle' | 'description' | 'buttons' | 'complete'>('initial');
@@ -58,16 +45,8 @@ export function StartMenu() {
 
   const {
     apiKey: storedApiKey,
-    setApiKey: saveApiKey,
     startGame,
-    executeNextStep
   } = useGameStore();
-
-  useEffect(() => {
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-  }, [storedApiKey]);
 
   // Orchestrated entry animation sequence
   useEffect(() => {
@@ -155,27 +134,12 @@ export function StartMenu() {
     };
   }, []);
 
-  const handleStart = async () => {
-    const trimmedKey = apiKey.trim();
-    if (!trimmedKey) {
-      alert('请先在设置中配置 Gemini API 密钥');
-      setSettingsOpen(true);
+  const handleStart = () => {
+    if (!storedApiKey?.trim()) {
+      alert('请先在游戏主界面的"游戏控制"面板中配置 API 密钥和 URL');
       return;
     }
 
-    setIsValidating(true);
-    const isValid = await testGeminiKey(trimmedKey);
-    setIsValidating(false);
-
-    if (!isValid) {
-      alert(
-        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常'
-      );
-      setSettingsOpen(true);
-      return;
-    }
-
-    saveApiKey(trimmedKey);
     startGame(DEFAULT_CONFIG);
     // Game will start at prologue phase, user needs to click next to proceed
   };
@@ -293,10 +257,10 @@ export function StartMenu() {
             1913年深冬，十五名旅人被困于寂静山庄，山灵的契约已成
           </p>
 
-          {/* Action Buttons - Slide up from bottom */}
+          {/* Action Button - Slide up from bottom */}
           <div
             className={`
-              flex gap-6 justify-center pt-8
+              flex justify-center pt-8
               transition-all duration-800 ease-out
               ${['initial', 'icon', 'title', 'divider', 'subtitle', 'description'].includes(stage)
                 ? 'opacity-0 translate-y-8'
@@ -306,30 +270,11 @@ export function StartMenu() {
           >
             <Button
               onClick={handleStart}
-              disabled={isValidating}
               className="group relative px-12 py-6 bg-slate-800 hover:bg-slate-700 text-white rounded-full font-cinzel tracking-widest text-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-slate-700"
             >
-              {isValidating ? (
-                <span className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  验证中
-                </span>
-              ) : (
-                <span className="flex items-center gap-3">
-                  <Play className="w-5 h-5" strokeWidth={2} />
-                  开始游戏
-                </span>
-              )}
-            </Button>
-
-            <Button
-              onClick={() => setSettingsOpen(true)}
-              variant="outline"
-              className="px-12 py-6 bg-transparent hover:bg-slate-200/50 text-slate-700 border-2 border-slate-400 rounded-full font-cinzel tracking-widest text-lg transition-all duration-300"
-            >
               <span className="flex items-center gap-3">
-                <Settings className="w-5 h-5" strokeWidth={2} />
-                设置
+                <Play className="w-5 h-5" strokeWidth={2} />
+                开始游戏
               </span>
             </Button>
           </div>
@@ -356,69 +301,6 @@ export function StartMenu() {
         <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-white to-transparent" />
       </div>
     </div>
-
-    {/* Settings Dialog */}
-    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-      <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-md border-2 border-slate-300">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-cinzel tracking-wide text-slate-800">
-            游戏设置
-          </DialogTitle>
-          <DialogDescription className="text-slate-600 font-serif">
-            配置 Gemini API 以开始游戏
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          <div className="space-y-3">
-            <Label htmlFor="apiKey" className="text-sm font-medium text-slate-700">
-              Gemini API 密钥
-            </Label>
-            <Input
-              id="apiKey"
-              type="password"
-              placeholder="输入你的 API 密钥"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="border-2 border-slate-300 focus:border-slate-500 bg-white/50"
-            />
-            <p className="text-xs text-slate-600">
-              从{' '}
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-slate-800 underline hover:text-slate-900"
-              >
-                Google AI Studio
-              </a>
-              {' '}获取密钥
-            </p>
-          </div>
-
-          <div className="flex gap-3 justify-end pt-2">
-            <Button
-              onClick={() => setSettingsOpen(false)}
-              variant="outline"
-              className="border-2 border-slate-300 text-slate-700 hover:bg-slate-100"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={() => {
-                if (apiKey.trim()) {
-                  saveApiKey(apiKey.trim());
-                  setSettingsOpen(false);
-                }
-              }}
-              className="bg-slate-800 hover:bg-slate-700 text-white"
-            >
-              保存
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
     </>
   );
 }
