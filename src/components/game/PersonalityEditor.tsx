@@ -39,7 +39,6 @@ import type { Player } from '@/types/game';
 import { getRelationshipsForCharacter, getRelationshipLabel } from '@/lib/relationships';
 import { getStateChangeDescription } from '@/lib/emotional-prompts';
 import { getCharacterAutobiographies } from '@/lib/character-autobiographies';
-import { cn } from '@/lib/utils';
 
 interface PersonalityEditorProps {
   open: boolean;
