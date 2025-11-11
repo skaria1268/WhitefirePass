@@ -15,9 +15,13 @@ import { CurrentSpeaker } from './CurrentSpeaker';
 import { StartMenu } from './StartMenu';
 import { CluesPanel } from './CluesPanel';
 import { PhaseTransition } from './PhaseTransition';
-import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon } from 'lucide-react';
+import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useBGM } from '@/hooks/useBGM';
 
 /**
  * Get phase-specific background gradient and theme
@@ -92,6 +96,10 @@ export function GameBoard() {
   const phase = gameState?.phase || 'setup';
   const theme = getPhaseTheme(phase);
 
+  // BGM system
+  const bgmPhase = gameState ? phase : 'menu';
+  const { volume, setVolume, isMuted, toggleMute } = useBGM(bgmPhase, true);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -151,18 +159,78 @@ export function GameBoard() {
             </div>
           </div>
 
-          {gameState && (
-            <div className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full border-2 backdrop-blur-md bg-background/20 shadow-glow-amber",
-              theme.border
-            )}>
-              {theme.icon}
-              <div>
-                <div className="text-sm font-bold text-foreground font-cinzel">{theme.label}</div>
-                <div className="text-xs text-muted-foreground font-serif">第 {gameState.round} 回合</div>
+          <div className="flex items-center gap-4">
+            {/* BGM Volume Control */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-background/20"
+                  onClick={(e) => {
+                    // Toggle mute on right click
+                    if (e.button === 2) {
+                      e.preventDefault();
+                      toggleMute();
+                    }
+                  }}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-foreground" />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48" align="end">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">BGM音量</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={toggleMute}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-3 h-3" />
+                      ) : (
+                        <Volume2 className="w-3 h-3" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <VolumeX className="w-3 h-3 text-muted-foreground" />
+                    <Slider
+                      value={[volume * 100]}
+                      onValueChange={(value) => setVolume(value[0] / 100)}
+                      max={100}
+                      step={1}
+                      className="flex-1"
+                      disabled={isMuted}
+                    />
+                    <Volume2 className="w-3 h-3 text-muted-foreground" />
+                  </div>
+                  <div className="text-xs text-center text-muted-foreground">
+                    {isMuted ? '静音' : `${Math.round(volume * 100)}%`}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {gameState && (
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full border-2 backdrop-blur-md bg-background/20 shadow-glow-amber",
+                theme.border
+              )}>
+                {theme.icon}
+                <div>
+                  <div className="text-sm font-bold text-foreground font-cinzel">{theme.label}</div>
+                  <div className="text-xs text-muted-foreground font-serif">第 {gameState.round} 回合</div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
