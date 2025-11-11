@@ -19,7 +19,22 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { TarotCard } from './TarotCard';
-import { Sparkles, Heart, TrendingUp, TrendingDown, Minus, Users, BookOpen } from 'lucide-react';
+import {
+  Sparkles,
+  Heart,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Users,
+  BookOpen,
+  Calendar,
+  Cake,
+  User as UserIcon,
+  Briefcase,
+  Sparkle,
+  Ruler,
+  Droplet,
+} from 'lucide-react';
 import type { Player } from '@/types/game';
 import { getRelationshipsForCharacter, getRelationshipLabel } from '@/lib/relationships';
 import { getStateChangeDescription } from '@/lib/emotional-prompts';
@@ -170,12 +185,18 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
  * Character basic info card - below tarot card
  */
 function CharacterBasicInfo({ player }: { player: Player }) {
+  // Calculate birth date based on age (game year is 1913)
+  const birthYear = player.age ? 1913 - player.age : null;
+  const birthDate = birthYear ? `${birthYear}年` : '未知';
+
   const infoItems = [
-    { label: '性别', value: player.gender || '未知', icon: '⚥' },
-    { label: '职业', value: player.occupation || '未知', icon: '⚒' },
-    { label: '性格', value: player.trait || '未知', icon: '◈' },
-    { label: '身高', value: player.height || '未知', icon: '⚐' },
-    { label: '血型', value: player.bloodType || '未知', icon: '⚕' },
+    { label: '年龄', value: player.age ? `${player.age}岁` : '未知', Icon: Calendar },
+    { label: '出生', value: birthDate, Icon: Cake },
+    { label: '性别', value: player.gender || '未知', Icon: UserIcon },
+    { label: '职业', value: player.occupation || '未知', Icon: Briefcase },
+    { label: '性格', value: player.trait || '未知', Icon: Sparkle },
+    { label: '身高', value: player.height || '未知', Icon: Ruler },
+    { label: '血型', value: player.bloodType || '未知', Icon: Droplet },
   ];
 
   return (
@@ -190,7 +211,7 @@ function CharacterBasicInfo({ player }: { player: Player }) {
             className="flex items-center justify-between text-sm group py-0.5"
           >
             <span className="flex items-center gap-2 text-slate-400">
-              <span className="text-amber-600/60 text-base">{item.icon}</span>
+              <item.Icon className="w-3.5 h-3.5 text-amber-600/60" />
               {item.label}
             </span>
             <span className="text-slate-200 font-medium">{item.value}</span>

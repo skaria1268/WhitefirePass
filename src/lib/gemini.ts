@@ -188,6 +188,59 @@ ${gameState.coronerReports.map((report) => `第${report.round}回合：${report.
   const effectiveRole = (player.role === 'heretic' && round === 1) ? 'innocent' : player.role;
   const displayRoleName = roleNames[effectiveRole];
 
+  // Handle secret meeting phase
+  if (phase === 'secret_meeting' && gameState.pendingSecretMeeting?.selectedParticipants) {
+    const [participant1, participant2] = gameState.pendingSecretMeeting.selectedParticipants;
+    if (participant1 === player.name || participant2 === player.name) {
+      const otherPlayer = participant1 === player.name ? participant2 : participant1;
+      const timing = gameState.pendingSecretMeeting.timing;
+      const timingText = timing === 'before_discussion' ? '白天讨论开始前' : '献祭仪式之后';
+
+      return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【白烬山口 - 寂静山庄 - 第 ${round} 夜】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+你是 ${player.name}。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【密会时刻 - ${timingText}】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+你正在和 ${otherPlayer} 进行私密对话。
+其他人不会知道你们说了什么。
+这是一个可以坦诚交流、试探、或欺骗的时刻。
+
+${messageHistory || '（对话刚刚开始）'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【你的性格】
+${player.personality || '你是一个普通的旅人，凭直觉和理性生存。'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+请按照以下格式回复：
+
+【思考】
+（你内心的独白。100字左右。）
+
+作为 ${player.name}：
+- 你为什么要和 ${otherPlayer} 进行这次对话？
+- 你打算从TA那里获取什么信息？
+- 你会向TA坦诚你的身份或想法吗？
+- 这是建立联盟、试探真相、还是布下欺骗的陷阱？
+
+【发言】
+（你对 ${otherPlayer} 说的话。100字左右。）
+
+用 ${player.name} 的语气和性格说话。
+这是私密对话，你可以更加坦诚，也可以更加狡诈。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【重要】
+这次对话只有你和 ${otherPlayer} 知道。
+选择你想要传达的信息，但也要警惕对方可能在欺骗你。`;
+    }
+  }
+
   const basePrompt = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【白烬山口 - 寂静山庄 - 第 ${round} 夜】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

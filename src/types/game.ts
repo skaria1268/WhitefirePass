@@ -89,6 +89,7 @@ export interface Player {
   personality?: string;  // Optional personality prompt for AI players
   emotionalState?: EmotionalState;  // Current emotional state
   // Character basic info
+  age?: number;
   gender?: '男性' | '女性';
   occupation?: string;
   trait?: string;  // Character trait/personality tag

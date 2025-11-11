@@ -22,6 +22,7 @@ import {
   Ghost,
   Ear,
   User,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -109,6 +110,8 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
       day: '白天讨论',
       voting: '献祭投票',
       night: '夜晚',
+      secret_meeting: '密会',
+      event: '事件',
       prologue: '序章',
       setup: '序章',
       end: '游戏结束',
@@ -131,6 +134,8 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
       day: <Sun className="w-3 h-3" />,
       voting: <Vote className="w-3 h-3" />,
       night: <Moon className="w-3 h-3" />,
+      secret_meeting: <Users className="w-3 h-3" />,
+      event: <Sparkles className="w-3 h-3" />,
       setup: <MessageSquare className="w-3 h-3" />,
       end: <CheckCircle2 className="w-3 h-3" />,
     };
@@ -168,6 +173,16 @@ export function CurrentSpeaker({ gameState }: CurrentSpeakerProps) {
             <div className="text-center text-muted-foreground py-4">
               <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p className="text-xs">故事叙述中...</p>
+            </div>
+          ) : phase === 'secret_meeting' ? (
+            <div className="text-center text-muted-foreground py-4">
+              <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-xs">密会进行中...</p>
+            </div>
+          ) : phase === 'event' ? (
+            <div className="text-center text-muted-foreground py-4">
+              <Sparkles className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-xs">事件发生中...</p>
             </div>
           ) : currentPlayer ? (
             <div className="text-center space-y-2">

@@ -62,6 +62,8 @@ const phaseNames: Record<string, string> = {
   night: '夜晚',
   day: '白天',
   voting: '投票',
+  secret_meeting: '密会',
+  event: '事件',
   end: '结束',
 };
 

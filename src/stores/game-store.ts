@@ -19,6 +19,7 @@ import {
   skipSecretMeeting as engineSkipSecretMeeting,
   completeSecretMeeting,
   generateGameEvent,
+  advancePhase,
 } from '@/lib/game-engine';
 import { getAIResponse, buildPrompt } from '@/lib/gemini';
 import { getInitialClues } from '@/lib/clues-data';
@@ -252,17 +253,6 @@ export const useGameStore = create<GameStore>()(
       messageIds.push(meetingStartMsg.id);
 
       // Player 1 speaks
-      const fullPrompt1 = buildPrompt(player1, gameState);
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          `${player1.name} (神谕)`,
-          fullPrompt1 + `\n\n【密会场景】你正在和 ${player2.name} 进行私密对话，其他人不会知道你们说了什么。请自然地交流你的想法。`,
-          'prompt',
-          { secretMeeting: [player1.name, player2.name] },
-        ),
-      );
-
       const response1 = await getAIResponse(player1, gameState, { apiKey });
       const { thinking: thinking1, speech: speech1 } = parseAIResponse(response1);
 
@@ -289,17 +279,6 @@ export const useGameStore = create<GameStore>()(
       messageIds.push(speechMsg1.id);
 
       // Player 2 responds
-      const fullPrompt2 = buildPrompt(player2, gameState);
-      gameState.messages.push(
-        addMessage(
-          gameState,
-          `${player2.name} (神谕)`,
-          fullPrompt2 + `\n\n【密会场景】你正在和 ${player1.name} 进行私密对话。${player1.name} 刚才对你说："${speech1}"。请回应。`,
-          'prompt',
-          { secretMeeting: [player1.name, player2.name] },
-        ),
-      );
-
       const response2 = await getAIResponse(player2, gameState, { apiKey });
       const { thinking: thinking2, speech: speech2 } = parseAIResponse(response2);
 
@@ -357,9 +336,18 @@ export const useGameStore = create<GameStore>()(
       set({ gameState: { ...gameState } });
     }
 
-    // Advance to next phase (event phase is auto-completed)
-    get().advanceToNextPhase();
-    set({ isProcessing: false });
+    // Change phase before advancing (prevent infinite loop)
+    const nextPhase = advancePhase(gameState);
+    gameState.phase = nextPhase;
+
+    // Trigger phase transition
+    if (nextPhase === 'night') {
+      get().triggerTransition('night', gameState.round);
+    } else if (nextPhase === 'end') {
+      get().triggerTransition('end', gameState.round);
+    }
+
+    set({ isProcessing: false, gameState: { ...gameState } });
   },
 
   /**
