@@ -169,8 +169,14 @@ ${gameState.listenerChecks.length > 0
   // Get coroner report info
   const coronerInfo = player.role === 'coroner' && phase === 'day' && gameState.coronerReports.length > 0
     ? `
-【你的验尸记录】
+【你的验尸记录】（⚠️ 只有你自己知道这些信息）
 ${gameState.coronerReports.map((report) => `第${report.round}回合：${report.target} 的灵魂是 ${report.isClean ? '清白的' : '污秽的'}`).join('\n')}
+
+【重要提醒】
+- 其他人不知道你有这些验尸结果
+- 你在发言时不要直接说"我验尸了"或"我知道TA的身份"
+- 如果要使用这些信息，需要巧妙地引导，不要直接暴露你的能力
+- 只有当你公开宣布自己是食灰者后，其他人才会知道你能验尸
 `
     : '';
 

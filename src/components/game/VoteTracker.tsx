@@ -8,7 +8,7 @@ import type { GameState } from '@/types/game';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Eye, Moon, Users } from 'lucide-react';
+import { Eye, Moon, Users, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VoteTrackerProps {
@@ -16,7 +16,7 @@ interface VoteTrackerProps {
 }
 
 export function VoteTracker({ gameState }: VoteTrackerProps) {
-  const { voteHistory = [], nightVoteHistory = [], listenerChecks = [] } = gameState;
+  const { voteHistory = [], nightVoteHistory = [], listenerChecks = [], coronerReports = [] } = gameState;
 
   // Group votes by round from history
   const votesByRound = new Map<number, typeof voteHistory>();
@@ -72,10 +72,10 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
               <div className="space-y-1">
                 <div className="flex items-center gap-1 text-xs font-semibold text-purple-400">
                   <Eye className="w-3 h-3" />
-                  查验
+                  聆心者查验
                 </div>
                 <div className="space-y-1">
-                  {listenerChecks.slice(-3).map((check, idx) => (
+                  {listenerChecks.map((check, idx) => (
                     <div
                       key={idx}
                       className="rounded bg-purple-950/30 border border-purple-500/30 p-2"
@@ -102,10 +102,44 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
               </div>
             )}
 
+            {/* Coroner Reports */}
+            {coronerReports.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400">
+                  <Flame className="w-3 h-3" />
+                  食灰者验尸
+                </div>
+                <div className="space-y-1">
+                  {coronerReports.map((report, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded bg-cyan-950/30 border border-cyan-500/30 p-2"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground">R{report.round}</span>
+                          <span className="text-foreground">{report.target}</span>
+                        </div>
+                        <Badge
+                          className={cn(
+                            'text-xs h-4 px-1',
+                            !report.isClean
+                              ? 'bg-red-600'
+                              : 'bg-sky-600',
+                          )}
+                        >
+                          {report.isClean ? '清白' : '污秽'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Night Votes (Werewolf) */}
             {Array.from(nightVotesByRound.entries())
               .sort((a, b) => b[0] - a[0])
-              .slice(0, 2)
               .map(([voteRound, roundVotes]) => {
                 const voteCounts = calculateVoteCounts(roundVotes);
                 return (
@@ -143,7 +177,6 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
             {/* Day Votes */}
             {Array.from(votesByRound.entries())
               .sort((a, b) => b[0] - a[0])
-              .slice(0, 2)
               .map(([voteRound, roundVotes]) => {
                 const voteCounts = calculateVoteCounts(roundVotes);
                 return (
@@ -186,7 +219,7 @@ export function VoteTracker({ gameState }: VoteTrackerProps) {
               })}
 
             {/* Empty state */}
-            {voteHistory.length === 0 && nightVoteHistory.length === 0 && listenerChecks.length === 0 && (
+            {voteHistory.length === 0 && nightVoteHistory.length === 0 && listenerChecks.length === 0 && coronerReports.length === 0 && (
               <div className="text-center text-muted-foreground py-4">
                 <p className="text-xs">暂无记录</p>
               </div>
