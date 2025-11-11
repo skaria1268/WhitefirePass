@@ -4,6 +4,7 @@
  */
 
 import type { GameState, Player } from '@/types/game';
+import { EMOTIONAL_STATE_PROMPTS } from './emotional-prompts';
 
 /**
  * Gemini API configuration
@@ -208,6 +209,17 @@ ${players.filter(p => !p.isAlive).map(p => p.name).join('、')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【你的性格】
 ${player.personality || '你是一个普通的旅人，凭直觉和理性生存。'}
+${(() => {
+  // Add emotional state prompt if character has changed state
+  const emotionalState = player.emotionalState;
+  if (!emotionalState || emotionalState === 'normal') return '';
+
+  const statePrompts = EMOTIONAL_STATE_PROMPTS[player.name];
+  if (!statePrompts) return '';
+
+  const statePrompt = statePrompts[emotionalState];
+  return statePrompt || '';
+})()}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【当前局势】

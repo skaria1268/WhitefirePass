@@ -16,6 +16,7 @@ import { StartMenu } from './StartMenu';
 import { CluesPanel } from './CluesPanel';
 import { PhaseTransition } from './PhaseTransition';
 import { GameEndDialog } from './GameEndDialog';
+import { EmotionalStateDialog } from './EmotionalStateDialog';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -81,6 +82,7 @@ function getPhaseTheme(phase: string) {
   }
 }
 
+// eslint-disable-next-line complexity
 export function GameBoard() {
   const {
     gameState,
@@ -93,6 +95,7 @@ export function GameBoard() {
     transitionPhase,
     transitionRound,
     completeTransition,
+    clearPendingStateChanges,
   } = useGameStore();
   const phase = gameState?.phase || 'setup';
   const theme = getPhaseTheme(phase);
@@ -404,6 +407,14 @@ export function GameBoard() {
           gameState={gameState}
           open={showEndDialog}
           onOpenChange={setShowEndDialog}
+        />
+      )}
+
+      {/* Emotional State Change Dialog */}
+      {gameState && gameState.pendingStateChanges.length > 0 && (
+        <EmotionalStateDialog
+          stateChanges={gameState.pendingStateChanges}
+          onComplete={clearPendingStateChanges}
         />
       )}
     </>

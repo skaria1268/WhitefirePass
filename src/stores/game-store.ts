@@ -13,6 +13,7 @@ import {
   addMessage,
   getAlivePlayers,
   getPlayerByName,
+  handleDeathTriggers,
 } from '@/lib/game-engine';
 import { getAIResponse, buildPrompt } from '@/lib/gemini';
 import { getInitialClues } from '@/lib/clues-data';
@@ -56,6 +57,9 @@ interface GameStore {
   // Transition actions
   triggerTransition: (phase: GameState['phase'], round: number) => void;
   completeTransition: () => void;
+
+  // Emotional state changes
+  clearPendingStateChanges: () => void;
 
   // Internal actions
   advanceToNextPhase: () => void;
@@ -170,6 +174,16 @@ export const useGameStore = create<GameStore>()(
       transitionPhase: null,
       transitionRound: 0,
     });
+  },
+
+  /**
+   * Clear pending state changes after they've been shown to user
+   */
+  clearPendingStateChanges: () => {
+    const { gameState } = get();
+    if (!gameState) return;
+    gameState.pendingStateChanges = [];
+    set({ gameState: { ...gameState } });
   },
 
   /**
@@ -1051,6 +1065,8 @@ function handleDayVotingResult(
         player.isAlive = false;
         // Record sacrificed player for coroner
         gameState.lastSacrificedPlayer = player.name;
+        // Trigger emotional state changes for related characters
+        handleDeathTriggers(gameState, player.name);
       }
     } else {
       // No one eliminated - clear last sacrificed
@@ -1072,6 +1088,8 @@ function handleNightKillResult(
     const player = gameState.players.find((p) => p.id === killedPlayer.id);
     if (player) {
       player.isAlive = false;
+      // Trigger emotional state changes for related characters
+      handleDeathTriggers(gameState, player.name);
     }
   }
   gameState.messages.push(message);

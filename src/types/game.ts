@@ -46,6 +46,35 @@ export type MessageType =
 /**
  * Player interface - unified abstraction for AI and human players
  */
+/**
+ * Emotional state - represents character's psychological condition
+ */
+export type EmotionalState =
+  | 'normal'      // 正常状态
+  | 'virtue'      // 美德激发 - 变得更理智和强大
+  | 'vice';       // 罪恶堕落 - 被压力压垮
+
+/**
+ * Relationship type between characters
+ */
+export type RelationshipType =
+  | 'sibling'     // 兄妹
+  | 'lover'       // 恋人/前恋人
+  | 'crush'       // 单恋
+  | 'rival'       // 情敌/仇敌
+  | 'debtor'      // 债务关系
+  | 'acquaintance'; // 旧识
+
+/**
+ * Character relationship definition
+ */
+export interface CharacterRelationship {
+  character: string;  // Character name
+  target: string;     // Related character name
+  type: RelationshipType;
+  virtueOnDeath?: boolean;  // true = 触发美德, false = 触发罪恶
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -54,6 +83,7 @@ export interface Player {
   isAlive: boolean;
   isAI: boolean;
   personality?: string;  // Optional personality prompt for AI players
+  emotionalState?: EmotionalState;  // Current emotional state
   // Character basic info
   gender?: '男性' | '女性';
   occupation?: string;
@@ -141,6 +171,17 @@ export interface TwinPair {
 }
 
 /**
+ * Emotional state change event
+ */
+export interface EmotionalStateChange {
+  character: string;      // Character who changes state
+  triggerCharacter: string; // Character whose death triggered this
+  relationshipType: RelationshipType;
+  newState: EmotionalState;
+  reason: string;         // Description of why this happened
+}
+
+/**
  * Game state - single source of truth
  */
 export interface GameState {
@@ -175,6 +216,9 @@ export interface GameState {
 
   // Story progression (for setup phase)
   storyProgress?: number;  // 0-5: Track which story message to show next (0=not started)
+
+  // Emotional state changes
+  pendingStateChanges: EmotionalStateChange[];  // Queue of state changes to show to user
 }
 
 /**

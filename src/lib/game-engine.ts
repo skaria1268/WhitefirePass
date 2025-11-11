@@ -11,7 +11,9 @@ import type {
   Role,
   GameConfig,
   TwinPair,
+  EmotionalStateChange,
 } from '@/types/game';
+import { getTriggeredStateChanges } from './relationships';
 
 /**
  * Create initial game state
@@ -72,6 +74,7 @@ export function createGame(config: GameConfig): GameState {
     voteHistory: [],
     nightVoteHistory: [],
     storyProgress: 0,
+    pendingStateChanges: [],
   };
 }
 
@@ -584,4 +587,40 @@ export function getPlayerByName(
   name: string,
 ): Player | undefined {
   return state.players.find((p) => p.name === name);
+}
+
+/**
+ * Handle emotional state changes triggered by a character's death
+ * Checks relationships and queues state changes
+ */
+export function handleDeathTriggers(
+  state: GameState,
+  deadCharacterName: string,
+): void {
+  const triggeredRelationships = getTriggeredStateChanges(deadCharacterName);
+
+  for (const relationship of triggeredRelationships) {
+    const affectedPlayer = state.players.find(p => p.name === relationship.character);
+
+    // Only affect alive players
+    if (!affectedPlayer || !affectedPlayer.isAlive) continue;
+
+    // Determine new state based on relationship
+    const newState = relationship.virtueOnDeath ? 'virtue' : 'vice';
+
+    // Update player's emotional state
+    affectedPlayer.emotionalState = newState;
+
+    // Create state change event for UI
+    const stateChange: EmotionalStateChange = {
+      character: relationship.character,
+      triggerCharacter: deadCharacterName,
+      relationshipType: relationship.type,
+      newState,
+      reason: `${deadCharacterName}的死亡触发了${relationship.character}的情感变化`,
+    };
+
+    // Add to pending state changes queue
+    state.pendingStateChanges.push(stateChange);
+  }
 }
