@@ -19,10 +19,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { TarotCard } from './TarotCard';
-import { Sparkles, Heart, TrendingUp, TrendingDown, Minus, Users } from 'lucide-react';
+import { Sparkles, Heart, TrendingUp, TrendingDown, Minus, Users, BookOpen } from 'lucide-react';
 import type { Player } from '@/types/game';
 import { getRelationshipsForCharacter, getRelationshipLabel } from '@/lib/relationships';
 import { getStateChangeDescription } from '@/lib/emotional-prompts';
+import { getCharacterAutobiographies } from '@/lib/character-autobiographies';
 import { cn } from '@/lib/utils';
 
 interface PersonalityEditorProps {
@@ -215,6 +216,7 @@ function TravelerDetail({ player }: { player: Player }) {
   };
 
   const relationships = getRelationshipsForCharacter(player.name);
+  const autobiographies = getCharacterAutobiographies(player.name);
 
   return (
     <div className="space-y-6">
@@ -272,9 +274,9 @@ function TravelerDetail({ player }: { player: Player }) {
         </div>
       </div>
 
-      {/* Tabs: Personality & Relationships */}
+      {/* Tabs: Personality, Relationships & Autobiographies */}
       <Tabs defaultValue="personality" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 bg-slate-950/50 border border-amber-900/30">
+        <TabsList className="w-full grid grid-cols-3 bg-slate-950/50 border border-amber-900/30">
           <TabsTrigger value="personality" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-100">
             旅者自述
           </TabsTrigger>
@@ -283,6 +285,14 @@ function TravelerDetail({ player }: { player: Player }) {
             {relationships.length > 0 && (
               <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-amber-500/30 text-amber-100 border-amber-500/50">
                 {relationships.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="autobiographies" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-100 relative">
+            人物自传
+            {autobiographies.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-amber-500/30 text-amber-100 border-amber-500/50">
+                {autobiographies.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -423,6 +433,40 @@ function TravelerDetail({ player }: { player: Player }) {
                   </Card>
                 );
               })
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Autobiographies Tab */}
+        <TabsContent value="autobiographies" className="mt-4">
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {autobiographies.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 border border-amber-900/30 rounded-lg bg-slate-950/50">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>此角色暂无自传记录</p>
+              </div>
+            ) : (
+              autobiographies.map((autobiography, index) => (
+                <Card
+                  key={index}
+                  className="border-2 border-amber-500/30 bg-amber-500/5"
+                >
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-amber-400" />
+                      <span className="text-amber-100">{autobiography.title}</span>
+                      <Badge variant="outline" className="ml-auto font-normal border-amber-500/50 text-amber-300">
+                        第 {index + 1} 章
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-slate-300 leading-relaxed font-serif whitespace-pre-line bg-slate-900/50 rounded-lg p-4 border border-amber-900/20">
+                      {autobiography.content}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
         </TabsContent>
