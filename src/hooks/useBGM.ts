@@ -10,7 +10,8 @@ import type { GameState } from '@/types/game';
  * BGM configuration for different game phases
  */
 const BGM_TRACKS = {
-  menu: '/bgm/day.mp3',      // Main menu and setup
+  menu: '/bgm/day.mp3',      // Main menu
+  setup: '/bgm/day.mp3',     // Setup phase
   day: '/bgm/day.mp3',       // Day phase
   voting: '/bgm/day.mp3',    // Voting phase (same as day)
   night: '/bgm/night.mp3',   // Night phase
