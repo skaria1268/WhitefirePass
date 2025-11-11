@@ -14,9 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { TarotCard } from './TarotCard';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Heart, TrendingUp, TrendingDown, Minus, Users } from 'lucide-react';
 import type { Player } from '@/types/game';
+import { getRelationshipsForCharacter, getRelationshipLabel } from '@/lib/relationships';
+import { getStateChangeDescription } from '@/lib/emotional-prompts';
+import { cn } from '@/lib/utils';
 
 interface PersonalityEditorProps {
   open: boolean;
@@ -207,6 +214,8 @@ function TravelerDetail({ player }: { player: Player }) {
     innocent: { name: '无知者', subtitle: 'The Innocent' },
   };
 
+  const relationships = getRelationshipsForCharacter(player.name);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -263,19 +272,161 @@ function TravelerDetail({ player }: { player: Player }) {
         </div>
       </div>
 
-      {/* Personality */}
-      <div className="border border-amber-900/30 rounded-lg p-5 bg-slate-950/50">
-        <h4 className="text-sm font-semibold text-amber-400 mb-3 font-cinzel tracking-wider">
-          旅者自述
-        </h4>
-        <div className="text-sm text-slate-300 leading-relaxed font-serif space-y-3">
-          {player.personality ? (
-            <p className="whitespace-pre-line">{player.personality}</p>
-          ) : (
-            <p className="text-slate-400 italic">暂无人设描述</p>
-          )}
-        </div>
-      </div>
+      {/* Tabs: Personality & Relationships */}
+      <Tabs defaultValue="personality" className="w-full">
+        <TabsList className="w-full grid grid-cols-2 bg-slate-950/50 border border-amber-900/30">
+          <TabsTrigger value="personality" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-100">
+            旅者自述
+          </TabsTrigger>
+          <TabsTrigger value="relationships" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-100 relative">
+            关系图谱
+            {relationships.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs bg-amber-500/30 text-amber-100 border-amber-500/50">
+                {relationships.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Personality Tab */}
+        <TabsContent value="personality" className="mt-4">
+          <div className="border border-amber-900/30 rounded-lg p-5 bg-slate-950/50">
+            <div className="text-sm text-slate-300 leading-relaxed font-serif space-y-3">
+              {player.personality ? (
+                <p className="whitespace-pre-line">{player.personality}</p>
+              ) : (
+                <p className="text-slate-400 italic">暂无人设描述</p>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Relationships Tab */}
+        <TabsContent value="relationships" className="mt-4">
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {relationships.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 border border-amber-900/30 rounded-lg bg-slate-950/50">
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>此角色暂无特殊关系</p>
+              </div>
+            ) : (
+              relationships.map((rel, index) => {
+                const virtueDesc = getStateChangeDescription(
+                  player.name,
+                  rel.target,
+                  'virtue',
+                  getRelationshipLabel(rel.type),
+                );
+                const viceDesc = getStateChangeDescription(
+                  player.name,
+                  rel.target,
+                  'vice',
+                  getRelationshipLabel(rel.type),
+                );
+
+                const normalChance = 1 - rel.virtueChance - rel.viceChance;
+
+                return (
+                  <Card
+                    key={index}
+                    className="border-2 border-purple-500/30 bg-purple-500/5"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Heart className="w-4 h-4 text-purple-400" />
+                          <span className="text-amber-100">{rel.target}</span>
+                        </div>
+                        <Badge variant="outline" className="font-normal border-amber-500/50 text-amber-300">
+                          {getRelationshipLabel(rel.type)}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Trigger Description */}
+                      <div className="text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 border border-amber-900/20">
+                        <p>
+                          当 <span className="text-amber-100 font-medium">{rel.target}</span>{' '}
+                          死亡时，{player.name} 的情感状态可能发生变化：
+                        </p>
+                      </div>
+
+                      {/* Virtue Chance */}
+                      {rel.virtueChance > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4 text-blue-400" />
+                              <span className="text-blue-400 font-medium">美德觉醒</span>
+                            </div>
+                            <span className="text-blue-400 font-mono">
+                              {(rel.virtueChance * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <Progress value={rel.virtueChance * 100} className="h-2 bg-slate-800">
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" />
+                          </Progress>
+                          <div className="text-xs bg-blue-950/30 border border-blue-800/30 rounded-lg p-3">
+                            <div className="font-medium text-blue-400 mb-1">
+                              {virtueDesc.title}
+                            </div>
+                            <p className="text-slate-300">{virtueDesc.description}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Vice Chance */}
+                      {rel.viceChance > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <TrendingDown className="w-4 h-4 text-red-400" />
+                              <span className="text-red-400 font-medium">罪恶堕落</span>
+                            </div>
+                            <span className="text-red-400 font-mono">
+                              {(rel.viceChance * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <Progress value={rel.viceChance * 100} className="h-2 bg-slate-800">
+                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full" />
+                          </Progress>
+                          <div className="text-xs bg-red-950/30 border border-red-800/30 rounded-lg p-3">
+                            <div className="font-medium text-red-400 mb-1">
+                              {viceDesc.title}
+                            </div>
+                            <p className="text-slate-300">{viceDesc.description}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Normal Chance */}
+                      {normalChance > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Minus className="w-4 h-4 text-slate-400" />
+                              <span className="text-slate-400 font-medium">保持正常</span>
+                            </div>
+                            <span className="text-slate-400 font-mono">
+                              {(normalChance * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                          <Progress value={normalChance * 100} className="h-2 bg-slate-800">
+                            <div className="h-full bg-gradient-to-r from-slate-500 to-slate-400 rounded-full" />
+                          </Progress>
+                          <div className="text-xs text-slate-400">
+                            情感状态不会发生变化，继续保持当前状态
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

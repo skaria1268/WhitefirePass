@@ -4,7 +4,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import type { Player } from '@/types/game';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,9 +17,7 @@ import {
   Search,
   Users,
   Shield,
-  Info,
 } from 'lucide-react';
-import { PlayerDetailDialog } from './PlayerDetailDialog';
 
 interface PlayerCardProps {
   player: Player;
@@ -124,23 +121,20 @@ function PlayerAvatar({
 
 export function PlayerCard({ player, showRole = false, isCurrent = false }: PlayerCardProps) {
   const borderColor = roleBorderColors[player.role];
-  const [detailOpen, setDetailOpen] = useState(false);
 
   return (
-    <>
-      <Card
-        className={cn(
-          'transition-all duration-300 relative cursor-pointer hover:shadow-lg',
-          player.isAlive
-            ? cn(
-                'border-2',
-                showRole ? borderColor : 'border-border',
-                isCurrent && 'ring-4 ring-yellow-500/50 shadow-2xl shadow-yellow-500/20 animate-pulse',
-              )
-            : 'opacity-50 grayscale border-gray-400',
-        )}
-        onClick={() => setDetailOpen(true)}
-      >
+    <Card
+      className={cn(
+        'transition-all duration-300 relative',
+        player.isAlive
+          ? cn(
+              'border-2',
+              showRole ? borderColor : 'border-border',
+              isCurrent && 'ring-4 ring-yellow-500/50 shadow-2xl shadow-yellow-500/20 animate-pulse',
+            )
+          : 'opacity-50 grayscale border-gray-400',
+      )}
+    >
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
             {showRole && (
@@ -152,9 +146,8 @@ export function PlayerCard({ player, showRole = false, isCurrent = false }: Play
             )}
             <div className="flex-1">
               <CardTitle className="flex items-center justify-between text-lg">
-                <span className="flex items-center gap-2">
+                <span>
                   {player.name}
-                  <Info className="w-3 h-3 text-muted-foreground opacity-50" />
                 </span>
                 {!player.isAlive && (
                   <Badge variant="destructive" className="text-xs flex items-center gap-1">
@@ -182,13 +175,6 @@ export function PlayerCard({ player, showRole = false, isCurrent = false }: Play
             旅者
           </div>
         </CardContent>
-      </Card>
-
-      <PlayerDetailDialog
-        player={player}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
-    </>
+    </Card>
   );
 }
