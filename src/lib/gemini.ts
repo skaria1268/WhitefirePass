@@ -257,6 +257,7 @@ ${(() => {
 })()}
 
 ${markedTeammates.length > 0 ? `\n【你感知到同类的气息】${markedTeammates.map((p) => p.name).join('、')}` : ''}
+${twinPartner ? `\n【你的同伴】${twinPartner}\n你们互相知道对方是清白的羔羊。你们是彼此唯一的、绝对的信任。` : ''}
 
 ${listenerCheckInfo}
 ${coronerInfo}
