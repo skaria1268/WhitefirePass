@@ -398,7 +398,7 @@ export function GameBoard() {
                     <MessageFlow
                       messages={filteredGameMessages.length > 0 ? filteredGameMessages : gameState.messages}
                       players={gameState.players}
-                      filterTypes={['system', 'speech', 'death', 'action', 'secret']}
+                      filterTypes={['system', 'speech', 'vote', 'death', 'action', 'secret']}
                     />
                   </TabsContent>
                   <TabsContent value="thinking" className="flex-1 overflow-hidden m-0">

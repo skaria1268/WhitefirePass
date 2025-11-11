@@ -1137,16 +1137,19 @@ export const useGameStore = create<GameStore>()(
         );
       }
 
-      // Add speech message (only for non-voting phases)
-      if (gameState.phase !== 'voting') {
+      // Add speech/vote message
+      if (gameState.phase === 'voting') {
+        // Add vote message with type 'vote' for voting phase
+        gameState.messages.push(
+          addMessage(gameState, currentPlayer.name, speech, 'vote', visibility),
+        );
+        // Record vote using helper function (voting is stored in voteHistory, not messages)
+        recordVote(gameState, currentPlayer, speech);
+      } else {
+        // Add speech message for non-voting phases
         gameState.messages.push(
           addMessage(gameState, currentPlayer.name, speech, 'speech', visibility),
         );
-      }
-
-      // Record vote using helper function (voting is stored in voteHistory, not messages)
-      if (gameState.phase === 'voting') {
-        recordVote(gameState, currentPlayer, speech);
       }
 
       // Move to next player only on success
