@@ -19,6 +19,7 @@ import { GameEndDialog } from './GameEndDialog';
 import { EmotionalStateDialog } from './EmotionalStateDialog';
 import { SecretMeetingSelector } from './SecretMeetingSelector';
 import { MessageFilter } from './MessageFilter';
+import { ADVDialogBox } from './ADVDialogBox';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
 import type { Message } from '@/types/game';
 import { cn } from '@/lib/utils';
@@ -129,6 +130,28 @@ export function GameBoard() {
 
   // Filtered messages state for game log
   const [filteredGameMessages, setFilteredGameMessages] = useState<Message[]>([]);
+
+  // Get latest display message for ADV dialog box
+  const getLatestDisplayMessage = () => {
+    if (!gameState) return undefined;
+
+    // Find the latest message that should be displayed in ADV box
+    // Only show player messages, not narrator/system messages
+    const displayableTypes = ['speech', 'action', 'secret'];
+    const latestMessage = [...gameState.messages]
+      .reverse()
+      .find(msg =>
+        displayableTypes.includes(msg.type) &&
+        msg.from !== '叙述者'
+      );
+
+    return latestMessage;
+  };
+
+  const latestMessage = getLatestDisplayMessage();
+  const currentSpeaker = latestMessage && latestMessage.from !== '叙述者'
+    ? gameState?.players.find(p => p.name === latestMessage.from)
+    : undefined;
 
   // Auto-open game end dialog when game ends
   useEffect(() => {
@@ -336,7 +359,7 @@ export function GameBoard() {
 
         {/* Right Main Area - Game Log & Sidebar */}
         <div className="flex-1 flex gap-4 overflow-hidden">
-          {/* Game Log with Tabs */}
+          {/* Game Log with Tabs and ADV Dialog */}
           <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
             <div className="flex-shrink-0 px-4 py-3 border-b border-border bg-gradient-to-r from-card via-card/50 to-card">
               <h2 className="text-lg font-bold text-card-foreground font-cinzel tracking-wide">
@@ -346,7 +369,9 @@ export function GameBoard() {
                 </span>
               </h2>
             </div>
-            <div className="flex-1 overflow-hidden">
+
+            {/* Message History Section */}
+            <div className="flex-1 overflow-hidden min-h-0">
               {gameState ? (
                 <Tabs defaultValue="game" className="h-full flex flex-col">
                   <TabsList className="flex-shrink-0 w-full justify-start rounded-none border-b bg-background/50">
@@ -394,6 +419,14 @@ export function GameBoard() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* ADV-style Dialog Box */}
+            <div className="flex-shrink-0">
+              <ADVDialogBox
+                currentMessage={latestMessage}
+                currentPlayer={currentSpeaker}
+              />
             </div>
           </div>
 
