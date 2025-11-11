@@ -88,6 +88,9 @@ export function buildPrompt(player: Player, gameState: GameState): string {
 
   const alivePlayers = players.filter((p) => p.isAlive);
 
+  // Check if there is a heretic in the game
+  const hasHeretic = players.some((p) => p.role === 'heretic');
+
   // Filter messages based on visibility
   // eslint-disable-next-line complexity
   const visibleMessages = messages.filter((m) => {
@@ -508,6 +511,21 @@ ${player.personality ? `- 记住你的身份和说话方式
 但你们也不是无敌的——白天你可能被识破，被献祭，被烧死。
 
 现在，你们必须决定：今晚谁会死在你们的利爪下。
+${hasHeretic && round >= 2 ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【⚠️ 背誓者的存在】
+
+昨夜，你们感知到一股熟悉yet陌生的气息。
+你们之中混入了一个"背誓者"——灵魂污秽，但不在你们的同类之中。
+
+- TA是谁？你们不知道。
+- TA无法听到你们的讨论，也无法参与你们的猎杀。
+- 但TA会在白天用发言和投票暗中帮助你们。
+- TA比你们更脆弱：一旦被聆心者查到，TA会立即暴露。
+- TA是你们的隐藏盟友，但你们永远无法相认。
+
+如果白天有"污秽"的人被献祭，那可能是背誓者。
+那不是你们的同类，但也是收割阵营的损失。` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【思考】
