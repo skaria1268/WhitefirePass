@@ -35,8 +35,8 @@ ENV PORT=3000
 # 复制 package 文件
 COPY package.json pnpm-lock.yaml ./
 
-# 安装生产依赖
-RUN pnpm install --prod --frozen-lockfile
+# 安装生产依赖（忽略 prepare 脚本，避免 husky 错误）
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # 从构建阶段复制构建结果
 COPY --from=builder /app/.next ./.next
