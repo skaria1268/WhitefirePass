@@ -53,5 +53,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
   CMD node -e "require('http').get('http://127.0.0.1:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-# 启动应用（添加日志输出帮助调试）
-CMD ["sh", "-c", "echo 'Starting WhitefirePass...' && pnpm run start"]
+# 启动应用（详细日志输出帮助调试）
+CMD ["sh", "-c", "set -x && echo '=== WhitefirePass Starting ===' && echo 'Node version:' && node --version && echo 'pnpm version:' && pnpm --version && echo 'Starting Next.js...' && exec pnpm run start"]
