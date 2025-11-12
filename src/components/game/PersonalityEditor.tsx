@@ -150,38 +150,32 @@ export function PersonalityEditor({ open, onOpenChange }: PersonalityEditorProps
             /* Detail View - full container */
             selectedPlayer && (
               <div className="min-h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 animate-in fade-in duration-500">
-                <div className="max-w-6xl mx-auto p-6 sm:p-8">
-                  <div className="flex flex-col lg:flex-row gap-8 items-start">
-                    {/* Left: Full Portrait */}
-                    <div className="flex-shrink-0 w-full lg:w-auto">
-                      <div className="relative w-full lg:w-[400px] h-[500px] rounded-lg overflow-hidden border-4 border-amber-600/40 shadow-2xl">
+                <div className="max-w-6xl mx-auto p-6 sm:p-8 space-y-8">
+                  {/* Top Section: Portrait + Basic Profile */}
+                  <div className="flex flex-col lg:flex-row gap-6 items-start">
+                    {/* Portrait - maintain aspect ratio 640:1632 */}
+                    <div className="flex-shrink-0">
+                      <div className="relative w-[235px] h-[600px] rounded-lg overflow-hidden border-4 border-amber-600/40 shadow-2xl">
                         <Image
                           src={`/portraits/${selectedPlayer.name}.png`}
                           alt={selectedPlayer.name}
                           fill
-                          className="object-cover"
-                          sizes="400px"
+                          className="object-cover object-top"
+                          sizes="235px"
                           priority
                         />
-                        {/* Gradient overlay at bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
-                        {/* Character name overlay */}
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-2xl font-bold text-white drop-shadow-lg font-cinzel">
-                            {selectedPlayer.name}
-                          </h3>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Right: Basic Info and Detail panel */}
-                    <div className="flex-1 min-w-0 space-y-6">
-                      {/* Basic Profile */}
+                    {/* Basic Profile */}
+                    <div className="flex-1">
                       <CharacterBasicInfo player={selectedPlayer} />
-
-                      {/* Detail Content */}
-                      <TravelerDetail player={selectedPlayer} />
                     </div>
+                  </div>
+
+                  {/* Bottom Section: Name + Details */}
+                  <div className="border-t border-amber-900/30 pt-8">
+                    <TravelerDetail player={selectedPlayer} />
                   </div>
                 </div>
               </div>
