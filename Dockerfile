@@ -49,9 +49,9 @@ RUN mkdir -p /app/data
 # 暴露端口
 EXPOSE 3000
 
-# 健康检查（使用 0.0.0.0 而不是 localhost）
-HEALTHCHECK --interval=30s --timeout=10s --start-period=50s --retries=3 \
+# 健康检查（增加启动时间防止超时）
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
   CMD node -e "require('http').get('http://127.0.0.1:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-# 启动应用（Next.js 会根据 HOSTNAME 和 PORT 环境变量绑定）
-CMD ["pnpm", "run", "start"]
+# 启动应用（添加日志输出帮助调试）
+CMD ["sh", "-c", "echo 'Starting WhitefirePass...' && pnpm run start"]
