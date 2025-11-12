@@ -32,6 +32,20 @@ const roleNames: Record<string, string> = {
 };
 
 /**
+ * Message type names mapping
+ */
+const messageTypeNames: Record<string, string> = {
+  system: '系统消息',
+  speech: '发言',
+  thinking: '内心独白',
+  prompt: '神谕指引',
+  vote: '投票',
+  death: '死亡',
+  action: '行动',
+  secret: '密会',
+};
+
+/**
  * Get player faction
  */
 function getPlayerFaction(role: string): 'harvest' | 'lamb' {
@@ -42,6 +56,7 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
   const [selectedFactions, setSelectedFactions] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [selectedMessageTypes, setSelectedMessageTypes] = useState<string[]>([]);
 
   // Get unique roles from players
   const uniqueRoles = Array.from(new Set(players.map(p => p.role)));
@@ -50,15 +65,20 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
   const applyFilters = (
     factions: string[],
     roles: string[],
-    playerNames: string[]
+    playerNames: string[],
+    messageTypes: string[]
   ) => {
     let filtered = messages;
 
-    // Filter by type - only show game-relevant messages
-    // Include 'thinking' (内心独白) and 'prompt' (神谕指引)
-    filtered = filtered.filter(msg =>
-      ['system', 'speech', 'death', 'action', 'secret', 'thinking', 'prompt'].includes(msg.type)
-    );
+    // Filter by message type if specified
+    if (messageTypes.length > 0) {
+      filtered = filtered.filter(msg => messageTypes.includes(msg.type));
+    } else {
+      // Default: show all game-relevant messages
+      filtered = filtered.filter(msg =>
+        ['system', 'speech', 'death', 'action', 'secret', 'thinking', 'prompt', 'vote'].includes(msg.type)
+      );
+    }
 
     // If any filters are active
     if (factions.length > 0 || roles.length > 0 || playerNames.length > 0) {
@@ -109,7 +129,7 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
       ? selectedFactions.filter(f => f !== faction)
       : [...selectedFactions, faction];
     setSelectedFactions(newFactions);
-    applyFilters(newFactions, selectedRoles, selectedPlayers);
+    applyFilters(newFactions, selectedRoles, selectedPlayers, selectedMessageTypes);
   };
 
   // Toggle role filter
@@ -118,7 +138,7 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
       ? selectedRoles.filter(r => r !== role)
       : [...selectedRoles, role];
     setSelectedRoles(newRoles);
-    applyFilters(selectedFactions, newRoles, selectedPlayers);
+    applyFilters(selectedFactions, newRoles, selectedPlayers, selectedMessageTypes);
   };
 
   // Toggle player filter
@@ -127,7 +147,16 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
       ? selectedPlayers.filter(p => p !== playerName)
       : [...selectedPlayers, playerName];
     setSelectedPlayers(newPlayers);
-    applyFilters(selectedFactions, selectedRoles, newPlayers);
+    applyFilters(selectedFactions, selectedRoles, newPlayers, selectedMessageTypes);
+  };
+
+  // Toggle message type filter
+  const toggleMessageType = (messageType: string) => {
+    const newMessageTypes = selectedMessageTypes.includes(messageType)
+      ? selectedMessageTypes.filter(t => t !== messageType)
+      : [...selectedMessageTypes, messageType];
+    setSelectedMessageTypes(newMessageTypes);
+    applyFilters(selectedFactions, selectedRoles, selectedPlayers, newMessageTypes);
   };
 
   // Clear all filters
@@ -135,10 +164,11 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
     setSelectedFactions([]);
     setSelectedRoles([]);
     setSelectedPlayers([]);
-    applyFilters([], [], []);
+    setSelectedMessageTypes([]);
+    applyFilters([], [], [], []);
   };
 
-  const hasActiveFilters = selectedFactions.length > 0 || selectedRoles.length > 0 || selectedPlayers.length > 0;
+  const hasActiveFilters = selectedFactions.length > 0 || selectedRoles.length > 0 || selectedPlayers.length > 0 || selectedMessageTypes.length > 0;
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b bg-background/50">
@@ -149,7 +179,7 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
             过滤器
             {hasActiveFilters && (
               <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
-                {selectedFactions.length + selectedRoles.length + selectedPlayers.length}
+                {selectedFactions.length + selectedRoles.length + selectedPlayers.length + selectedMessageTypes.length}
               </Badge>
             )}
           </Button>
@@ -237,6 +267,22 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
                 ))}
               </div>
             </div>
+
+            {/* Message Type Filter */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium">按消息类型</div>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {Object.entries(messageTypeNames).map(([type, label]) => (
+                  <label key={type} className="flex items-center space-x-2 cursor-pointer">
+                    <Checkbox
+                      checked={selectedMessageTypes.includes(type)}
+                      onCheckedChange={() => toggleMessageType(type)}
+                    />
+                    <span className="text-sm">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </PopoverContent>
       </Popover>
@@ -268,6 +314,15 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
               <X
                 className="w-3 h-3 cursor-pointer"
                 onClick={() => togglePlayer(playerName)}
+              />
+            </Badge>
+          ))}
+          {selectedMessageTypes.map(type => (
+            <Badge key={type} variant="secondary" className="gap-1">
+              {messageTypeNames[type] || type}
+              <X
+                className="w-3 h-3 cursor-pointer"
+                onClick={() => toggleMessageType(type)}
               />
             </Badge>
           ))}
