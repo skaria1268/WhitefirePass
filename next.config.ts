@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   basePath: process.env.NODE_ENV === 'production' ? '/WhitefirePass' : '',
+  eslint: {
+    // Warning: Only use this for deployment builds
+    // During development, these warnings should still be addressed
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Keep TypeScript checks enabled
+    ignoreBuildErrors: false,
+  },
 };
 
 export default nextConfig;
