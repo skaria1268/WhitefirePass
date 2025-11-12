@@ -5,7 +5,6 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Message, Player } from '@/types/game';
 import { TYPOGRAPHY, getBorderClass } from '@/lib/design-tokens';
@@ -72,14 +71,12 @@ export function SpeechModal({ message, player, isOpen, onClose }: SpeechModalPro
                 </div>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onClose}
-              className="text-amber-600/60 hover:text-amber-400 hover:bg-amber-900/20 rounded-full"
+              className="inline-flex items-center justify-center w-8 h-8 text-amber-600/60 hover:text-amber-400 hover:bg-amber-900/20 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
-            </Button>
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -114,12 +111,12 @@ export function SpeechModal({ message, player, isOpen, onClose }: SpeechModalPro
 
         {/* Footer */}
         <div className="sticky bottom-0 z-10 bg-gradient-to-t from-slate-950/95 to-slate-950/80 px-8 py-4 border-t border-amber-600/20 flex justify-end gap-3">
-          <Button
+          <button
             onClick={onClose}
-            className="bg-amber-900/30 text-amber-400 hover:bg-amber-900/50 border border-amber-600/40"
+            className="px-4 py-2 rounded-md font-medium transition-colors bg-amber-900/30 text-amber-400 hover:bg-amber-900/50 border border-amber-600/40"
           >
             关闭
-          </Button>
+          </button>
         </div>
 
         {/* Decorative corners */}
