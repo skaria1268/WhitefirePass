@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Kbd } from '@/components/ui/kbd';
 import { useGameStore } from '@/stores/game-store';
-import { testGeminiKey } from '@/lib/gemini';
+import { testOpenAIKey } from '@/lib/gemini';
 import { SaveGameManager } from '@/components/game/SaveGameManager';
 import { PersonalityEditor } from '@/components/game/PersonalityEditor';
 import { GameGuide } from '@/components/game/GameGuide';
@@ -63,7 +63,7 @@ function ApiKeyInput({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Gemini API 密钥</label>
+      <label className="text-sm font-medium">OpenAI API 密钥</label>
       <Input
         type="password"
         placeholder="请输入你的 API 密钥"
@@ -71,24 +71,11 @@ function ApiKeyInput({
         onChange={(e) => onChange(e.target.value)}
       />
       <p className="text-xs text-muted-foreground">
-        从{' '}
-        <a
-          href="https://aistudio.google.com/app/apikey"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          Google AI Studio
-        </a>
-        {' '}获取你的 API 密钥
+        输入你的 OpenAI 兼容 API 密钥（Bearer token）
       </p>
       <p className="text-xs text-amber-600 flex items-center gap-1">
         <AlertTriangle className="w-3 h-3" />
-        确保 API 密钥有效且已启用 Gemini API
-      </p>
-      <p className="text-xs text-green-600 flex items-center gap-1">
-        <CheckCircle2 className="w-3 h-3" />
-        已配置代理：127.0.0.1:7897
+        确保 API 密钥有效且可访问
       </p>
     </div>
   );
@@ -830,19 +817,23 @@ export function ControlPanel() {
   const handleSaveSettings = async () => {
     const trimmedKey = apiKey.trim();
     if (!trimmedKey) {
-      alert('请输入你的 Gemini API 密钥');
+      alert('请输入你的 OpenAI API 密钥');
       return;
     }
 
     const trimmedUrl = apiUrl.trim();
+    if (!trimmedUrl) {
+      alert('请输入 OpenAI API URL');
+      return;
+    }
 
     setIsValidating(true);
-    const isValid = await testGeminiKey(trimmedKey, trimmedUrl);
+    const isValid = await testOpenAIKey(trimmedKey, trimmedUrl);
     setIsValidating(false);
 
     if (!isValid) {
       alert(
-        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常\n4. API URL 是否正确\n\n获取 API 密钥：https://aistudio.google.com/app/apikey',
+        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. API URL 是否正确\n3. 网络连接是否正常\n4. API 服务是否可用',
       );
       return;
     }
@@ -858,19 +849,23 @@ export function ControlPanel() {
   const handleStart = async () => {
     const trimmedKey = apiKey.trim();
     if (!trimmedKey) {
-      alert('请输入你的 Gemini API 密钥');
+      alert('请输入你的 OpenAI API 密钥');
       return;
     }
 
     const trimmedUrl = apiUrl.trim();
+    if (!trimmedUrl) {
+      alert('请输入 OpenAI API URL');
+      return;
+    }
 
     setIsValidating(true);
-    const isValid = await testGeminiKey(trimmedKey, trimmedUrl);
+    const isValid = await testOpenAIKey(trimmedKey, trimmedUrl);
     setIsValidating(false);
 
     if (!isValid) {
       alert(
-        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. 是否已启用 Gemini API\n3. 网络连接是否正常\n4. API URL 是否正确\n\n获取 API 密钥：https://aistudio.google.com/app/apikey',
+        'API 密钥验证失败！\n\n请检查：\n1. API 密钥是否正确\n2. API URL 是否正确\n3. 网络连接是否正常\n4. API 服务是否可用',
       );
       return;
     }
@@ -900,9 +895,9 @@ export function ControlPanel() {
           配置并控制狼人杀游戏
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="md:max-h-[calc(40vh-6rem)] md:overflow-y-auto">
         <Tabs defaultValue="control" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 sticky top-0 z-10 bg-background">
             <TabsTrigger value="control" className="flex items-center gap-2">
               <Gamepad2 className="w-4 h-4" />
               控制
@@ -917,7 +912,7 @@ export function ControlPanel() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="control" className="space-y-4 mt-4">
+          <TabsContent value="control" className="space-y-4 mt-4 pb-2">
             <ControlTabContent
               hasActiveGame={hasActiveGame}
               gameState={gameState}
@@ -941,7 +936,7 @@ export function ControlPanel() {
             />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4 mt-4">
+          <TabsContent value="settings" className="space-y-4 mt-4 pb-2">
             <SettingsTabContent
               apiKey={apiKey}
               apiUrl={apiUrl}
@@ -952,7 +947,7 @@ export function ControlPanel() {
             />
           </TabsContent>
 
-          <TabsContent value="saves" className="mt-4">
+          <TabsContent value="saves" className="mt-4 pb-2">
             <SaveGameManager />
           </TabsContent>
         </Tabs>

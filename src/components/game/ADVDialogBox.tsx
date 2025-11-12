@@ -15,6 +15,7 @@ interface ADVDialogBoxProps {
   currentMessage?: Message;
   currentPlayer?: Player;
   className?: string;
+  onMessageClick?: () => void;
 }
 
 /**
@@ -84,8 +85,8 @@ function DialogContent({ message, displayText, roleInfo, messageTypeName, isVisi
   isVisible: boolean;
 }) {
   return (
-    <div className={cn('flex-1 flex flex-col justify-between min-h-0 transition-all duration-500', isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4')}>
-      <div className="flex items-baseline gap-3 mb-3">
+    <div className={cn('flex-1 flex flex-col h-full min-h-0 transition-all duration-500', isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4')}>
+      <div className="flex items-baseline gap-3 mb-3 flex-shrink-0">
         <div className="relative">
           <h3 className={cn(TYPOGRAPHY.h2, "text-amber-100")}>{message.from}</h3>
           <div className="absolute -bottom-1 left-0 right-0 h-px bg-gradient-to-r from-amber-600/80 via-amber-600/40 to-transparent" />
@@ -103,12 +104,12 @@ function DialogContent({ message, displayText, roleInfo, messageTypeName, isVisi
           </span>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(120 113 108) transparent' }}>
+      <div className="flex-1 overflow-y-auto pr-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(120 113 108) transparent' }}>
         <div className={cn('text-slate-200 text-base leading-relaxed font-serif', message.type === 'thinking' && 'italic text-emerald-400/90', message.type === 'system' && 'text-amber-100/90')}>
           {displayText}
         </div>
       </div>
-      <div className="mt-3 pt-2 border-t border-amber-600/10">
+      <div className="mt-3 pt-2 border-t border-amber-600/10 flex-shrink-0">
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span className="font-serif italic">白烬山口 · 寂静山庄</span>
           <span className="font-mono">{new Date(message.timestamp).toLocaleTimeString('zh-CN')}</span>
@@ -118,7 +119,7 @@ function DialogContent({ message, displayText, roleInfo, messageTypeName, isVisi
   );
 }
 
-export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDialogBoxProps) {
+export function ADVDialogBox({ currentMessage, currentPlayer, className, onMessageClick }: ADVDialogBoxProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [displayText, setDisplayText] = useState('');
 
@@ -141,11 +142,13 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
   const messageTypeName = messageTypeNames[currentMessage.type] || currentMessage.type;
 
   return (
-    <div className={cn(
-      'relative w-full h-64 bg-gradient-to-b from-slate-900/95 to-slate-950/98 backdrop-blur-sm overflow-hidden',
-      getBorderClass('t', 'border-amber-600', 'divider', '2'),
-      className
-    )}>
+    <div
+      onClick={onMessageClick}
+      className={cn(
+        'relative w-full h-64 bg-gradient-to-b from-slate-900/95 to-slate-950/98 backdrop-blur-sm overflow-hidden cursor-pointer group transition-all hover:from-slate-900/97 hover:to-slate-950 hover:shadow-lg hover:shadow-amber-600/20',
+        getBorderClass('t', 'border-amber-600', 'divider', '2'),
+        className
+      )}>
       {/* Decorative top border */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-600/50 to-transparent" />
 
@@ -159,7 +162,7 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
         </svg>
       </div>
 
-      <div className="relative h-full flex items-center gap-6 px-8 py-6">
+      <div className="relative h-full flex items-start gap-6 px-8 py-6">
         {!isSystemMessage && currentPlayer && (
           <CharacterPortrait player={currentPlayer} isVisible={isVisible} />
         )}
@@ -170,6 +173,11 @@ export function ADVDialogBox({ currentMessage, currentPlayer, className }: ADVDi
           messageTypeName={messageTypeName}
           isVisible={isVisible}
         />
+      </div>
+
+      {/* Click hint */}
+      <div className="absolute bottom-2 right-4 text-xs text-amber-600/40 group-hover:text-amber-600/70 transition-colors pointer-events-none">
+        点击查看完整发言
       </div>
 
       {/* Decorative corners */}

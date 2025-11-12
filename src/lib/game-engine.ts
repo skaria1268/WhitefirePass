@@ -80,6 +80,7 @@ export function createGame(config: GameConfig): GameState {
     pendingStateChanges: [],
     secretMeetings: [],
     gameEvents: [],
+    apiLogs: [],
   };
 }
 
@@ -592,7 +593,7 @@ function shuffle<T>(array: T[]): T[] {
 /**
  * Generate unique ID
  */
-function generateId(): string {
+export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 

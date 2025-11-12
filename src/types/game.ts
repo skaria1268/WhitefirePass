@@ -5,7 +5,7 @@
 /**
  * API type selection
  */
-export type APIType = 'gemini' | 'openai';
+export type APIType = 'openai';
 
 /**
  * Player roles in the game
@@ -240,6 +240,9 @@ export interface GameState {
 
   // Game events
   gameEvents: GameEventRecord[];  // History of all game events
+
+  // API request/response logs
+  apiLogs: APILog[];  // All API requests and responses for debugging
 }
 
 /**
@@ -296,6 +299,20 @@ export interface SecretMeeting {
 }
 
 /**
+ * API request/response log for debugging
+ */
+export interface APILog {
+  id: string;
+  timestamp: number;
+  type: 'request' | 'response' | 'error';
+  playerName?: string;  // Which player this request was for
+  prompt: string;       // The prompt sent to AI
+  response?: string;    // The AI response
+  error?: string;       // Error message if failed
+  duration?: number;    // Time taken in ms
+}
+
+/**
  * Game event record
  */
 export interface GameEventRecord {
@@ -311,7 +328,7 @@ export interface GameEventRecord {
 /**
  * Prompt item types
  */
-export type PromptItemType = 'system' | 'user' | 'placeholder';
+export type PromptItemType = 'system' | 'user' | 'assistant' | 'placeholder';
 
 /**
  * Single prompt item in the configuration

@@ -20,6 +20,7 @@ import { EmotionalStateDialog } from './EmotionalStateDialog';
 import { SecretMeetingSelector } from './SecretMeetingSelector';
 import { MessageFilter } from './MessageFilter';
 import { ADVDialogBox } from './ADVDialogBox';
+import { SpeechModal } from './SpeechModal';
 import { APISettingsDialog } from './APISettingsDialog';
 import { PromptEditorFloating } from './PromptEditorFloating';
 import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX, Settings } from 'lucide-react';
@@ -135,6 +136,9 @@ export function GameBoard() {
   // API Settings dialog state
   const [showAPISettings, setShowAPISettings] = useState(false);
 
+  // Speech modal state
+  const [showSpeechModal, setShowSpeechModal] = useState(false);
+
   // Filtered messages state for game log
   const [filteredGameMessages, setFilteredGameMessages] = useState<Message[]>([]);
 
@@ -211,13 +215,14 @@ export function GameBoard() {
 
       <div
         className={cn(
-          "h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br transition-all duration-1000 ease-in-out",
+          "min-h-screen w-screen flex flex-col bg-gradient-to-br transition-all duration-1000 ease-in-out",
+          "md:h-screen md:overflow-hidden",
           theme.gradient
         )}
       >
       {/* Fixed Header */}
       <header className={cn("flex-shrink-0 backdrop-blur-sm bg-background/10", getBorderClass('b', 'border', 'divider'), SHADOWS.card)}>
-        <div className="px-6 py-4 flex items-center justify-between">
+        <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Mountain className={cn(ICON.lg, "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]")} />
             <div>
@@ -319,12 +324,12 @@ export function GameBoard() {
         </div>
       </header>
 
-      {/* Main Content Area - No Scroll */}
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+      {/* Main Content Area - Mobile: scrollable, Desktop: no scroll */}
+      <div className="flex-1 flex flex-col md:flex-row gap-4 p-4 overflow-y-auto md:overflow-hidden">
         {/* Left Sidebar - Players & Controls */}
-        <div className="w-96 flex flex-col gap-4 overflow-hidden">
-          {/* Players List - Scrollable */}
-          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+        <div className="w-full md:w-96 flex flex-col gap-4 md:overflow-hidden">
+          {/* Players List - Mobile: auto height, Desktop: scrollable */}
+          <div className="rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col md:flex-1">
             <div className={CARD_HEADER}>
               <h2 className={TYPOGRAPHY.h2}>
                 {SECTION_TITLES.travelers.title}
@@ -333,7 +338,7 @@ export function GameBoard() {
                 </span>
               </h2>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="p-4 space-y-3 md:flex-1 md:overflow-y-auto">
               {gameState ? (
                 gameState.players.map((player, index) => {
                   // Determine if this player is currently speaking
@@ -372,16 +377,16 @@ export function GameBoard() {
             </div>
           )}
 
-          {/* Control Panel - Fixed */}
-          <div className="flex-shrink-0">
+          {/* Control Panel - Mobile: auto height, Desktop: max height with scroll */}
+          <div className="flex-shrink-0 md:max-h-[40vh] md:overflow-y-auto">
             <ControlPanel />
           </div>
         </div>
 
-        {/* Right Main Area - Game Log & Sidebar */}
-        <div className="flex-1 flex gap-4 overflow-hidden">
+        {/* Right Main Area - Game Log & Sidebar - Mobile: stack vertically, Desktop: side by side */}
+        <div className="flex-1 flex flex-col md:flex-row gap-4 md:overflow-hidden">
           {/* Game Log with Tabs and ADV Dialog */}
-          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+          <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col min-h-[400px] md:min-h-0">
             <div className={CARD_HEADER}>
               <h2 className={TYPOGRAPHY.h2}>
                 {SECTION_TITLES.gameLog.title}
@@ -450,20 +455,21 @@ export function GameBoard() {
               <ADVDialogBox
                 currentMessage={latestMessage}
                 currentPlayer={currentSpeaker}
+                onMessageClick={() => setShowSpeechModal(true)}
               />
             </div>
           </div>
 
-          {/* Right Sidebar - Current Speaker & Tabs (Vote Tracker / Clues) */}
+          {/* Right Sidebar - Current Speaker & Tabs (Vote Tracker / Clues) - Mobile: full width, Desktop: fixed width */}
           {gameState && (
-            <div className="w-80 flex flex-col gap-4 overflow-hidden">
+            <div className="w-full md:w-80 flex flex-col gap-4 md:overflow-hidden">
               {/* Current Speaker - Upper section */}
               <div className="flex-shrink-0 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow">
                 <CurrentSpeaker gameState={gameState} />
               </div>
 
-              {/* Tabs - Lower section (Vote Tracker / Clues Panel) */}
-              <div className="flex-1 rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col">
+              {/* Tabs - Lower section (Vote Tracker / Clues Panel) - Mobile: auto height, Desktop: flex-1 */}
+              <div className="rounded-lg bg-card/90 backdrop-blur-sm border border-border shadow-xl shadow-inner-glow overflow-hidden flex flex-col md:flex-1 min-h-[300px]">
                 <Tabs defaultValue="votes" className="h-full flex flex-col">
                   <TabsList className="flex-shrink-0 w-full justify-start rounded-none border-b bg-background/50">
                     <TabsTrigger value="votes">投票记录</TabsTrigger>
@@ -523,6 +529,14 @@ export function GameBoard() {
       <APISettingsDialog
         open={showAPISettings}
         onOpenChange={setShowAPISettings}
+      />
+
+      {/* Speech Modal */}
+      <SpeechModal
+        message={latestMessage}
+        player={currentSpeaker}
+        isOpen={showSpeechModal}
+        onClose={() => setShowSpeechModal(false)}
       />
 
       {/* Prompt Editor Floating Window */}

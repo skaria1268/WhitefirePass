@@ -6,12 +6,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Mountain, Play, Settings, X, Check } from 'lucide-react';
+import { Mountain, Play, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useGameStore } from '@/stores/game-store';
-import { testGeminiKey } from '@/lib/gemini';
+import { APISettingsDialog } from './APISettingsDialog';
 import type { GameConfig } from '@/types/game';
 
 interface Snowflake {
@@ -46,30 +44,15 @@ export function StartMenu() {
   const [snowVisible, setSnowVisible] = useState(false);
   const [backgroundVisible, setBackgroundVisible] = useState(false);
 
-  // Settings panel
-  const [showSettings, setShowSettings] = useState(false);
-  const [tempApiKey, setTempApiKey] = useState('');
-  const [tempApiUrl, setTempApiUrl] = useState('https://generativelanguage.googleapis.com');
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  // Settings dialog
+  const [showAPISettings, setShowAPISettings] = useState(false);
 
   const {
-    apiKey: storedApiKey,
-    apiUrl: storedApiUrl,
-    setApiKey,
-    setApiUrl,
     startGame,
+    apiKey,
+    apiUrl,
   } = useGameStore();
 
-  // Initialize form with stored values
-  useEffect(() => {
-    if (storedApiKey) {
-      setTempApiKey(storedApiKey);
-    }
-    if (storedApiUrl) {
-      setTempApiUrl(storedApiUrl);
-    }
-  }, [storedApiKey, storedApiUrl]);
 
   // Orchestrated entry animation sequence
   useEffect(() => {
@@ -157,47 +140,11 @@ export function StartMenu() {
     };
   }, []);
 
-  const handleTestApiKey = async () => {
-    if (!tempApiKey.trim()) {
-      alert('请输入 API 密钥');
-      return;
-    }
-
-    setIsTesting(true);
-    setTestResult(null);
-
-    try {
-      const isValid = await testGeminiKey(tempApiKey, tempApiUrl || undefined);
-      setTestResult(isValid ? 'success' : 'error');
-      if (isValid) {
-        // Auto-save if test successful
-        setApiKey(tempApiKey);
-        setApiUrl(tempApiUrl);
-      }
-    } catch (error) {
-      console.error('API key test failed:', error);
-      setTestResult('error');
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
-  const handleSaveConfig = () => {
-    if (!tempApiKey.trim()) {
-      alert('请输入 API 密钥');
-      return;
-    }
-
-    setApiKey(tempApiKey);
-    setApiUrl(tempApiUrl);
-    setShowSettings(false);
-    setTestResult(null);
-  };
 
   const handleStart = () => {
-    if (!storedApiKey?.trim()) {
-      // Show settings panel if no API key configured
-      setShowSettings(true);
+    if (!apiKey?.trim() || !apiUrl?.trim()) {
+      // Show API settings dialog if no API key/url configured
+      setShowAPISettings(true);
       return;
     }
 
@@ -340,13 +287,13 @@ export function StartMenu() {
             </Button>
 
             <Button
-              onClick={() => setShowSettings(true)}
+              onClick={() => setShowAPISettings(true)}
               variant="outline"
               className="group relative px-8 py-6 bg-white/80 hover:bg-white text-slate-700 rounded-full font-cinzel tracking-widest text-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-slate-300"
             >
               <span className="flex items-center gap-3">
                 <Settings className="w-5 h-5" strokeWidth={2} />
-                配置
+                配置 API
               </span>
             </Button>
           </div>
@@ -373,107 +320,11 @@ export function StartMenu() {
         <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-white to-transparent" />
       </div>
 
-      {/* Settings Panel Modal */}
-      {showSettings && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 p-8 relative">
-            <button
-              onClick={() => setShowSettings(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <h2 className="text-2xl font-cinzel text-slate-800 mb-6">API 配置</h2>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="apiKey" className="text-slate-700 font-serif">
-                  Gemini API 密钥
-                </Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  value={tempApiKey}
-                  onChange={(e) => setTempApiKey(e.target.value)}
-                  placeholder="输入你的 Gemini API Key"
-                  className="mt-1 font-mono"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  从{' '}
-                  <a
-                    href="https://makersuite.google.com/app/apikey"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Google AI Studio
-                  </a>{' '}
-                  获取
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="apiUrl" className="text-slate-700 font-serif">
-                  API URL（可选）
-                </Label>
-                <Input
-                  id="apiUrl"
-                  type="text"
-                  value={tempApiUrl}
-                  onChange={(e) => setTempApiUrl(e.target.value)}
-                  placeholder="https://generativelanguage.googleapis.com"
-                  className="mt-1 font-mono text-sm"
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  默认使用官方 API 地址，如需使用代理可修改
-                </p>
-              </div>
-
-              {testResult && (
-                <div
-                  className={`p-3 rounded-md flex items-center gap-2 ${
-                    testResult === 'success'
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-red-50 text-red-700'
-                  }`}
-                >
-                  {testResult === 'success' ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span className="text-sm">API 密钥验证成功！已自动保存</span>
-                    </>
-                  ) : (
-                    <>
-                      <X className="w-4 h-4" />
-                      <span className="text-sm">API 密钥验证失败，请检查后重试</span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={handleTestApiKey}
-                  disabled={isTesting || !tempApiKey.trim()}
-                  className="flex-1"
-                  variant="outline"
-                >
-                  {isTesting ? '测试中...' : '测试连接'}
-                </Button>
-
-                <Button
-                  onClick={handleSaveConfig}
-                  disabled={!tempApiKey.trim()}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700"
-                >
-                  保存配置
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* API Settings Dialog */}
+      <APISettingsDialog
+        open={showAPISettings}
+        onOpenChange={setShowAPISettings}
+      />
     </div>
     </>
   );

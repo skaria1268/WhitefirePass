@@ -3,10 +3,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ProxyAgent, fetch as undiciFetch } from 'undici';
-
-const PROXY_URL = 'http://127.0.0.1:7897';
-const proxyAgent = new ProxyAgent(PROXY_URL);
 
 /**
  * GET handler for listing models
@@ -24,17 +20,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Build models endpoint URL
+    // If URL already ends with /v1, add /models directly
+    // Otherwise, add /v1/models
+    const modelsUrl = apiUrl.endsWith('/v1')
+      ? `${apiUrl}/models`
+      : `${apiUrl}/v1/models`;
+
     // Call OpenAI-compatible /v1/models endpoint
-    const response = await undiciFetch(
-      `${apiUrl}/v1/models`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        dispatcher: proxyAgent,
+    const response = await fetch(modelsUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
       },
-    );
+    });
 
     if (!response.ok) {
       const errorText = await response.text();

@@ -4,8 +4,9 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameState, GameConfig, Message, Player, SavedGame, Clue, APIType, PromptConfig } from '@/types/game';
+import type { GameState, GameConfig, Message, Player, SavedGame, Clue, APIType, PromptConfig, APILog } from '@/types/game';
 import {
+  generateId,
   createGame,
   checkWinCondition,
   processNightPhase,
@@ -30,7 +31,7 @@ import { getInitialClues } from '@/lib/clues-data';
 interface GameStore {
   gameState: GameState | null;
   isProcessing: boolean;
-  apiType: APIType;  // 'gemini' or 'openai'
+  apiType: APIType;  // 'openai'
   apiKey: string;
   apiUrl: string;
   model: string;
@@ -115,10 +116,10 @@ export const useGameStore = create<GameStore>()(
     (set, get) => ({
   gameState: null,
   isProcessing: false,
-  apiType: 'gemini',
+  apiType: 'openai',
   apiKey: '',
-  apiUrl: 'https://generativelanguage.googleapis.com',
-  model: 'gemini-2.5-pro',
+  apiUrl: '',
+  model: 'gpt-3.5-turbo',
   availableModels: [],
   lastError: null,
   retryCount: 0,
@@ -393,6 +394,7 @@ export const useGameStore = create<GameStore>()(
       messageIds.push(promptMsg1.id);
 
       // Player 1 speaks
+      const startTime1 = Date.now();
       const response1 = await getAIResponse(player1, gameState, {
         apiKey,
         apiUrl,
@@ -404,6 +406,12 @@ export const useGameStore = create<GameStore>()(
           });
         },
       });
+      const duration1 = Date.now() - startTime1;
+
+      // Log Player 1's request and response
+      addAPILog(gameState, 'request', player1.name, fullPrompt1);
+      addAPILog(gameState, 'response', player1.name, undefined, response1, undefined, duration1);
+
       const { thinking: thinking1, speech: speech1 } = parseAIResponse(response1);
 
       if (thinking1) {
@@ -441,6 +449,7 @@ export const useGameStore = create<GameStore>()(
       messageIds.push(promptMsg2.id);
 
       // Player 2 responds
+      const startTime2 = Date.now();
       const response2 = await getAIResponse(player2, gameState, {
         apiKey,
         apiUrl,
@@ -452,6 +461,12 @@ export const useGameStore = create<GameStore>()(
           });
         },
       });
+      const duration2 = Date.now() - startTime2;
+
+      // Log Player 2's request and response
+      addAPILog(gameState, 'request', player2.name, fullPrompt2);
+      addAPILog(gameState, 'response', player2.name, undefined, response2, undefined, duration2);
+
       const { thinking: thinking2, speech: speech2 } = parseAIResponse(response2);
 
       if (thinking2) {
@@ -513,6 +528,9 @@ export const useGameStore = create<GameStore>()(
     } catch (error) {
       console.error('Secret meeting error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Log API error for secret meeting
+      addAPILog(gameState, 'error', 'Secret Meeting', '', undefined, errorMessage);
 
       // Clean up failed messages
       if (messageIds.length > 0) {
@@ -1166,6 +1184,9 @@ export const useGameStore = create<GameStore>()(
 
     const currentPlayer = alivePlayers[gameState.currentPlayerIndex];
 
+    // Build full prompt outside try block so it's accessible in catch
+    const fullPrompt = buildPrompt(currentPlayer, gameState);
+
     try {
       // Determine message visibility based on phase and role
       let visibility: Message['visibility'] = 'all';
@@ -1180,9 +1201,6 @@ export const useGameStore = create<GameStore>()(
       }
 
       set({ gameState: { ...gameState } });
-
-      // Build and record full prompt for transparency
-      const fullPrompt = buildPrompt(currentPlayer, gameState);
       gameState.messages.push(
         addMessage(
           gameState,
@@ -1194,6 +1212,7 @@ export const useGameStore = create<GameStore>()(
       );
 
       // Get AI response
+      const startTime = Date.now();
       const response = await getAIResponse(currentPlayer, gameState, {
         apiKey,
         apiUrl,
@@ -1205,6 +1224,11 @@ export const useGameStore = create<GameStore>()(
           });
         },
       });
+      const duration = Date.now() - startTime;
+
+      // Log successful request and response
+      addAPILog(gameState, 'request', currentPlayer.name, fullPrompt);
+      addAPILog(gameState, 'response', currentPlayer.name, undefined, response, undefined, duration);
 
       // Parse thinking and speech
       const { thinking, speech } = parseAIResponse(response);
@@ -1256,6 +1280,9 @@ export const useGameStore = create<GameStore>()(
       console.error(`Error executing action for ${currentPlayer.name}:`, error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
+
+      // Log API error
+      addAPILog(gameState, 'error', currentPlayer.name, fullPrompt, undefined, errorMessage);
 
       const { retryCount } = get();
       const maxRetries = 10;
@@ -1777,4 +1804,33 @@ function getSavedGamesFromStorage(): SavedGame[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Add API log entry to game state
+ */
+function addAPILog(
+  gameState: GameState,
+  type: 'request' | 'response' | 'error',
+  playerName: string,
+  prompt?: string,
+  response?: string,
+  error?: string,
+  duration?: number
+): void {
+  // Ensure apiLogs array exists (defensive against undefined from old saved games)
+  if (!gameState.apiLogs) {
+    gameState.apiLogs = [];
+  }
+
+  gameState.apiLogs.push({
+    id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    timestamp: Date.now(),
+    type,
+    playerName,
+    prompt: prompt || '',
+    response,
+    error,
+    duration,
+  });
 }

@@ -8,7 +8,8 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Skull, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { cn } from '@/lib/utils';
 
 interface StoryIntroProps {
@@ -488,15 +489,18 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => !newOpen && onComplete()}>
-      <DialogContent className="max-w-4xl bg-amber-50/95 backdrop-blur-xl border-4 border-amber-900/50 shadow-2xl">
-        <div className="relative" onClick={handleSkip}>
+      <DialogTitle>
+        <VisuallyHidden>迷路旅人的遗书 - Story Introduction</VisuallyHidden>
+      </DialogTitle>
+      <DialogContent className="max-w-4xl bg-amber-50/95 backdrop-blur-xl border-4 border-amber-900/50 shadow-2xl flex flex-col max-h-[90vh] p-0">
+        <div className="relative overflow-y-auto flex-1 px-6 py-4" onClick={handleSkip}>
           {/* Close button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onComplete();
             }}
-            className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-amber-900/10 transition-colors group"
+            className="sticky top-2 right-6 float-right z-10 p-2 rounded-full hover:bg-amber-900/10 transition-colors group mb-2"
             aria-label="关闭"
           >
             <X className="w-5 h-5 text-amber-700 group-hover:text-amber-900" />
@@ -526,7 +530,7 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
           </div>
 
           {/* Diary text - paper texture background */}
-          <div className="relative min-h-[280px] flex items-start justify-center px-6 py-4 bg-amber-50/50 border-l-4 border-amber-800/20">
+          <div className="relative py-6 px-6 bg-amber-50/50 border-l-4 border-amber-800/20">
             {/* Paper lines effect */}
             <div className="absolute inset-0 pointer-events-none opacity-20">
               {Array.from({ length: 15 }).map((_, i) => (
@@ -550,41 +554,41 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
           {currentEntryIndex === DIARY_ENTRIES.length - 1 && isEntryComplete && (
             <div className="absolute top-4 right-4 w-16 h-16 bg-red-900/20 rounded-full blur-xl" />
           )}
+        </div>
 
-          {/* Controls */}
-          <div className="mt-5 flex flex-col items-center gap-3">
-            {!isEntryComplete ? (
-              <Button
-                onClick={handleSkip}
-                size="lg"
-                variant="outline"
-                className="border-2 border-amber-700 text-amber-900 hover:bg-amber-100 font-serif"
-              >
-                立即显示全部
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                size="lg"
-                className="bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-700 hover:to-amber-800 text-amber-50 font-cinzel tracking-wider border-2 border-amber-700 shadow-lg animate-fade-in"
-              >
-                {currentEntryIndex < DIARY_ENTRIES.length - 1 ? (
-                  <>
-                    <BookOpen className="w-5 h-5 mr-2" />
-                    继续阅读
-                  </>
-                ) : (
-                  <>
-                    <Skull className="w-5 h-5 mr-2" />
-                    合上遗书
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+        {/* Controls - Fixed at bottom, outside scrollable area */}
+        <div className="border-t border-amber-800/30 bg-amber-50/50 px-6 py-4 flex flex-col items-center gap-3">
+          {!isEntryComplete ? (
+            <Button
+              onClick={handleSkip}
+              size="lg"
+              variant="outline"
+              className="border-2 border-amber-700 text-amber-900 hover:bg-amber-100 font-serif w-full"
+            >
+              立即显示全部
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              size="lg"
+              className="bg-gradient-to-r from-amber-800 to-amber-900 hover:from-amber-700 hover:to-amber-800 text-amber-50 font-cinzel tracking-wider border-2 border-amber-700 shadow-lg animate-fade-in w-full"
+            >
+              {currentEntryIndex < DIARY_ENTRIES.length - 1 ? (
+                <>
+                  <BookOpen className="w-5 h-5 mr-2" />
+                  继续阅读
+                </>
+              ) : (
+                <>
+                  <Skull className="w-5 h-5 mr-2" />
+                  合上遗书
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Entry indicator */}
-          <div className="mt-4 flex justify-center gap-1.5">
+          <div className="flex justify-center gap-1.5">
             {DIARY_ENTRIES.map((_, index) => (
               <div
                 key={index}
@@ -600,9 +604,6 @@ export function StoryIntro({ open, onComplete }: StoryIntroProps) {
             ))}
           </div>
         </div>
-
-        {/* Paper texture overlay */}
-        <div className="absolute inset-0 pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iNCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz48L3N2Zz4=')] rounded-lg" />
       </DialogContent>
     </Dialog>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/stores/game-store';
-import { testGeminiKey, testOpenAIKey } from '@/lib/gemini';
+import { testOpenAIKey } from '@/lib/gemini';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ interface APISettingsDialogProps {
 
 /**
  * API Settings Dialog Component
- * Allows users to configure Gemini or OpenAI compatible APIs
+ * Allows users to configure OpenAI compatible APIs
  */
 export function APISettingsDialog({ open, onOpenChange }: APISettingsDialogProps) {
   const [isTesting, setIsTesting] = useState(false);
@@ -58,13 +58,7 @@ export function APISettingsDialog({ open, onOpenChange }: APISettingsDialogProps
     setTestResult(null);
 
     try {
-      let success = false;
-
-      if (localApiType === 'gemini') {
-        success = await testGeminiKey(localApiKey, localApiUrl);
-      } else {
-        success = await testOpenAIKey(localApiKey, localApiUrl, localModel);
-      }
+      const success = await testOpenAIKey(localApiKey, localApiUrl, localModel);
 
       setTestResult({
         success,
@@ -124,74 +118,17 @@ export function APISettingsDialog({ open, onOpenChange }: APISettingsDialogProps
         <DialogHeader>
           <DialogTitle>API 配置</DialogTitle>
           <DialogDescription>
-            配置 AI API 服务。支持 Gemini 和 OpenAI 兼容 API。
+            配置 OpenAI 兼容 API 服务。
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={localApiType} onValueChange={(value) => {
-          setLocalApiType(value as 'gemini' | 'openai');
+          setLocalApiType(value as 'openai');
           setShowCustomModel(false);
         }}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="gemini">Google Gemini</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="openai">OpenAI 兼容</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="gemini" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="gemini-url">API URL</Label>
-              <Input
-                id="gemini-url"
-                placeholder="https://generativelanguage.googleapis.com"
-                value={localApiType === 'gemini' ? localApiUrl : ''}
-                onChange={(e) => {
-                  if (localApiType === 'gemini') {
-                    setLocalApiUrl(e.target.value);
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                默认: https://generativelanguage.googleapis.com
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gemini-key">API Key</Label>
-              <Input
-                id="gemini-key"
-                type="password"
-                placeholder="输入你的 Gemini API Key"
-                value={localApiType === 'gemini' ? localApiKey : ''}
-                onChange={(e) => {
-                  if (localApiType === 'gemini') {
-                    setLocalApiKey(e.target.value);
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                获取 API Key: <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">
-                  makersuite.google.com
-                </a>
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gemini-model">模型名称</Label>
-              <Input
-                id="gemini-model"
-                placeholder="gemini-2.5-pro"
-                value={localApiType === 'gemini' ? localModel : ''}
-                onChange={(e) => {
-                  if (localApiType === 'gemini') {
-                    setLocalModel(e.target.value);
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground">
-                默认: gemini-2.5-pro
-              </p>
-            </div>
-          </TabsContent>
 
           <TabsContent value="openai" className="space-y-4">
             <div className="space-y-2">
