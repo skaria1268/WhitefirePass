@@ -487,9 +487,20 @@ function CurrentPlayerDisplay({ gameState }: { gameState: GameState }) {
     );
   }
 
-  const alivePlayers = gameState.players
-    .filter((p) => p.isAlive)
-    .filter((p) => gameState.phase !== 'night' || p.role === 'marked');
+  // Filter players based on current phase
+  let alivePlayers = gameState.players.filter((p) => p.isAlive);
+
+  // During night, filter by night phase
+  if (gameState.phase === 'night' && gameState.nightPhase) {
+    if (gameState.nightPhase === 'listener') {
+      alivePlayers = alivePlayers.filter((p) => p.role === 'listener');
+    } else if (gameState.nightPhase === 'marked-discuss' || gameState.nightPhase === 'marked-vote') {
+      alivePlayers = alivePlayers.filter((p) => p.role === 'marked');
+    } else if (gameState.nightPhase === 'guard') {
+      alivePlayers = alivePlayers.filter((p) => p.role === 'guard');
+    }
+  }
+
   const currentPlayer = alivePlayers[gameState.currentPlayerIndex];
 
   if (!currentPlayer) {

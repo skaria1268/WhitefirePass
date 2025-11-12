@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -61,6 +61,12 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
   // Get unique roles from players
   const uniqueRoles = Array.from(new Set(players.map(p => p.role)));
 
+  // Auto-refresh filters when messages change
+  useEffect(() => {
+    applyFilters(selectedFactions, selectedRoles, selectedPlayers, selectedMessageTypes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
+
   // Apply filters
   const applyFilters = (
     factions: string[],
@@ -68,6 +74,12 @@ export function MessageFilter({ messages, players, onFilterChange }: MessageFilt
     playerNames: string[],
     messageTypes: string[]
   ) => {
+    // If no filters are active, pass all messages
+    if (factions.length === 0 && roles.length === 0 && playerNames.length === 0 && messageTypes.length === 0) {
+      onFilterChange(messages);
+      return;
+    }
+
     let filtered = messages;
 
     // Filter by message type if specified
