@@ -3,7 +3,7 @@
  * 白烬山口 (Whitefire Pass) - AI驱动系统
  */
 
-import type { GameState, Player } from '@/types/game';
+import type { GameState, Player, APIType } from '@/types/game';
 import { EMOTIONAL_STATE_PROMPTS } from './emotional-prompts';
 
 /**
@@ -13,6 +13,7 @@ interface GeminiConfig {
   apiKey: string;
   apiUrl?: string;
   model?: string;
+  apiType?: APIType;  // 'gemini' or 'openai'
   onRetry?: (info: { attempt: number; maxRetries: number; delay: number; reason: string }) => void;
 }
 
@@ -108,7 +109,69 @@ export async function testGeminiKey(apiKey: string, apiUrl?: string): Promise<bo
 }
 
 /**
- * Generate AI response using Gemini API with retry and exponential backoff
+ * Test if OpenAI compatible API key is valid with retry
+ */
+export async function testOpenAIKey(apiKey: string, apiUrl: string, model: string = 'gpt-3.5-turbo'): Promise<boolean> {
+  // Use fewer retries for test (2 retries max)
+  const maxRetries = 2;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(
+        `${apiUrl}/v1/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'user',
+                content: '测试',
+              },
+            ],
+            temperature: 0.9,
+            max_tokens: 10,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        return true;
+      }
+
+      // If error is retryable and we have attempts left
+      if (isRetryableError(response.status) && attempt < maxRetries) {
+        const delay = calculateBackoff(attempt);
+        console.warn(`OpenAI API 密钥测试失败 (${response.status}), 重试 ${attempt + 1}/${maxRetries}，等待 ${delay}ms...`);
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      // Non-retryable error or final attempt
+      return false;
+
+    } catch (error) {
+      // Network error
+      if (attempt < maxRetries) {
+        const delay = calculateBackoff(attempt);
+        console.warn(`OpenAI API 密钥测试网络错误, 重试 ${attempt + 1}/${maxRetries}，等待 ${delay}ms...`, error);
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Generate AI response using Gemini or OpenAI API with retry and exponential backoff
  */
 export async function getAIResponse(
   player: Player,
@@ -116,9 +179,21 @@ export async function getAIResponse(
   config: GeminiConfig,
 ): Promise<string> {
   const prompt = buildPrompt(player, gameState);
+  const apiType = config.apiType ?? 'gemini';
+
+  if (apiType === 'openai') {
+    return getOpenAIResponse(prompt, config);
+  }
+
+  return getGeminiResponse(prompt, config);
+}
+
+/**
+ * Generate AI response using Gemini API
+ */
+async function getGeminiResponse(prompt: string, config: GeminiConfig): Promise<string> {
   const baseUrl = config.apiUrl || 'https://generativelanguage.googleapis.com';
   const model = config.model ?? 'gemini-2.5-pro';
-
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
@@ -260,6 +335,157 @@ export async function getAIResponse(
 
   // All retries failed
   console.error('Gemini API 请求失败，所有重试已耗尽');
+  throw lastError ?? new Error('API 请求失败');
+}
+
+/**
+ * Generate AI response using OpenAI compatible API
+ */
+async function getOpenAIResponse(prompt: string, config: GeminiConfig): Promise<string> {
+  if (!config.apiUrl) {
+    throw new Error('OpenAI API URL 不能为空');
+  }
+
+  const model = config.model ?? 'gpt-3.5-turbo';
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      const response = await fetch(
+        `${config.apiUrl}/v1/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            temperature: 0.9,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = (await response.json()) as {
+          error?: {
+            message?: string;
+            type?: string;
+          };
+        };
+
+        const errorMessage = errorData.error?.message ?? 'API 请求失败';
+
+        // Check if error is retryable
+        if (isRetryableError(response.status) && attempt < RETRY_CONFIG.maxRetries) {
+          const delay = calculateBackoff(attempt);
+          const reason = `HTTP ${response.status}: ${errorMessage}`;
+
+          console.warn(
+            `OpenAI API 请求失败 (${response.status}), 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+            errorData
+          );
+
+          // Notify retry progress
+          config.onRetry?.({
+            attempt: attempt + 1,
+            maxRetries: RETRY_CONFIG.maxRetries,
+            delay,
+            reason,
+          });
+
+          lastError = new Error(errorMessage);
+          await sleep(delay);
+          continue; // Retry
+        }
+
+        // Non-retryable error, throw immediately
+        console.error('OpenAI API 错误响应 (不可重试):', errorData);
+        throw new Error(errorMessage);
+      }
+
+      const data = (await response.json()) as {
+        choices?: Array<{
+          message?: {
+            content?: string;
+          };
+        }>;
+      };
+
+      // Extract text from response
+      const text = data.choices?.[0]?.message?.content?.trim();
+
+      if (!text) {
+        // Empty response is retryable
+        if (attempt < RETRY_CONFIG.maxRetries) {
+          const delay = calculateBackoff(attempt);
+          const reason = 'AI 响应为空';
+
+          console.warn(
+            `OpenAI API 响应为空, 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+            data
+          );
+
+          // Notify retry progress
+          config.onRetry?.({
+            attempt: attempt + 1,
+            maxRetries: RETRY_CONFIG.maxRetries,
+            delay,
+            reason,
+          });
+
+          lastError = new Error('AI 响应为空');
+          await sleep(delay);
+          continue; // Retry
+        }
+
+        console.error('OpenAI API 响应为空 (重试已耗尽):', data);
+        throw new Error('AI 响应为空');
+      }
+
+      // Success!
+      if (attempt > 0) {
+        console.log(`OpenAI API 请求成功 (第 ${attempt + 1} 次尝试)`);
+      }
+      return text;
+
+    } catch (error) {
+      // Network error or fetch failure
+      if (attempt < RETRY_CONFIG.maxRetries) {
+        const delay = calculateBackoff(attempt);
+        const reason = `网络错误: ${error instanceof Error ? error.message : String(error)}`;
+
+        console.warn(
+          `网络请求失败, 重试 ${attempt + 1}/${RETRY_CONFIG.maxRetries}，等待 ${delay}ms...`,
+          error
+        );
+
+        // Notify retry progress
+        config.onRetry?.({
+          attempt: attempt + 1,
+          maxRetries: RETRY_CONFIG.maxRetries,
+          delay,
+          reason,
+        });
+
+        lastError = error instanceof Error ? error : new Error(String(error));
+        await sleep(delay);
+        continue; // Retry
+      }
+
+      // All retries exhausted
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  // All retries failed
+  console.error('OpenAI API 请求失败，所有重试已耗尽');
   throw lastError ?? new Error('API 请求失败');
 }
 

@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameState, GameConfig, Message, Player, SavedGame, Clue } from '@/types/game';
+import type { GameState, GameConfig, Message, Player, SavedGame, Clue, APIType, PromptConfig } from '@/types/game';
 import {
   createGame,
   checkWinCondition,
@@ -30,11 +30,18 @@ import { getInitialClues } from '@/lib/clues-data';
 interface GameStore {
   gameState: GameState | null;
   isProcessing: boolean;
+  apiType: APIType;  // 'gemini' or 'openai'
   apiKey: string;
   apiUrl: string;
+  model: string;
+  availableModels: string[];  // List of available models from API
   lastError: string | null;
   retryCount: number;  // Current retry attempt count
   clues: Clue[];  // Collected clues/documents
+
+  // Prompt configuration
+  promptConfigs: PromptConfig[];  // Saved prompt configurations
+  currentPromptConfigId: string | null;  // Currently selected prompt config
 
   // Phase transition animation
   showTransition: boolean;
@@ -48,8 +55,15 @@ interface GameStore {
   isAutoExecuting: boolean;
 
   // Actions
+  setApiType: (type: APIType) => void;
   setApiKey: (key: string) => void;
   setApiUrl: (url: string) => void;
+  setModel: (model: string) => void;
+  setAvailableModels: (models: string[]) => void;
+  addPromptConfig: (config: PromptConfig) => void;
+  updatePromptConfig: (config: PromptConfig) => void;
+  deletePromptConfig: (configId: string) => void;
+  setCurrentPromptConfig: (configId: string | null) => void;
   startGame: (config: GameConfig) => void;
   resetGame: () => void;
   executeNextStep: () => Promise<void>;
@@ -101,11 +115,16 @@ export const useGameStore = create<GameStore>()(
     (set, get) => ({
   gameState: null,
   isProcessing: false,
+  apiType: 'gemini',
   apiKey: '',
   apiUrl: 'https://generativelanguage.googleapis.com',
+  model: 'gemini-2.5-pro',
+  availableModels: [],
   lastError: null,
   retryCount: 0,
   clues: [],
+  promptConfigs: [],
+  currentPromptConfigId: null,
 
   // Phase transition
   showTransition: false,
@@ -119,17 +138,70 @@ export const useGameStore = create<GameStore>()(
   isAutoExecuting: false,
 
   /**
-   * Set Gemini API key
+   * Set API type (Gemini or OpenAI)
+   */
+  setApiType: (type: APIType) => {
+    set({ apiType: type });
+  },
+
+  /**
+   * Set API key
    */
   setApiKey: (key: string) => {
     set({ apiKey: key });
   },
 
   /**
-   * Set Gemini API URL
+   * Set API URL
    */
   setApiUrl: (url: string) => {
     set({ apiUrl: url });
+  },
+
+  /**
+   * Set model name
+   */
+  setModel: (model: string) => {
+    set({ model });
+  },
+
+  /**
+   * Set available models from API
+   */
+  setAvailableModels: (models: string[]) => {
+    set({ availableModels: models });
+  },
+
+  /**
+   * Add a new prompt configuration
+   */
+  addPromptConfig: (config: PromptConfig) => {
+    const { promptConfigs } = get();
+    set({ promptConfigs: [...promptConfigs, config] });
+  },
+
+  /**
+   * Update an existing prompt configuration
+   */
+  updatePromptConfig: (config: PromptConfig) => {
+    const { promptConfigs } = get();
+    const updated = promptConfigs.map((c) => (c.id === config.id ? config : c));
+    set({ promptConfigs: updated });
+  },
+
+  /**
+   * Delete a prompt configuration
+   */
+  deletePromptConfig: (configId: string) => {
+    const { promptConfigs } = get();
+    set({ promptConfigs: promptConfigs.filter((c) => c.id !== configId) });
+  },
+
+  /**
+   * Set the current active prompt configuration
+   */
+  setCurrentPromptConfig: (configId: string | null) => {
+    set({ currentPromptConfigId: configId });
   },
 
   /**
@@ -283,7 +355,7 @@ export const useGameStore = create<GameStore>()(
    * Execute secret meeting between two players
    */
   executeSecretMeeting: async () => {
-    const { gameState, apiKey, apiUrl } = get();
+    const { gameState, apiKey, apiUrl, apiType, model } = get();
     if (!gameState || !gameState.pendingSecretMeeting?.selectedParticipants) return;
 
     const [player1Name, player2Name] = gameState.pendingSecretMeeting.selectedParticipants;
@@ -324,6 +396,8 @@ export const useGameStore = create<GameStore>()(
       const response1 = await getAIResponse(player1, gameState, {
         apiKey,
         apiUrl,
+        apiType,
+        model,
         onRetry: (info) => {
           set({
             lastError: `${player1.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
@@ -370,6 +444,8 @@ export const useGameStore = create<GameStore>()(
       const response2 = await getAIResponse(player2, gameState, {
         apiKey,
         apiUrl,
+        apiType,
+        model,
         onRetry: (info) => {
           set({
             lastError: `${player2.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
@@ -1052,7 +1128,7 @@ export const useGameStore = create<GameStore>()(
    */
   // eslint-disable-next-line complexity
   executeCurrentPlayerAction: async () => {
-    const { gameState, apiKey, apiUrl } = get();
+    const { gameState, apiKey, apiUrl, apiType, model } = get();
     if (!gameState) return;
 
     // Get active players based on current phase
@@ -1121,6 +1197,8 @@ export const useGameStore = create<GameStore>()(
       const response = await getAIResponse(currentPlayer, gameState, {
         apiKey,
         apiUrl,
+        apiType,
+        model,
         onRetry: (info) => {
           set({
             lastError: `${currentPlayer.name} 请求失败，正在重试 (${info.attempt}/${info.maxRetries})...\n原因: ${info.reason}\n等待 ${(info.delay / 1000).toFixed(1)}秒 后重试`,
@@ -1220,8 +1298,14 @@ export const useGameStore = create<GameStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         gameState: state.gameState,
+        apiType: state.apiType,
         apiKey: state.apiKey,
+        apiUrl: state.apiUrl,
+        model: state.model,
+        availableModels: state.availableModels,
         clues: state.clues,
+        promptConfigs: state.promptConfigs,
+        currentPromptConfigId: state.currentPromptConfigId,
       }),
       onRehydrateStorage: () => (state) => {
         // Ensure pendingStateChanges exists in rehydrated state

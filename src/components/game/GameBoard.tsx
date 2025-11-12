@@ -20,7 +20,9 @@ import { EmotionalStateDialog } from './EmotionalStateDialog';
 import { SecretMeetingSelector } from './SecretMeetingSelector';
 import { MessageFilter } from './MessageFilter';
 import { ADVDialogBox } from './ADVDialogBox';
-import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX } from 'lucide-react';
+import { APISettingsDialog } from './APISettingsDialog';
+import { PromptEditorFloating } from './PromptEditorFloating';
+import { Mountain, Gamepad2, Moon, Sun, Users as UsersIcon, Volume2, VolumeX, Settings } from 'lucide-react';
 import type { Message } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { TYPOGRAPHY, CARD_HEADER, getBorderClass, ICON, SHADOWS } from '@/lib/design-tokens';
@@ -130,6 +132,9 @@ export function GameBoard() {
   // Game end dialog state
   const [showEndDialog, setShowEndDialog] = useState(false);
 
+  // API Settings dialog state
+  const [showAPISettings, setShowAPISettings] = useState(false);
+
   // Filtered messages state for game log
   const [filteredGameMessages, setFilteredGameMessages] = useState<Message[]>([]);
 
@@ -229,6 +234,17 @@ export function GameBoard() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* API Settings Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-background/20"
+              onClick={() => setShowAPISettings(true)}
+              title="API 配置"
+            >
+              <Settings className={cn(ICON.sm, "text-muted-foreground")} />
+            </Button>
+
             {/* BGM Volume Control */}
             <Popover>
               <PopoverTrigger asChild>
@@ -502,6 +518,15 @@ export function GameBoard() {
           }}
         />
       )}
+
+      {/* API Settings Dialog */}
+      <APISettingsDialog
+        open={showAPISettings}
+        onOpenChange={setShowAPISettings}
+      />
+
+      {/* Prompt Editor Floating Window */}
+      <PromptEditorFloating />
     </>
   );
 }

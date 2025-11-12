@@ -3,6 +3,11 @@
  */
 
 /**
+ * API type selection
+ */
+export type APIType = 'gemini' | 'openai';
+
+/**
  * Player roles in the game
  */
 export type Role =
@@ -301,4 +306,34 @@ export interface GameEventRecord {
   participants: string[];
   effects: string[];
   type: 'positive' | 'negative' | 'neutral';
+}
+
+/**
+ * Prompt item types
+ */
+export type PromptItemType = 'system' | 'user' | 'placeholder';
+
+/**
+ * Single prompt item in the configuration
+ */
+export interface PromptItem {
+  id: string;
+  type: PromptItemType;
+  label: string;  // Display name
+  content: string;  // The actual prompt or placeholder
+  order: number;  // Order in the sequence
+  enabled: boolean;  // Whether to include in final prompt
+  isDynamic?: boolean;  // If true, content will be replaced at runtime
+}
+
+/**
+ * Prompt configuration
+ */
+export interface PromptConfig {
+  id: string;
+  name: string;  // e.g., "Default Day Prompt"
+  description?: string;
+  items: PromptItem[];
+  createdAt: number;
+  updatedAt: number;
 }
